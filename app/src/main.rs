@@ -1,7 +1,13 @@
+#![feature(toowned_clone_into)]
+#[cfg(test)]
+extern crate mockall;
+extern crate mockall_double;
 extern crate sgx_types;
 extern crate sgx_urts;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
+
+pub mod data_enclave;
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 
