@@ -2,6 +2,8 @@
 #[cfg(test)]
 extern crate mockall;
 extern crate mockall_double;
+#[cfg(test)]
+extern crate proptest;
 extern crate sgx_types;
 extern crate sgx_urts;
 use sgx_types::*;

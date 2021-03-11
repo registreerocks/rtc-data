@@ -11,6 +11,11 @@ mockall_double = { version = "0.2.0", features = ["nightly"] }
 
 [dev-dependencies]
 mockall = { version = "0.9.1", features = ["nightly"] }
+proptest = "1.0.0"
 
 [features]
 test = []
+
+[patch."https://github.com/apache/teaclave-sgx-sdk.git"]
+sgx_types = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }
+

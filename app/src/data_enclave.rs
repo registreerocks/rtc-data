@@ -80,30 +80,76 @@ mock! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::collection::size_range;
+    use proptest::prelude::*;
+    use std::convert::TryInto;
 
-    #[test]
-    fn create_report() {
-        let expected_key: [u8; PUBKEY_SIZE] = [1; PUBKEY_SIZE];
-        let expected_config_svn = 12;
+    prop_compose! {
+        fn arb_sgx_measurement_t()(m in any::<[u8; SGX_HASH_SIZE]>()) -> sgx_measurement_t {
+            sgx_measurement_t { m }
+        }
+    }
 
-        let mut mock = MockSgxEnclave::default();
-        mock.expect_geteid().return_const(1u64 as sgx_enclave_id_t);
+    prop_compose! {
+        fn arb_sgx_attributes_t()(flags in any::<u64>(), xfrm in any::<u64>()) -> sgx_attributes_t {
+            sgx_attributes_t { flags, xfrm }
+        }
+    }
 
-        let ctx = ecalls::enclave_create_report_context();
-        // TODO: add expected target info value
-        ctx.expect().returning(move |_, _, _, key, rep| {
-            expected_key.clone_into(key);
-            unsafe {
-                *rep = sgx_report_t::default();
-                (*rep).body.config_svn = expected_config_svn;
+    prop_compose! {
+        fn arb_pubkey()(key_vec in any_with::<Vec<u8>>(size_range(PUBKEY_SIZE).lift())) -> [u8; PUBKEY_SIZE] {
+            key_vec.try_into().unwrap()
+        }
+    }
+
+    prop_compose! {
+        fn arb_sgx_target_info_t()
+            (mr_enclave in arb_sgx_measurement_t(),
+             attributes in arb_sgx_attributes_t(),
+             reserved1 in any::<[u8; SGX_TARGET_INFO_RESERVED1_BYTES]>(),
+             config_svn in any::<u16>(),
+             misc_select in any::<u32>(),
+             reserved2 in any::<[u8; SGX_TARGET_INFO_RESERVED2_BYTES]>(),
+             config_id in any_with::<Vec<u8>>(size_range(SGX_CONFIGID_SIZE).lift()),
+             reserved3 in any_with::<Vec<u8>>(size_range(SGX_TARGET_INFO_RESERVED3_BYTES).lift()),
+             ) -> sgx_target_info_t {
+             sgx_target_info_t {
+                mr_enclave,
+                attributes,
+                reserved1,
+                config_svn,
+                misc_select,
+                reserved2,
+                config_id: config_id.try_into().unwrap(),
+                reserved3: reserved3.try_into().unwrap(),
             }
-            sgx_status_t::SGX_SUCCESS
-        });
+        }
+    }
 
-        let res = SgxEnclave::create_report(&mock, &sgx_target_info_t::default()).unwrap();
+    proptest! {
+        #[test]
+        fn create_report(qe_ti in arb_sgx_target_info_t(), expected_key in arb_pubkey()) {
+            let expected_config_svn = 12;
 
-        assert_eq!(res.1, expected_key);
-        // Check one value being set on the result
-        assert_eq!(res.0.body.config_svn, expected_config_svn)
+            let mut mock = MockSgxEnclave::default();
+            mock.expect_geteid().return_const(1u64 as sgx_enclave_id_t);
+
+            let ctx = ecalls::enclave_create_report_context();
+            ctx.expect().withf(move |_,_,ti, _, _| &qe_ti ==  ti).returning(move |_, _, _, key, rep| {
+                expected_key.clone_into(key);
+                unsafe {
+                    *rep = sgx_report_t::default();
+                    (*rep).body.config_svn = expected_config_svn;
+                }
+                sgx_status_t::SGX_SUCCESS
+            });
+
+            let res = SgxEnclave::create_report(&mock, &qe_ti).unwrap();
+
+            prop_assert_eq!(res.1, expected_key);
+
+            // TODO: use arb report value
+            assert_eq!(res.0.body.config_svn, expected_config_svn)
+        }
     }
 }
