@@ -3,13 +3,20 @@
 extern crate mockall;
 extern crate mockall_double;
 #[cfg(test)]
+extern crate num_traits;
+#[cfg(test)]
 extern crate proptest;
+#[cfg(test)]
+extern crate rand;
+extern crate rsa;
 extern crate sgx_types;
 extern crate sgx_urts;
+extern crate thiserror;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 
-pub mod data_enclave;
+pub mod attestation;
+pub mod rtc_enclave;
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 
