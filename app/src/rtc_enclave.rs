@@ -1,5 +1,6 @@
 extern crate sgx_types;
 extern crate sgx_urts;
+#[cfg(test)]
 use self::MockSgxEnclave as SgxEnclave;
 #[cfg(test)]
 use mockall::predicate::*;
