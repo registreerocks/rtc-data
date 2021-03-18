@@ -81,7 +81,7 @@ App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 # App_Rust_Path := ./app/target/release
 App_Rust_Path := ./app/target/debug
 App_Enclave_u_Object :=lib/libEnclave_u.a
-App_Name := bin/app
+App_Name := bin/rtc_data_service
 
 ######## Enclave Settings ########
 
