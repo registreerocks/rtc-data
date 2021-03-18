@@ -45,7 +45,7 @@ RUN mkdir /root/sgx && \
     echo 'alias start-aesm="LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service"' >> /root/.bashrc && \
     rm -rf /root/sgx*
 
-# Donwload the teaclave rust sgx sdk
+# Download the teaclave rust sgx sdk
 RUN mkdir /root/sgx-rust && \
     curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v1.1.3.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
 
