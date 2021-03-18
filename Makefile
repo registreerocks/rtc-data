@@ -121,19 +121,26 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
 	$(SGX_EDGER8R) --untrusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir app
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
+######## Directories ########
+
+lib:
+	mkdir -p lib
+
+bin:
+	mkdir -p bin
+
 ######## App Objects ########
 
 app/Enclave_u.o: $(Enclave_EDL_Files)
 	@$(CC) $(App_C_Flags) -c app/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
-$(App_Enclave_u_Object): app/Enclave_u.o
+$(App_Enclave_u_Object): app/Enclave_u.o | lib
 	$(AR) rcsD $@ $^
 
-$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
+$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files) | bin
 	@cd app && SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
-	mkdir -p bin
 	cp $(App_Rust_Path)/rtc_data_service ./bin
 
 ######## Enclave Objects ########
@@ -146,8 +153,7 @@ $(RustEnclave_Name): enclave enclave/Enclave_t.o
 	@$(CXX) enclave/Enclave_t.o -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
-$(Signed_RustEnclave_Name): $(RustEnclave_Name)
-	mkdir -p bin
+$(Signed_RustEnclave_Name): $(RustEnclave_Name) | bin
 	@$(SGX_ENCLAVE_SIGNER) sign -key enclave/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config enclave/Enclave.config.xml
 	@echo "SIGN =>  $@"
 
