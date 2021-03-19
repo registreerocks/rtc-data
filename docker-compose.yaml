@@ -1,14 +1,18 @@
 services:
   dev:
-    build: .
+    build:
+      context: .
+      args:
+        UID: ${UID:-1000}
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     volumes:
-      - ./:/root/rtc-data
-      - cargo-cache:/root/.cargo  # Keep Cargo cache between runs
+      - ./:/home/dev/rtc-data
+      - cargo-cache:/home/dev/.cargo  # Keep Cargo cache between runs
+    working_dir: /home/dev/rtc-data
     environment:
-      - SGX_SDK=/opt/sgxsdk
-      - LD_LIBRARY_PATH=/opt/sgxsdk/sdk_libs
+      - SGX_SDK=/home/dev/opt/sgxsdk
+      - LD_LIBRARY_PATH=/home/dev/opt/sgxsdk/sdk_libs
       - SGX_MODE=SW
   devhw:
     build: .

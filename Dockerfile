@@ -28,7 +28,14 @@ RUN curl -fsSL  https://packages.microsoft.com/keys/microsoft.asc | apt-key add 
 
 
 # Base with the SGX and Teaclave SDKs installed
-FROM apt-base AS teaclave-base
+FROM apt-base AS user-base
+ARG UID=1000
+RUN useradd --create-home --shell /bin/bash --uid "${UID}" dev
+USER dev
+WORKDIR /home/dev
+
+# Base with the SGX and Teaclave SDKs installed
+FROM user-base AS teaclave-base
 
 # See:
 # https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/release_notes.md
@@ -38,25 +45,23 @@ ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-
 ARG teaclave_version=1.1.3
 
 # Setup the rust toolchain for building
-RUN curl 'https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init' --output /root/rustup-init && \
-    chmod +x /root/rustup-init && \
-    echo '1' | /root/rustup-init --default-toolchain ${rust_toolchain} && \
-    echo 'source /root/.cargo/env' >> /root/.bashrc && \
-    /root/.cargo/bin/rustup component add rust-src rls rust-analysis clippy rustfmt && \
-    rm /root/rustup-init && rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git
+RUN curl 'https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init' --output $HOME/rustup-init && \
+    chmod +x $HOME/rustup-init && \
+    echo '1' | $HOME/rustup-init --default-toolchain ${rust_toolchain} && \
+    echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
+    $HOME/.cargo/bin/rustup component add rust-src rls rust-analysis clippy rustfmt && \
+    rm $HOME/rustup-init && rm -rf $HOME/.cargo/registry && rm -rf $HOME/.cargo/git
 
 # Install the sgx sdk
-RUN mkdir /root/sgx && \
-    curl --output /root/sgx/sdk.bin ${sdk_bin} && \
-    cd /root/sgx && \
-    chmod +x /root/sgx/sdk.bin && \
-    echo -e 'no\n/opt' | /root/sgx/sdk.bin && \
-    # echo 'source /opt/sgxsdk/environment' >> /root/.bashrc && \
-    echo 'alias start-aesm="LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service"' >> /root/.bashrc && \
-    rm -rf /root/sgx*
+RUN mkdir $HOME/sgx && \
+    curl --output $HOME/sgx/sdk.bin ${sdk_bin} && \
+    cd $HOME/sgx && \
+    chmod +x $HOME/sgx/sdk.bin && \
+    echo -e 'no\n$HOME/opt' | $HOME/sgx/sdk.bin && \
+    # echo 'source $HOME/opt/sgxsdk/environment' >> $HOME/.bashrc && \
+    echo 'alias start-aesm="LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service"' >> $HOME/.bashrc && \
+    rm -rf $HOME/sgx*
 
 # Download the teaclave rust sgx sdk
-RUN mkdir /root/sgx-rust && \
-    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v${teaclave_version}.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
-
-WORKDIR /root
+RUN mkdir $HOME/sgx-rust && \
+    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v${teaclave_version}.tar.gz | tar -xz -C $HOME/sgx-rust --strip-components=1
