@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-Rust_Enclave_Name := libenclave.a
+Rust_Enclave_Name := ../lib/libenclave.a
 Rust_Enclave_Files := $(wildcard src/*.rs)
 
 ifeq ($(MITIGATION-CVE-2020-0551), LOAD)
