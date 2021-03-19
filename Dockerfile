@@ -1,7 +1,5 @@
-FROM ubuntu:18.04
-
-ENV rust_toolchain  nightly-2020-10-25
-ENV sdk_bin         https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
+# Base with APT packages installed
+FROM ubuntu:18.04 AS apt-base
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common build-essential automake autoconf libtool protobuf-compiler libprotobuf-dev git-core libprotobuf-c0-dev cmake pkg-config expect gdb libssl-dev && \
@@ -27,6 +25,13 @@ RUN curl -fsSL  https://packages.microsoft.com/keys/microsoft.asc | apt-key add 
     apt-get install -y az-dcap-client && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt/archives/*
+
+
+# Base with the SGX and Teaclave SDKs installed
+FROM apt-base AS teaclave-base
+
+ARG rust_toolchain=nightly-2020-10-25
+ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
 
 # Setup the rust toolchain for building
 RUN curl 'https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init' --output /root/rustup-init && \
