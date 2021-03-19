@@ -1,11 +1,10 @@
 FROM ubuntu:18.04
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV rust_toolchain  nightly-2020-10-25
 ENV sdk_bin         https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
 
 RUN apt-get update && \
-    apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common build-essential automake autoconf libtool protobuf-compiler libprotobuf-dev git-core libprotobuf-c0-dev cmake pkg-config expect gdb libssl-dev
+    DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common build-essential automake autoconf libtool protobuf-compiler libprotobuf-dev git-core libprotobuf-c0-dev cmake pkg-config expect gdb libssl-dev
 
 #  Add SGX repository and install SGX libraries
 RUN curl -fsSL https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add - && \
