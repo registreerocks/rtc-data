@@ -34,7 +34,7 @@ FROM apt-base AS teaclave-base
 # https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/release_notes.md
 # https://01.org/intel-software-guard-extensions/downloads
 ARG rust_toolchain=nightly-2020-10-25
-ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
+ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.13.100.4.bin
 ARG teaclave_version=1.1.3
 
 # Setup the rust toolchain for building
