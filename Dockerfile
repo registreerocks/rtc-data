@@ -32,6 +32,7 @@ FROM apt-base AS teaclave-base
 
 ARG rust_toolchain=nightly-2020-10-25
 ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
+ARG teaclave_version=1.1.3
 
 # Setup the rust toolchain for building
 RUN curl 'https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init' --output /root/rustup-init && \
@@ -53,6 +54,6 @@ RUN mkdir /root/sgx && \
 
 # Download the teaclave rust sgx sdk
 RUN mkdir /root/sgx-rust && \
-    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v1.1.3.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
+    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v${teaclave_version}.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
 
 WORKDIR /root
