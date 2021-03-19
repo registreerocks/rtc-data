@@ -30,6 +30,9 @@ RUN curl -fsSL  https://packages.microsoft.com/keys/microsoft.asc | apt-key add 
 # Base with the SGX and Teaclave SDKs installed
 FROM apt-base AS teaclave-base
 
+# See:
+# https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/release_notes.md
+# https://01.org/intel-software-guard-extensions/downloads
 ARG rust_toolchain=nightly-2020-10-25
 ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
 ARG teaclave_version=1.1.3
