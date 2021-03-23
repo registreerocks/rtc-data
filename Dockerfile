@@ -1,11 +1,10 @@
-FROM ubuntu:18.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV rust_toolchain  nightly-2020-10-25
-ENV sdk_bin         https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin
+# Base with APT packages installed
+FROM ubuntu:18.04 AS apt-base
 
 RUN apt-get update && \
-    apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common build-essential automake autoconf libtool protobuf-compiler libprotobuf-dev git-core libprotobuf-c0-dev cmake pkg-config expect gdb libssl-dev
+    DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common build-essential automake autoconf libtool protobuf-compiler libprotobuf-dev git-core libprotobuf-c0-dev cmake pkg-config expect gdb libssl-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/cache/apt/archives/*
 
 #  Add SGX repository and install SGX libraries
 RUN curl -fsSL https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add - && \
@@ -27,6 +26,17 @@ RUN curl -fsSL  https://packages.microsoft.com/keys/microsoft.asc | apt-key add 
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt/archives/*
 
+
+# Base with the SGX and Teaclave SDKs installed
+FROM apt-base AS teaclave-base
+
+# See:
+# https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/release_notes.md
+# https://01.org/intel-software-guard-extensions/downloads
+ARG rust_toolchain=nightly-2020-10-25
+ARG sdk_bin=https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.13.100.4.bin
+ARG teaclave_version=1.1.3
+
 # Setup the rust toolchain for building
 RUN curl 'https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init' --output /root/rustup-init && \
     chmod +x /root/rustup-init && \
@@ -47,6 +57,6 @@ RUN mkdir /root/sgx && \
 
 # Download the teaclave rust sgx sdk
 RUN mkdir /root/sgx-rust && \
-    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v1.1.3.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
+    curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v${teaclave_version}.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
 
 WORKDIR /root
