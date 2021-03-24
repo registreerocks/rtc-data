@@ -3,9 +3,19 @@ enclave {
     from "sgx_stdio.edl" import *;
     from "sgx_backtrace.edl" import *;
     from "sgx_tstdc.edl" import *;
+    from "sgx_tprotected_fs.edl" import *;
+    from "sgx_fs.edl" import *;
+    from "sgx_file.edl" import *;
+
+    include "sgx_tprotected_fs.h"
+    include "sgx_report.h"
+
     trusted {
         /* define ECALLs here. */
 
         public sgx_status_t say_something([in, count=len] const uint8_t* some_string, size_t len);
+        public uint32_t enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
+                                              [out] uint8_t enclave_pubkey[388],
+                                              [out]sgx_report_t* p_report);
     };
 };

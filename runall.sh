@@ -5,4 +5,5 @@ which cargo >/dev/null || . "$HOME/.cargo/env"
 
 make
 cd bin/
+rm prov_key.bin
 ./rtc_data_service
