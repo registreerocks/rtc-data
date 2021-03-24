@@ -17,6 +17,7 @@ use thiserror::Error;
 pub const PUBKEY_SIZE: usize = SGX_RSA3072_KEY_SIZE + SGX_RSA3072_PUB_EXP_SIZE;
 
 #[cfg_attr(test, automock)]
+#[allow(dead_code)]
 mod ffi {
     use super::*;
     extern "C" {
@@ -33,6 +34,7 @@ mod ffi {
 #[double]
 use self::ffi as ecalls;
 
+#[derive(Debug)]
 pub struct EnclaveReport {
     pub report: sgx_report_t,
     pub enclave_pub_key: RSAPublicKey,
@@ -67,6 +69,7 @@ impl RtcEnclave for SgxEnclave {
         };
         match result {
             sgx_status_t::SGX_SUCCESS => {
+                println!("{:?}", ret_pubkey);
                 let enclave_pub_key = RSAPublicKey::new(
                     // TODO: Check if bytes are in big-or-little endian order
                     BigUint::from_bytes_le(&ret_pubkey[0..SGX_RSA3072_KEY_SIZE]),

@@ -18,6 +18,8 @@ use sgx_urts::SgxEnclave;
 pub mod attestation;
 pub mod rtc_enclave;
 
+use rtc_enclave::RtcEnclave;
+
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 
 extern "C" {
@@ -59,6 +61,8 @@ fn main() {
             return;
         }
     };
+
+    println!("{:?}", enclave.create_report(&sgx_target_info_t::default()));
 
     let input_string = String::from("This is a normal world string passed into Enclave!\n");
     let mut retval = sgx_status_t::SGX_SUCCESS;
