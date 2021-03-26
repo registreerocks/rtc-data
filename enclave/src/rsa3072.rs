@@ -1,3 +1,4 @@
+use core::convert::TryInto;
 use sgx_crypto_helper::RsaKeyPair;
 use sgx_tcrypto::{rsgx_create_rsa_key_pair, SgxRsaPrivKey, SgxRsaPubKey};
 use sgx_types::sgx_status_t;
@@ -11,6 +12,8 @@ big_array! {
 }
 
 pub const SGX_RSA3072_DEFAULT_E: [u8; SGX_RSA3072_PUB_EXP_SIZE] = [0x01, 0x00, 0x00, 0x01]; // 16777217
+
+pub const RSA3072_PKCS8_DER_SIZE: usize = 420;
 
 // TODO: This would be a lot easier if we could get the value of "n" and "e" directly from the
 // Rsa3072KeyPair type in the crypto helper library. Maybe consider a PR for this.
@@ -186,8 +189,8 @@ impl RsaKeyPair for Rsa3072KeyPair {
     }
 }
 pub trait PublicKeyEncoding {
-    fn to_pkcs1(&self) -> Result<Vec<u8>, ASN1EncodeErr>;
-    fn to_pkcs8(&self) -> Result<Vec<u8>, ASN1EncodeErr>;
+    fn to_pkcs1(&self) -> Result<[u8; 398], ASN1EncodeErr>;
+    fn to_pkcs8(&self) -> Result<[u8; RSA3072_PKCS8_DER_SIZE], ASN1EncodeErr>;
 }
 
 impl PublicKeyEncoding for Rsa3072KeyPair {
@@ -197,13 +200,20 @@ impl PublicKeyEncoding for Rsa3072KeyPair {
     /// following a `-----BEGIN <name> PUBLIC KEY-----` header.
     ///
     /// <https://tls.mbed.org/kb/cryptography/asn1-key-structures-in-der-and-pem>
-    fn to_pkcs1(&self) -> Result<Vec<u8>, ASN1EncodeErr> {
+    fn to_pkcs1(&self) -> Result<[u8; 398], ASN1EncodeErr> {
+        // 388 Bytes: (T = 1, L = 3, V = SGX_RSA3072_KEY_SIZE = 384)
         let n = ASN1Block::Integer(0, BigInt::from_signed_bytes_be(&self.n));
+        // 6 Bytes: (T = 1, L = 1, V = SGX_RSA3072_PUB_EXP_SIZE = 4)
         let e = ASN1Block::Integer(0, BigInt::from_signed_bytes_be(&self.e));
-        println!("enclave n: {:?}", n);
         let blocks = vec![n, e];
 
-        to_der(&ASN1Block::Sequence(0, blocks))
+        // 398 Bytes: (T = 1, L = 3, V = 394)
+        to_der(&ASN1Block::Sequence(0, blocks)).map(|der| {
+            // NOTE: The size will only be correct if the exponent is 4 bytes long.
+            // Since the exponent is constant we can assume the size of the der bytes.
+            der.try_into()
+                .expect("Wrong Size of PKCS#1 DER for public key")
+        })
     }
 
     /// Encodes a Public key to into `PKCS8` bytes.
@@ -212,18 +222,29 @@ impl PublicKeyEncoding for Rsa3072KeyPair {
     /// following a `-----BEGIN PUBLIC KEY-----` header.
     ///
     /// <https://tls.mbed.org/kb/cryptography/asn1-key-structures-in-der-and-pem>
-    fn to_pkcs8(&self) -> Result<Vec<u8>, ASN1EncodeErr> {
+    fn to_pkcs8(&self) -> Result<[u8; RSA3072_PKCS8_DER_SIZE], ASN1EncodeErr> {
+        // 11 Bytes: (T = 1, L = 1, V = 9)
         let oid = ASN1Block::ObjectIdentifier(0, rsa_oid());
+        // 13 Bytes: (T = 1, L = 1, V = 11)
         let alg = ASN1Block::Sequence(0, vec![oid]);
 
+        // 398 Bytes
         let bz = self.to_pkcs1()?;
-        let octet_string = ASN1Block::BitString(0, bz.len(), bz);
+
+        // 403 Bytes: (T = 1, L = 3, V = 399 [388 + leading byte specifying unused bits])
+        let octet_string = ASN1Block::BitString(0, bz.len(), bz.to_vec());
+
         let blocks = vec![alg, octet_string];
 
-        to_der(&ASN1Block::Sequence(0, blocks))
+        // 420 Bytes: (T = 1, L = 3, V = 416 [len(octet_string) + len(alg)])
+        to_der(&ASN1Block::Sequence(0, blocks)).map(|der| {
+            der.try_into()
+                .expect("Wrong Size of PKCS#8 DER for Public Key")
+        })
     }
 }
 
 pub(crate) fn rsa_oid() -> OID {
+    // 9 bytes
     simple_asn1::oid!(1, 2, 840, 113549, 1, 1, 1)
 }

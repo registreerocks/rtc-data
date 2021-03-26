@@ -33,7 +33,7 @@ use std::{
     untrusted::path::PathEx,
 };
 
-use rsa3072::{PublicKeyEncoding, Rsa3072KeyPair};
+use rsa3072::{PublicKeyEncoding, Rsa3072KeyPair, RSA3072_PKCS8_DER_SIZE};
 use sgx_tse::{rsgx_get_key, rsgx_self_report};
 
 use sgx_crypto_helper::RsaKeyPair;
@@ -75,7 +75,7 @@ pub extern "C" fn say_something(some_string: *const u8, some_len: usize) -> sgx_
 #[no_mangle]
 pub extern "C" fn enclave_create_report(
     p_qe3_target: &sgx_target_info_t,
-    enclave_pubkey: &mut [u8; PUBKEY_SIZE], // Public key in format [...modulus, ...exponent]
+    enclave_pubkey: &mut [u8; RSA3072_PKCS8_DER_SIZE],
     p_report: *mut sgx_report_t,
 ) -> sgx_status_t {
     // TODO: Error handling
@@ -84,20 +84,15 @@ pub extern "C" fn enclave_create_report(
         Err(x) => panic!(x),
     };
 
-    // TODO Change public key out variable to 420 bytes and return pkcs8 instead
-    // This value can then be base64 encoded and passed through as the enclave held data
-    // to Azure Attestation.
-
-    let pkcs_pubkey = report_keypair.to_pkcs8().unwrap();
-    println!("pkcs8 len: {:?}", pkcs_pubkey.len());
-    println!("pkcs8 enclave: {:?}", pkcs_pubkey);
-    let pubkey_hash = rsgx_sha256_slice(&pkcs_pubkey.as_slice()).unwrap();
+    let pkcs8_pubkey = report_keypair.to_pkcs8().unwrap();
+    println!("pkcs8 len: {:?}", pkcs8_pubkey.len());
+    println!("pkcs8 enclave: {:?}", pkcs8_pubkey);
+    let pubkey_hash = rsgx_sha256_slice(&pkcs8_pubkey).unwrap();
 
     let mut p_data = sgx_report_data_t::default();
     p_data.d[0..32].copy_from_slice(&pubkey_hash);
 
-    enclave_pubkey[0..SGX_RSA3072_KEY_SIZE].copy_from_slice(&report_keypair.n);
-    enclave_pubkey[SGX_RSA3072_KEY_SIZE..].copy_from_slice(&report_keypair.e);
+    enclave_pubkey.copy_from_slice(&pkcs8_pubkey);
 
     match rsgx_create_report(p_qe3_target, &p_data) {
         Ok(report) => {

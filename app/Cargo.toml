@@ -10,12 +10,16 @@ sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "v1.1
 mockall_double = { version = "0.2.0", features = ["nightly"] }
 thiserror = "1.0.24"
 rsa = "0.3.0"
+base64 = "0.13.0"
 
 [dev-dependencies]
 rand = "0.7.3"
 mockall = { version = "0.9.1", features = ["nightly"] }
 proptest = "1.0.0"
+num-bigint = { version = "0.4.0", features = ["rand"] }
 num-traits = "0.2"
+# This should be removed once the rust-crypto rsa crate updates with export functionality
+simple_asn1 = { version = "0.5.1" }
 
 [features]
 test = []

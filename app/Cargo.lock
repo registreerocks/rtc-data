@@ -246,6 +246,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d0a3d5e207573f948a9e5376662aa743a2ea13f7c50a554d7af443a73fbfeba"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e0d047c1062aa51e256408c560894e5251f08925980e53cf1aa5bd00eec6512"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits",
+ "rand 0.8.3",
+]
+
+[[package]]
 name = "num-bigint-dig"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -543,7 +566,7 @@ dependencies = [
  "pem",
  "rand 0.7.3",
  "sha2",
- "simple_asn1",
+ "simple_asn1 0.4.1",
  "subtle",
  "thiserror",
  "zeroize",
@@ -553,14 +576,17 @@ dependencies = [
 name = "rtc_data_service"
 version = "0.0.1"
 dependencies = [
+ "base64",
  "mockall",
  "mockall_double",
+ "num-bigint 0.4.0",
  "num-traits",
  "proptest",
  "rand 0.7.3",
  "rsa",
  "sgx_types",
  "sgx_urts",
+ "simple_asn1 0.5.1",
  "thiserror",
 ]
 
@@ -616,8 +642,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "692ca13de57ce0613a363c8c2f1de925adebc81b04c923ac60c5488bb44abe4b"
 dependencies = [
  "chrono",
- "num-bigint",
+ "num-bigint 0.2.6",
  "num-traits",
+]
+
+[[package]]
+name = "simple_asn1"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db8d597fce66eb0f19dd129b9956e4054cba21aeaf97d4116595027b670fac50"
+dependencies = [
+ "chrono",
+ "num-bigint 0.3.2",
+ "num-traits",
+ "thiserror",
 ]
 
 [[package]]

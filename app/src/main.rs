@@ -1,7 +1,10 @@
 #![feature(toowned_clone_into)]
+extern crate base64;
 #[cfg(test)]
 extern crate mockall;
 extern crate mockall_double;
+#[cfg(test)]
+extern crate num_bigint;
 #[cfg(test)]
 extern crate num_traits;
 #[cfg(test)]
@@ -11,9 +14,17 @@ extern crate rand;
 extern crate rsa;
 extern crate sgx_types;
 extern crate sgx_urts;
+#[cfg(test)]
+extern crate simple_asn1;
 extern crate thiserror;
+
 use sgx_types::*;
+
+#[cfg(not(test))]
 use sgx_urts::SgxEnclave;
+
+#[cfg(test)]
+use rtc_enclave::MockSgxEnclave as SgxEnclave;
 
 pub mod attestation;
 pub mod rtc_enclave;
