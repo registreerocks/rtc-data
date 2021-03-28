@@ -1,3 +1,6 @@
+// TODO: Enable and clean warnings
+//#![warn(missing_docs)]
+#![deny(clippy::mem_forget)]
 #![feature(toowned_clone_into)]
 extern crate base64;
 #[cfg(test)]
@@ -12,24 +15,18 @@ extern crate proptest;
 #[cfg(test)]
 extern crate rand;
 extern crate rsa;
+extern crate rtc_types;
+extern crate rtc_uenclave;
 extern crate sgx_types;
-extern crate sgx_urts;
 #[cfg(test)]
 extern crate simple_asn1;
 extern crate thiserror;
 
 use sgx_types::*;
 
-#[cfg(not(test))]
-use sgx_urts::SgxEnclave;
-
-#[cfg(test)]
-use rtc_enclave::MockSgxEnclave as SgxEnclave;
-
 pub mod attestation;
-pub mod rtc_enclave;
 
-use rtc_enclave::RtcEnclave;
+use rtc_uenclave::{RtcEnclave, SgxEnclave};
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 

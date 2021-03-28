@@ -1,10 +1,9 @@
 #[cfg(test)]
 use mockall::*;
-use rsa::RSAPublicKey;
-use rtc_enclave::*;
+use rtc_types::*;
+use rtc_uenclave::*;
 use sgx_types::{sgx_quote3_error_t, sgx_report_t, sgx_target_info_t};
 use thiserror::Error;
-
 #[cfg(test)]
 #[automock]
 #[allow(dead_code)]
@@ -31,7 +30,7 @@ use sgx_types::{sgx_qe_get_quote, sgx_qe_get_quote_size, sgx_qe_get_target_info}
 
 pub struct AttestationResult {
     pub quote: Vec<u8>,
-    pub enclave_pub_key: RSAPublicKey,
+    pub enclave_pubkey: PubkeyPkcs8,
 }
 
 pub fn get_quote_and_pubkey(
@@ -41,12 +40,12 @@ pub fn get_quote_and_pubkey(
     let quote_size = get_quote_size()?;
     let EnclaveReport {
         report,
-        enclave_pub_key,
+        enclave_pubkey,
     } = enclave.create_report(&qe_target_info)?;
 
     Ok(AttestationResult {
         quote: get_quote(report, quote_size)?,
-        enclave_pub_key,
+        enclave_pubkey,
     })
 }
 

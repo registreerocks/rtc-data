@@ -4,6 +4,6 @@
 which cargo >/dev/null || . "$HOME/.cargo/env"
 
 make
-cd bin/
-rm prov_key.bin
+cd build/data_system/bin
+rm -f prov_key.bin
 ./rtc_data_service
