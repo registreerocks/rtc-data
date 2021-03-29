@@ -3,13 +3,18 @@ use std::env;
 fn main() {
     let test_enabled = env::var_os("CARGO_FEATURE_TEST").is_some();
 
+    let cur_dir = env::current_dir().unwrap();
+
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
     // This check allows unit tests to run without the need to link and libraries
     // by using `cargo test --features=test`
     if !test_enabled {
-        println!("cargo:rustc-link-search=native=../lib");
+        println!(
+            "cargo:rustc-link-search=native={}/build/data_system/lib",
+            cur_dir.parent().unwrap().to_str().unwrap()
+        );
         println!("cargo:rustc-link-lib=static=Enclave_u");
 
         println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
