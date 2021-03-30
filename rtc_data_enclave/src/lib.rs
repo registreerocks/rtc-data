@@ -150,7 +150,7 @@ pub unsafe extern "C" fn enclave_create_report(
         (*enclave_pubkey).copy_from_slice(&key);
     }
 
-    return CreateReportResult::Sgx(sgx_status_t::SGX_ERROR_UNEXPECTED);
+    CreateReportResult::Success
 }
 
 /// Return result when creating a report

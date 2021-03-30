@@ -1,3 +1,4 @@
+use ecalls::EnclaveReportResult;
 #[cfg(test)]
 use mockall::predicate::*;
 #[cfg(test)]
@@ -5,7 +6,9 @@ use mockall::*;
 use sgx_types::*;
 use thiserror::Error;
 
-use crate::ecalls;
+use crate::{ecalls, CreateReportError};
+
+use crate::quote::*;
 
 #[cfg(test)]
 pub use self::MockSgxEnclave as SgxEnclave;
@@ -20,24 +23,55 @@ pub trait RtcEnclave {
     fn create_report(
         &self,
         qe_target_info: &sgx_target_info_t,
-    ) -> Result<ecalls::EnclaveReport, ReportError>;
+    ) -> Result<EnclaveReportResult, AttestationError>;
+
+    /// Performs dcap attestation using Azure Attestation
+    ///
+    /// Returns the JWT token with the quote and enclave data
+    fn dcap_attestation_azure(&self) -> Result<(), AttestationError> {
+        let qe_ti = QuotingEnclave.get_target_info()?;
+        let EnclaveReportResult {
+            enclave_report,
+            enclave_pubkey,
+        } = self.create_report(&qe_ti)?;
+
+        let quote = QuotingEnclave.request_quote(enclave_report)?;
+
+        todo!()
+    }
+
+    // TODO: Remove this method and call quoting enclave in the dcap_attestation method
+    // directly. This is only here to test functionality in Azure at this stage
+    #[allow(missing_docs)]
+    fn request_quote(&self, report: sgx_report_t) -> Result<Vec<u8>, AttestationError> {
+        Ok(QuotingEnclave.request_quote(report)?)
+    }
 }
 
 impl RtcEnclave for SgxEnclave {
     fn create_report(
         &self,
         qe_target_info: &sgx_target_info_t,
-    ) -> Result<ecalls::EnclaveReport, ReportError> {
-        ecalls::create_report(self.geteid(), qe_target_info).map_err(|err| err.into())
+    ) -> Result<EnclaveReportResult, AttestationError> {
+        Ok(ecalls::create_report(self.geteid(), qe_target_info)?)
     }
 }
 
-/// Error returned if the enclave failed to create or process a report
-#[derive(Error, Debug)]
-pub enum ReportError {
-    /// Enclave failed to create report
-    #[error("Enclave failed to create report: {}", .0)]
-    Enclave(#[from] ecalls::CreateReportError),
+/// Attestation process failed
+#[derive(Debug, Error)]
+pub enum AttestationError {
+    /// Failed to get quote
+    #[error("Failed to get quote: {}", .0.as_str())]
+    Quote(sgx_quote3_error_t),
+    /// Failed to get application report
+    #[error("Failed to get application report: {}", .0)]
+    Report(#[from] CreateReportError),
+}
+
+impl From<sgx_quote3_error_t> for AttestationError {
+    fn from(err: sgx_quote3_error_t) -> Self {
+        AttestationError::Quote(err)
+    }
 }
 
 #[cfg(test)]
@@ -164,14 +198,14 @@ mod tests {
             mock.expect_geteid().return_const(enclave_id as sgx_enclave_id_t);
 
             let ctx = ecalls::create_report_context();
-            ctx.expect().with(eq(enclave_id), eq(qe_ti)).return_const(Ok(ecalls::EnclaveReport{
+            ctx.expect().with(eq(enclave_id), eq(qe_ti)).return_const(Ok(ecalls::EnclaveReportResult{
                 enclave_pubkey: key_arr,
-                report
+                enclave_report: report
             }));
 
             let res = SgxEnclave::create_report(&mock, &qe_ti).unwrap();
 
-            assert_eq!(res.report, report)
+            assert_eq!(res.enclave_report, report)
         }
     }
 
