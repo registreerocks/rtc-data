@@ -2,11 +2,11 @@
 use mockall::*;
 use sgx_types::{sgx_quote3_error_t, sgx_report_t, sgx_target_info_t};
 
-#[cfg(test)]
-#[automock]
-#[allow(dead_code)]
+#[cfg_attr(test, automock)]
 mod qe_functions {
     use sgx_types::{sgx_quote3_error_t, sgx_report_t, sgx_target_info_t, uint32_t, uint8_t};
+
+    #[link(name = "sgx_dcap_ql")]
     extern "C" {
         pub fn sgx_qe_get_target_info(
             p_qe_target_info: *mut sgx_target_info_t,
@@ -24,7 +24,7 @@ mod qe_functions {
 use self::mock_qe_functions::*;
 
 #[cfg(not(test))]
-use sgx_types::{sgx_qe_get_quote, sgx_qe_get_quote_size, sgx_qe_get_target_info};
+use self::qe_functions::*;
 
 pub(crate) struct QuotingEnclave;
 
