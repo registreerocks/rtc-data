@@ -23,6 +23,8 @@ extern crate thiserror;
 
 use sgx_types::*;
 
+pub mod actix;
+
 use rtc_uenclave::{RtcEnclave, SgxEnclave};
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
@@ -88,5 +90,6 @@ fn main() {
         }
     }
     println!("[+] say_something success...");
+    actix::actix_server::start_server();
     enclave.destroy();
 }

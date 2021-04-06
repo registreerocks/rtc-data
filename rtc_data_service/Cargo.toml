@@ -3,6 +3,7 @@ name = "rtc_data_service"
 version = "0.0.1"
 authors = ["Registree"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "v1.1.3", features = ["extra_traits"] }
@@ -11,6 +12,10 @@ mockall_double = { version = "0.2.0", features = ["nightly"] }
 thiserror = "1.0.24"
 rsa = "0.3.0"
 base64 = "0.13.0"
+actix-web = "3"
+serde = { version = "1.0.125", features = ["derive"] }
+dotenv = "0.15.0"
+config = "0.11.0"
 rtc_uenclave = { path = "../rtc_uenclave" }
 rtc_types = { path = "../rtc_types" }
 

@@ -1695,7 +1695,10 @@ dependencies = [
 name = "rtc_data_service"
 version = "0.0.1"
 dependencies = [
+ "actix-web",
  "base64",
+ "config",
+ "dotenv",
  "mockall",
  "mockall_double",
  "num-bigint 0.4.0",
@@ -1705,6 +1708,7 @@ dependencies = [
  "rsa",
  "rtc_types",
  "rtc_uenclave",
+ "serde 1.0.125",
  "sgx_types",
  "sgx_urts",
  "simple_asn1 0.5.1",
