@@ -62,4 +62,3 @@ mod models{
         pub status : String
     }
 }
-
