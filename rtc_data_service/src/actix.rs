@@ -2,7 +2,7 @@ mod actix_config{
     use config::ConfigError;
     use serde::Deserialize;
 
-    // Configuration specific to there server
+    // Configuration specific to the server
     #[derive(Deserialize)]
     pub struct ServerConfig {
         pub host : String,
@@ -62,5 +62,4 @@ mod models{
         pub status : String
     }
 }
-
 
