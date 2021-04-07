@@ -41,7 +41,7 @@ pub mod actix_server{
     
         dotenv().ok();
     
-        let config = crate::actix::actix_config::Config::from_env().expect("So");
+        let config = crate::actix::actix_config::Config::from_env().expect("Server config expected");
     
         print!("Starting server at http://{}:{}/", config.server.host, config.server.port);
         HttpServer::new(|| {
