@@ -1663,16 +1663,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rtc_app_backend"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "config",
- "dotenv",
- "serde 1.0.125",
-]
-
-[[package]]
 name = "rtc_data_enclave"
 version = "0.0.1"
 dependencies = [

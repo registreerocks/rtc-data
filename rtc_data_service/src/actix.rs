@@ -17,7 +17,7 @@ mod actix_config{
     }
 
     impl Config {
-        // Loads configuration from the evironment to the Config Struct
+        // Loads configuration from the environment to the Config Struct
         pub fn from_env() -> Result<Self, ConfigError> {
             let mut cfg = config::Config::new();
             cfg.merge(config::Environment::new())?;
@@ -41,7 +41,7 @@ pub mod actix_server{
     
         dotenv().ok();
     
-        let config = crate::actix::actix_config::Config::from_env().unwrap();
+        let config = crate::actix::actix_config::Config::from_env().expect("So");
     
         print!("Starting server at http://{}:{}/", config.server.host, config.server.port);
         HttpServer::new(|| {
