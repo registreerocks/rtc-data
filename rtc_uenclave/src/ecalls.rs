@@ -28,9 +28,9 @@ use self::ffi as ecalls;
 
 /// Report result from an enclave alongside a public key used to encrypt data for that enclave.
 #[derive(Debug, Clone, PartialEq)]
-pub struct EnclaveReport {
+pub struct EnclaveReportResult {
     /// Report containing the hash of the public key in the report data field
-    pub report: sgx_report_t,
+    pub enclave_report: sgx_report_t,
     /// Public key of the enclave the report is for.
     pub enclave_pubkey: PubkeyPkcs8,
 }
@@ -45,7 +45,7 @@ pub(crate) mod inner {
     pub fn create_report(
         eid: sgx_enclave_id_t,
         qe_target_info: &sgx_target_info_t,
-    ) -> Result<EnclaveReport, CreateReportError> {
+    ) -> Result<EnclaveReportResult, CreateReportError> {
         let mut retval = CreateReportResult::Success;
         let mut ret_report: sgx_report_t = sgx_report_t::default();
         let mut ret_pubkey: PubkeyPkcs8 = [0; RSA3072_PKCS8_DER_SIZE];
@@ -66,8 +66,8 @@ pub(crate) mod inner {
         match (sgx_result, retval) {
             (sgx_status_t::SGX_SUCCESS, CreateReportResult::Success) => {
                 // TODO: add check that ensures the out variables are correctly written to by unsafe code?
-                Ok(EnclaveReport {
-                    report: ret_report,
+                Ok(EnclaveReportResult {
+                    enclave_report: ret_report,
                     enclave_pubkey: ret_pubkey,
                 })
             }
@@ -111,7 +111,7 @@ mod test {
         let result = inner::create_report(eid, &qe_target_info);
         assert!(result.is_ok());
         let ok_res = result.unwrap();
-        assert_eq!(ok_res.report, report);
+        assert_eq!(ok_res.enclave_report, report);
         assert_eq!(ok_res.enclave_pubkey, pubkey);
     }
 }

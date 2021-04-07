@@ -14,7 +14,6 @@ thiserror = "1.0.24"
 rsa = "0.3.0"
 base64 = "0.13.0"
 rtc_types = {path = "../rtc_types"}
-mockall = { version = "0.9.1", features = ["nightly"], optional = true }
 
 [dev-dependencies]
 rand = "0.7.3"

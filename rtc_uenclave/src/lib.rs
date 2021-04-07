@@ -6,6 +6,7 @@
 #![warn(missing_docs)]
 extern crate rtc_types;
 extern crate sgx_types;
+#[cfg(not(test))]
 extern crate sgx_urts;
 
 #[cfg(test)]
@@ -13,9 +14,10 @@ extern crate mockall;
 extern crate mockall_double;
 
 mod ecalls;
+mod quote;
 mod rtc_enclave;
 
-pub use ecalls::{CreateReportError, EnclaveReport};
+pub use ecalls::{CreateReportError, EnclaveReportResult};
 pub use rtc_enclave::*;
 
 // TODO: Use newtype construct?

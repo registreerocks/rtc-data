@@ -14,7 +14,6 @@ extern crate num_traits;
 extern crate proptest;
 #[cfg(test)]
 extern crate rand;
-extern crate rsa;
 extern crate rtc_types;
 extern crate rtc_uenclave;
 extern crate sgx_types;
@@ -23,8 +22,6 @@ extern crate simple_asn1;
 extern crate thiserror;
 
 use sgx_types::*;
-
-pub mod attestation;
 
 use rtc_uenclave::{RtcEnclave, SgxEnclave};
 

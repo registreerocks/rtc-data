@@ -10,11 +10,19 @@ services:
       - SGX_SDK=/opt/sgxsdk
       - LD_LIBRARY_PATH=/opt/sgxsdk/sdk_libs
       - SGX_MODE=SW
-
-  # release:
-  #   devices:
-  #     - /dev/sgx/enclave
-  #     - /dev/sgx/provision
+  devhw:
+    build: .
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - ./:/root/rtc-data
+      - cargo-cache:/root/.cargo  # Keep Cargo cache between runs
+    environment:
+      - SGX_SDK=/opt/sgxsdk
+      - SGX_MODE=HW
+    devices:
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
   
   
 volumes:
