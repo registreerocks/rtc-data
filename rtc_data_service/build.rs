@@ -15,9 +15,8 @@ fn main() {
             "cargo:rustc-link-search=native={}/build/data_system/lib",
             cur_dir.parent().unwrap().to_str().unwrap()
         );
-        println!("cargo:rustc-link-lib=static=Enclave_u");
 
-        println!("cargo:rustc-link-lib=dylib=sgx_dcap_ql");
+        println!("cargo:rustc-link-lib=static=Enclave_u");
 
         println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
         println!("cargo:rustc-link-lib=static=sgx_uprotected_fs");
