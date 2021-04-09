@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ureq::AgentBuilder;
 
+#[cfg(test)]
+use mockall::*;
+
 // Types from: https://docs.microsoft.com/en-us/rest/api/attestation/attestation/attestsgxenclave#definitions
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Debug)]
@@ -25,7 +28,7 @@ pub struct AttestSgxEnclaveRequest {
 }
 
 impl AttestSgxEnclaveRequest {
-    pub(crate) fn from_quote(quote_vec: &Vec<u8>, runtime_data: impl AsRef<[u8]>) -> Self {
+    pub(crate) fn from_quote(quote_vec: &Vec<u8>, runtime_data: &[u8]) -> Self {
         AttestSgxEnclaveRequest {
             quote: encode_config(quote_vec, base64::URL_SAFE),
             runtime_data: QuoteRuntimeData {
@@ -38,34 +41,38 @@ impl AttestSgxEnclaveRequest {
 
 pub(crate) struct AzureAttestationClient<T: HttpClient + Sized>(T);
 
-impl<T: HttpClient + Sized> AzureAttestationClient<T> {
-    /// Creates a new AzureAttestationClient using a ureq Agent
-    fn new_ureq() -> AzureAttestationClient<ureq::Agent>
-    where
-        Self: Sized,
-    {
-        let agent = AgentBuilder::new()
-            .timeout_read(Duration::from_secs(5))
-            .timeout_write(Duration::from_secs(5))
-            .build();
-
-        AzureAttestationClient(agent)
-    }
-
-    fn attest(
+impl<T: 'static + HttpClient + Sized> AzureAttestationClient<T> {
+    pub(crate) fn attest(
         &self,
         body: AttestSgxEnclaveRequest,
         instance_url: String,
-    ) -> Result<AttestationResponse, HttpRequestError> {
-        // "https://sharedeus.eus.attest.azure.net"
+    ) -> Result<AttestationResponse, HttpRequestError>
+    where
+        Self: Sized,
+    {
+        // For a list of shared regional providers:
+        // https://docs.microsoft.com/en-us/azure/attestation/basic-concepts#regional-shared-provider
         let uri = format!("{}/attest/SgxEnclave?api-version=2020-10-01", instance_url);
         self.0.post_json(uri, body)
     }
 }
 
+impl AzureAttestationClient<ureq::Agent> {
+    /// Creates a new ureq AzureAttestationClient
+    pub(crate) fn new() -> Self {
+        let agent = AgentBuilder::new()
+            .timeout_read(Duration::from_secs(5))
+            .timeout_write(Duration::from_secs(5))
+            .build();
+
+        Self(agent)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug)]
-pub struct AttestationResponse {
-    token: String,
+#[cfg_attr(test, derive(Default))]
+pub(crate) struct AttestationResponse {
+    pub token: String,
 }
 
 #[cfg(test)]
@@ -80,7 +87,7 @@ mod test {
         let quote_vec: Vec<u8> = vec![0, 0, 1, 0, 32];
         let runtime_data = b"some runtime data";
 
-        let result = AttestSgxEnclaveRequest::from_quote(&quote_vec, &runtime_data);
+        let result = AttestSgxEnclaveRequest::from_quote(&quote_vec, runtime_data);
 
         assert_eq!(
             decode_config(result.quote, base64::URL_SAFE).unwrap(),
@@ -96,10 +103,10 @@ mod test {
     fn attest_works() {
         let quote_vec: Vec<u8> = vec![0, 0, 1, 0, 32];
         let runtime_data = b"some runtime data";
-        let body = AttestSgxEnclaveRequest::from_quote(&quote_vec, &runtime_data);
+        let body = AttestSgxEnclaveRequest::from_quote(&quote_vec, runtime_data);
         // TODO: Refactor this clone. There is probably a better way
         let body_clone = body.clone();
-        let instance_url: &'static str = "https://sharedeus.eus.attest.azure.net";
+        let instance_url: &'static str = "https://example.com";
 
         let mut mock_client = MockHttpClient::new();
         mock_client

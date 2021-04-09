@@ -1,61 +1,87 @@
+use crate::{azure_attestation::AttestSgxEnclaveRequest, http_client::HttpRequestError};
 use ecalls::EnclaveReportResult;
 #[cfg(test)]
 use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
+use mockall_double::double;
 use sgx_types::*;
 use thiserror::Error;
 
 use crate::{ecalls, CreateReportError};
 
-use crate::quote::*;
+#[double]
+use crate::quote::QuotingEnclave;
 
 #[cfg(test)]
 pub use self::MockSgxEnclave as SgxEnclave;
 #[cfg(not(test))]
 pub use sgx_urts::SgxEnclave;
 
-/// Trait for RTC Enclaves
+#[cfg(test)]
+use self::MockAzureAttestationClient as AzureAttestationClient;
+#[cfg(not(test))]
+use crate::azure_attestation::AzureAttestationClient;
+
+const INSTANCE_URL: &'static str = "https://sharedeus.eus.attest.azure.net";
+
+/// Struct for RTC Enclaves
 ///
-/// This trait contains the basic functionality required from all RTC enclaves
-pub trait RtcEnclave {
-    /// Request the enclave to create a report
+/// This struct contains the basic functionality required from all RTC enclaves
+pub struct RtcEnclave {
+    base_enclave: SgxEnclave,
+    quoting_enclave: QuotingEnclave,
+    attestation_client: AzureAttestationClient<ureq::Agent>,
+}
+
+impl RtcEnclave {
+    /// Creates a new RtcEnclave from the given SgxEnclave instance
+    #[cfg(not(test))]
+    pub fn new(base_enclave: SgxEnclave) -> RtcEnclave {
+        RtcEnclave {
+            base_enclave,
+            quoting_enclave: QuotingEnclave::default(),
+            attestation_client: AzureAttestationClient::<ureq::Agent>::new(),
+        }
+    }
+
     fn create_report(
         &self,
         qe_target_info: &sgx_target_info_t,
-    ) -> Result<EnclaveReportResult, AttestationError>;
+    ) -> Result<EnclaveReportResult, AttestationError> {
+        Ok(ecalls::create_report(
+            self.base_enclave.geteid(),
+            qe_target_info,
+        )?)
+    }
 
     /// Performs dcap attestation using Azure Attestation
     ///
     /// Returns the JWT token with the quote and enclave data
-    fn dcap_attestation_azure(&self) -> Result<(), AttestationError> {
-        let qe_ti = QuotingEnclave.get_target_info()?;
+    pub fn dcap_attestation_azure(&self) -> Result<String, AttestationError> {
+        let qe_ti = self.quoting_enclave.get_target_info()?;
         let EnclaveReportResult {
             enclave_report,
             enclave_pubkey,
         } = self.create_report(&qe_ti)?;
 
-        let quote = QuotingEnclave.request_quote(enclave_report)?;
+        let quote = self.quoting_enclave.request_quote(enclave_report)?;
 
-        todo!()
-    }
+        let body = AttestSgxEnclaveRequest::from_quote(&quote, &enclave_pubkey);
 
-    // TODO: Remove this method and call quoting enclave in the dcap_attestation method
-    // directly. This is only here to test functionality in Azure at this stage
-    #[allow(missing_docs)]
-    fn request_quote(&self, report: sgx_report_t) -> Result<Vec<u8>, AttestationError> {
-        Ok(QuotingEnclave.request_quote(report)?)
-    }
-}
+        let response = self
+            .attestation_client
+            .attest(body, INSTANCE_URL.to_string())?;
 
-impl RtcEnclave for SgxEnclave {
-    fn create_report(
-        &self,
-        qe_target_info: &sgx_target_info_t,
-    ) -> Result<EnclaveReportResult, AttestationError> {
-        Ok(ecalls::create_report(self.geteid(), qe_target_info)?)
+        Ok(response.token)
     }
 }
+
+// impl RtcEnclave for SgxEnclave {
+//     // fn get_quoting_enclave(&self) -> QuotingEnclave {
+//     //     QuotingEnclave::default()
+//     // }
+// }
 
 /// Attestation process failed
 #[derive(Debug, Error)]
@@ -66,6 +92,9 @@ pub enum AttestationError {
     /// Failed to get application report
     #[error("Failed to get application report: {}", .0)]
     Report(#[from] CreateReportError),
+    /// Failed to get azure attestation JWT
+    #[error("Failed to get azure attestation JWT: {}", .0)]
+    Azure(#[from] HttpRequestError),
 }
 
 impl From<sgx_quote3_error_t> for AttestationError {
@@ -76,7 +105,6 @@ impl From<sgx_quote3_error_t> for AttestationError {
 
 #[cfg(test)]
 mock! {
-
     #[allow(missing_docs)]
     pub SgxEnclave {
 
@@ -97,8 +125,21 @@ mock! {
 }
 
 #[cfg(test)]
+#[allow(missing_docs)]
+mock! {
+    pub(crate) AzureAttestationClient<T: crate::http_client::HttpClient + Sized> {
+        pub(crate) fn attest(
+            &self,
+            body: AttestSgxEnclaveRequest,
+            instance_url: String,
+        ) -> Result<crate::azure_attestation::AttestationResponse, HttpRequestError>;
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use crate::azure_attestation::AttestationResponse;
     use num_bigint;
     use num_traits::FromPrimitive;
     use proptest::collection::size_range;
@@ -106,6 +147,51 @@ mod tests {
     use rtc_types::RSA3072_PKCS8_DER_SIZE;
     use simple_asn1::{to_der, ASN1Block, BigInt, BigUint, OID};
     use std::convert::TryInto;
+
+    #[test]
+    fn dcap_azure_attestation_works() {
+        let _static_ctx = {
+            let create_report_ctx = ecalls::create_report_context();
+            create_report_ctx
+                .expect()
+                .return_const(Ok(EnclaveReportResult {
+                    enclave_pubkey: [0; RSA3072_PKCS8_DER_SIZE],
+                    enclave_report: sgx_report_t::default(),
+                }));
+            create_report_ctx
+        };
+
+        let sut = {
+            let enclave_id = 3u64;
+            let mut mock_qe = QuotingEnclave::default();
+            mock_qe
+                .expect_get_target_info()
+                .return_const(Ok(sgx_target_info_t::default()));
+            mock_qe
+                .expect_request_quote()
+                .return_const(Ok(vec![1, 2, 3]));
+
+            let mut mock_be = MockSgxEnclave::default();
+            mock_be
+                .expect_geteid()
+                .return_const(enclave_id as sgx_enclave_id_t);
+
+            let mut mock_aa_client = AzureAttestationClient::default();
+            mock_aa_client
+                .expect_attest()
+                .returning(|_, _| Ok(AttestationResponse::default()));
+
+            RtcEnclave {
+                base_enclave: mock_be,
+                quoting_enclave: mock_qe,
+                attestation_client: mock_aa_client,
+            }
+        };
+
+        let result = sut.dcap_attestation_azure();
+
+        assert!(result.is_ok());
+    }
 
     // Using 32 bit integers since the max size of the returned exponent from sgx is 32 bits
     static MIN_EXP: u32 = 0xffffff + 1; // Always have at least 4 bytes for constant size encoding
@@ -197,13 +283,20 @@ mod tests {
             let mut mock = MockSgxEnclave::default();
             mock.expect_geteid().return_const(enclave_id as sgx_enclave_id_t);
 
+            let sut = RtcEnclave{
+                base_enclave: mock,
+                quoting_enclave: QuotingEnclave::default(),
+                attestation_client: AzureAttestationClient::<ureq::Agent>::default(),
+
+            };
+
             let ctx = ecalls::create_report_context();
             ctx.expect().with(eq(enclave_id), eq(qe_ti)).return_const(Ok(ecalls::EnclaveReportResult{
                 enclave_pubkey: key_arr,
                 enclave_report: report
             }));
 
-            let res = SgxEnclave::create_report(&mock, &qe_ti).unwrap();
+            let res = sut.create_report(&qe_ti).unwrap();
 
             assert_eq!(res.enclave_report, report)
         }
