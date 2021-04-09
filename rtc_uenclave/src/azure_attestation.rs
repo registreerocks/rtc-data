@@ -45,7 +45,7 @@ impl<T: 'static + HttpClient + Sized> AzureAttestationClient<T> {
     pub(crate) fn attest(
         &self,
         body: AttestSgxEnclaveRequest,
-        instance_url: String,
+        instance_url: &str,
     ) -> Result<AttestationResponse, HttpRequestError>
     where
         Self: Sized,
@@ -66,6 +66,12 @@ impl AzureAttestationClient<ureq::Agent> {
             .build();
 
         Self(agent)
+    }
+}
+
+impl Default for AzureAttestationClient<ureq::Agent> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -122,7 +128,7 @@ mod test {
 
         let aa_client = AzureAttestationClient(mock_client);
 
-        let result = aa_client.attest(body, instance_url.to_string());
+        let result = aa_client.attest(body, &instance_url.to_string());
 
         assert!(result.is_ok());
     }

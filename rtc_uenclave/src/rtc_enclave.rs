@@ -23,26 +23,71 @@ use self::MockAzureAttestationClient as AzureAttestationClient;
 #[cfg(not(test))]
 use crate::azure_attestation::AzureAttestationClient;
 
-const INSTANCE_URL: &'static str = "https://sharedeus.eus.attest.azure.net";
+/// Configuration for a RtcEnclave
+#[derive(Default, Clone)]
+pub struct EnclaveConfig {
+    /// Path of the `.so` file for this enclave
+    pub lib_path: &'static str,
+
+    /// URL used to request attestation results.
+    ///
+    /// NOTE: The URL should point to a valid provider in the same region as
+    /// the virtual machine
+    ///
+    /// For as list of shared providers per region, see:
+    /// https://docs.microsoft.com/en-us/azure/attestation/basic-concepts#regional-shared-provider
+    pub attestation_provider_url: &'static str,
+
+    /// `true` to run the enclave in debug mode (INSECURE).
+    pub debug: bool,
+}
 
 /// Struct for RTC Enclaves
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
+#[derive(Default)]
 pub struct RtcEnclave {
     base_enclave: SgxEnclave,
     quoting_enclave: QuotingEnclave,
     attestation_client: AzureAttestationClient<ureq::Agent>,
+    config: EnclaveConfig,
 }
 
 impl RtcEnclave {
-    /// Creates a new RtcEnclave from the given SgxEnclave instance
-    #[cfg(not(test))]
-    pub fn new(base_enclave: SgxEnclave) -> RtcEnclave {
-        RtcEnclave {
-            base_enclave,
-            quoting_enclave: QuotingEnclave::default(),
-            attestation_client: AzureAttestationClient::<ureq::Agent>::new(),
-        }
+    /// Creates a new enclave instance with the provided configuration
+    pub fn init(cfg: EnclaveConfig) -> Result<RtcEnclave, sgx_status_t> {
+        Ok(RtcEnclave {
+            attestation_client: Self::init_attestation_client(),
+            quoting_enclave: Self::init_quoting_enclave(),
+            base_enclave: Self::init_base_enclave(&cfg)?,
+            config: cfg,
+        })
+    }
+
+    fn init_attestation_client() -> AzureAttestationClient<ureq::Agent> {
+        AzureAttestationClient::<ureq::Agent>::new()
+    }
+
+    fn init_quoting_enclave() -> QuotingEnclave {
+        QuotingEnclave::default()
+    }
+
+    fn init_base_enclave(config: &EnclaveConfig) -> Result<SgxEnclave, sgx_status_t> {
+        let mut launch_token: sgx_launch_token_t = [0; 1024];
+        let mut launch_token_updated: i32 = 0;
+        // TODO: Confirm the launch parameters
+        let debug = if config.debug { 1 } else { 0 };
+        let mut misc_attr = sgx_misc_attribute_t {
+            secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
+            misc_select: 0,
+        };
+        SgxEnclave::create(
+            &config.lib_path,
+            debug,
+            &mut launch_token,
+            &mut launch_token_updated,
+            &mut misc_attr,
+        )
     }
 
     fn create_report(
@@ -53,6 +98,12 @@ impl RtcEnclave {
             self.base_enclave.geteid(),
             qe_target_info,
         )?)
+    }
+
+    /// `true` if the enclave have been initialized
+    pub fn is_initialized(&self) -> bool {
+        // TODO: Find a better way to check if the enclave session exists
+        self.base_enclave.geteid() > 0
     }
 
     /// Performs dcap attestation using Azure Attestation
@@ -71,17 +122,16 @@ impl RtcEnclave {
 
         let response = self
             .attestation_client
-            .attest(body, INSTANCE_URL.to_string())?;
+            .attest(body, self.config.attestation_provider_url)?;
 
         Ok(response.token)
     }
-}
 
-// impl RtcEnclave for SgxEnclave {
-//     // fn get_quoting_enclave(&self) -> QuotingEnclave {
-//     //     QuotingEnclave::default()
-//     // }
-// }
+    /// Take ownership of self and drop resources
+    pub fn destroy(self) {
+        // Take ownership of self and drop
+    }
+}
 
 /// Attestation process failed
 #[derive(Debug, Error)]
@@ -131,7 +181,7 @@ mock! {
         pub(crate) fn attest(
             &self,
             body: AttestSgxEnclaveRequest,
-            instance_url: String,
+            instance_url: &str,
         ) -> Result<crate::azure_attestation::AttestationResponse, HttpRequestError>;
     }
 }
@@ -185,6 +235,7 @@ mod tests {
                 base_enclave: mock_be,
                 quoting_enclave: mock_qe,
                 attestation_client: mock_aa_client,
+                config: EnclaveConfig::default(),
             }
         };
 
@@ -287,6 +338,7 @@ mod tests {
                 base_enclave: mock,
                 quoting_enclave: QuotingEnclave::default(),
                 attestation_client: AzureAttestationClient::<ureq::Agent>::default(),
+                config: EnclaveConfig::default(),
 
             };
 

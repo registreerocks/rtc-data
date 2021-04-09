@@ -14,6 +14,3 @@ mod rtc_enclave;
 
 pub use ecalls::{CreateReportError, EnclaveReportResult};
 pub use rtc_enclave::*;
-
-// TODO: Use newtype construct?
-pub use rtc_enclave::SgxEnclave;

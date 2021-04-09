@@ -62,7 +62,7 @@ pub async fn server_status(_req: HttpRequest) -> impl Responder {
 #[get("/report")]
 pub async fn get_report(_req: HttpRequest) -> impl Responder {
     let res = EnclaveActor::from_registry()
-        .send(CreateReport::default())
+        .send(RequestAttestation::default())
         .await;
 
     match try { res.ok()?.ok()? } {
