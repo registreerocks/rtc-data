@@ -10,6 +10,7 @@ mod qe_functions {
     // TODO: test if this line is required for correct interaction
     // in the azure environment
     // #[cfg_attr(not(test), link(name = "sgx_dcap_ql"))]
+    #[cfg_attr(test, allow(unused))]
     extern "C" {
         pub fn sgx_qe_get_target_info(
             p_qe_target_info: *mut sgx_target_info_t,
