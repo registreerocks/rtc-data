@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use crate::{azure_attestation::AttestSgxEnclaveRequest, http_client::HttpRequestError};
 use ecalls::EnclaveReportResult;
 #[cfg(test)]
@@ -5,6 +7,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
+use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
 
@@ -24,10 +27,10 @@ use self::MockAzureAttestationClient as AzureAttestationClient;
 use crate::azure_attestation::AzureAttestationClient;
 
 /// Configuration for a RtcEnclave
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Deserialize, Debug)]
 pub struct EnclaveConfig {
     /// Path of the `.so` file for this enclave
-    pub lib_path: &'static str,
+    pub lib_path: String,
 
     /// URL used to request attestation results.
     ///
@@ -36,7 +39,7 @@ pub struct EnclaveConfig {
     ///
     /// For as list of shared providers per region, see:
     /// https://docs.microsoft.com/en-us/azure/attestation/basic-concepts#regional-shared-provider
-    pub attestation_provider_url: &'static str,
+    pub attestation_provider_url: String,
 
     /// `true` to run the enclave in debug mode (INSECURE).
     pub debug: bool,
@@ -45,21 +48,21 @@ pub struct EnclaveConfig {
 /// Struct for RTC Enclaves
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
-#[derive(Default)]
-pub struct RtcEnclave {
+#[derive(Debug)]
+pub struct RtcEnclave<T: Borrow<EnclaveConfig>> {
     base_enclave: SgxEnclave,
     quoting_enclave: QuotingEnclave,
     attestation_client: AzureAttestationClient<ureq::Agent>,
-    config: EnclaveConfig,
+    config: T,
 }
 
-impl RtcEnclave {
+impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
     /// Creates a new enclave instance with the provided configuration
-    pub fn init(cfg: EnclaveConfig) -> Result<RtcEnclave, sgx_status_t> {
+    pub fn init(cfg: T) -> Result<RtcEnclave<T>, sgx_status_t> {
         Ok(RtcEnclave {
             attestation_client: Self::init_attestation_client(),
             quoting_enclave: Self::init_quoting_enclave(),
-            base_enclave: Self::init_base_enclave(&cfg)?,
+            base_enclave: Self::init_base_enclave(cfg.borrow())?,
             config: cfg,
         })
     }
@@ -122,14 +125,21 @@ impl RtcEnclave {
 
         let response = self
             .attestation_client
-            .attest(body, self.config.attestation_provider_url)?;
+            .attest(body, &self.config.borrow().attestation_provider_url)?;
 
         Ok(response.token)
     }
 
     /// Take ownership of self and drop resources
     pub fn destroy(self) {
+        println!("Destroying Enclave");
         // Take ownership of self and drop
+    }
+}
+
+impl<T: Borrow<EnclaveConfig>> Drop for RtcEnclave<T> {
+    fn drop(&mut self) {
+        println!("Dropping Enclave");
     }
 }
 

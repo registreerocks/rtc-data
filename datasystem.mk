@@ -106,6 +106,7 @@ $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files) | $(CUSTOM_BIN_PATH)
 	@cd $(APP_PATH) && SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	cp $(App_Rust_Path)/rtc_data_service $(CUSTOM_BIN_PATH)
+	cp -r $(APP_PATH)/config $(CUSTOM_BIN_PATH)
 
 ######## Enclave Objects ########
 
@@ -128,9 +129,10 @@ enclave:
 
 .PHONY: clean
 clean:
-	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) $(Qpl_Name) $(ENCLAVE_PATH)/*_t.* $(APP_PATH)/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
+	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) $(Qpl_Name) $(ENCLAVE_PATH)/*_t.* $(APP_PATH)/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a $(CUSTOM_BIN_PATH)/*.bin $(CUSTOM_BIN_PATH)/config/*.toml
 	@cd $(ENCLAVE_PATH) && cargo clean
 	@cd $(APP_PATH) && cargo clean
+	@rm -df $(CUSTOM_BIN_PATH)/config
 	@rm -df $(CUSTOM_LIBRARY_PATH)
 	@rm -df $(CUSTOM_BIN_PATH)
 	@rm -df $(CUSTOM_BUILD_PATH)

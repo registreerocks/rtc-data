@@ -1,13 +1,6 @@
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcEnclave};
-use std::cell::Cell;
-
-// TODO: use env vars for this config
-static ENCLAVE_CONFIG: EnclaveConfig = EnclaveConfig {
-    attestation_provider_url: "https://sharedeus.eus.attest.azure.net",
-    debug: true,
-    lib_path: "enclave.signed.so",
-};
+use std::sync::Arc;
 
 #[derive(Default)]
 pub(crate) struct RequestAttestation;
@@ -18,21 +11,36 @@ impl Message for RequestAttestation {
     type Result = RequestAttestationResult;
 }
 
-#[derive(Default)]
-pub(crate) struct EnclaveActor(Cell<RtcEnclave>);
+pub(crate) struct EnclaveActor {
+    enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
+    config: Arc<EnclaveConfig>,
+}
+
+impl EnclaveActor {
+    pub fn new(config: Arc<EnclaveConfig>) -> Self {
+        Self {
+            enclave: None,
+            config,
+        }
+    }
+}
+
+impl Drop for EnclaveActor {
+    fn drop(&mut self) {
+        println!("Dropping enclave actor");
+    }
+}
 
 impl Actor for EnclaveActor {
     type Context = Context<EnclaveActor>;
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
-        self.0.take().destroy();
+        self.enclave.take().map(|enclave| enclave.destroy());
     }
 
     fn started(&mut self, _ctx: &mut Self::Context) {
-        // TODO: Should we use expect here or handle the errors in some
-        // other way?
-        self.0
-            .set(RtcEnclave::init(ENCLAVE_CONFIG.clone()).expect("Enclave to be initialized"));
+        self.enclave
+            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to initialize"));
     }
 }
 
@@ -40,17 +48,18 @@ impl Handler<RequestAttestation> for EnclaveActor {
     type Result = RequestAttestationResult;
 
     fn handle(&mut self, _msg: RequestAttestation, _ctx: &mut Self::Context) -> Self::Result {
-        self.0.get_mut().dcap_attestation_azure()
+        self.enclave
+            .as_ref()
+            .expect("RequestAttestation sent to uninitialized EnclaveActor")
+            .dcap_attestation_azure()
     }
 }
 
 // TODO: Investigate supervisor returning `Err(Cancelled)` (see supervisor docs on Actix)
 impl actix::Supervised for EnclaveActor {
     fn restarting(&mut self, _ctx: &mut Context<EnclaveActor>) {
-        self.0
-            .replace(RtcEnclave::init(ENCLAVE_CONFIG.clone()).expect("enclave to be initialized"))
-            .destroy()
+        self.enclave
+            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to be initialized"))
+            .map(|enc| enc.destroy());
     }
 }
-
-impl SystemService for EnclaveActor {}

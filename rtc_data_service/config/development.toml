@@ -1,0 +1,4 @@
+[data_enclave]
+debug = true
+# TODO: Mock this for dev environment
+attestation_provider_url = "https://example.com"

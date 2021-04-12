@@ -8,11 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ureq::AgentBuilder;
 
-#[cfg(test)]
-use mockall::*;
-
 // Types from: https://docs.microsoft.com/en-us/rest/api/attestation/attestation/attestsgxenclave#definitions
-
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Debug)]
 pub struct QuoteRuntimeData {
     data: String,
@@ -39,6 +35,7 @@ impl AttestSgxEnclaveRequest {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct AzureAttestationClient<T: HttpClient + Sized>(T);
 
 impl<T: 'static + HttpClient + Sized> AzureAttestationClient<T> {

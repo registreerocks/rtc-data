@@ -534,12 +534,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
-
-[[package]]
 name = "downcast"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1468,20 +1462,20 @@ name = "rtc_data_service"
 version = "0.0.1"
 dependencies = [
  "actix",
+ "actix-rt",
  "actix-web",
  "base64",
  "config",
- "dotenv",
  "mockall",
  "mockall_double",
  "num-bigint 0.4.0",
  "num-traits 0.2.14",
  "proptest",
  "rand 0.7.3",
- "rsa",
  "rtc_types",
  "rtc_uenclave",
  "serde 1.0.125",
+ "serde_json",
  "sgx_types",
  "sgx_urts",
  "simple_asn1 0.5.1",

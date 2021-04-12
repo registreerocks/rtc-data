@@ -30,7 +30,7 @@ use self::mock_qe_functions::*;
 #[cfg(not(test))]
 use self::qe_functions::*;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct QuotingEnclave;
 
 #[cfg_attr(test, automock)]
