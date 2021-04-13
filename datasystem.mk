@@ -87,10 +87,10 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ENCLAVE_PATH)/Enclave.edl
 
 ######## Directories ########
 
-lib:
+$(CUSTOM_LIBRARY_PATH):
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 
-bin:
+$(CUSTOM_BIN_PATH):
 	mkdir -p $(CUSTOM_BIN_PATH)
 
 ######## App Objects ########
@@ -99,10 +99,10 @@ $(APP_PATH)/Enclave_u.o: $(Enclave_EDL_Files)
 	@$(CC) $(App_C_Flags) -c $(APP_PATH)/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
-$(App_Enclave_u_Object): $(APP_PATH)/Enclave_u.o | lib
+$(App_Enclave_u_Object): $(APP_PATH)/Enclave_u.o | $(CUSTOM_LIBRARY_PATH)
 	$(AR) rcsD $@ $^
 
-$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files) | bin
+$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files) | $(CUSTOM_BIN_PATH)
 	@cd $(APP_PATH) && SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	cp $(App_Rust_Path)/rtc_data_service $(CUSTOM_BIN_PATH)
@@ -117,7 +117,7 @@ $(RustEnclave_Name): $ enclave $(ENCLAVE_PATH)/Enclave_t.o
 	@$(CXX) $(ENCLAVE_PATH)/Enclave_t.o -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
-$(Signed_RustEnclave_Name): $(RustEnclave_Name) | bin
+$(Signed_RustEnclave_Name): $(RustEnclave_Name) | $(CUSTOM_BIN_PATH)
 	@$(SGX_ENCLAVE_SIGNER) sign -key $(ENCLAVE_PATH)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(ENCLAVE_PATH)/Enclave.config.xml
 	@echo "SIGN =>  $@"
 
