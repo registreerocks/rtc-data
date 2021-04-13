@@ -87,13 +87,10 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ENCLAVE_PATH)/Enclave.edl
 
 ######## Directories ########
 
-build:
-	mkdir -p $(BUILD_PATH) &&	mkdir -p $(CUSTOM_BUILD_PATH)
-
-lib: build
+lib:
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 
-bin: build
+bin:
 	mkdir -p $(CUSTOM_BIN_PATH)
 
 ######## App Objects ########
