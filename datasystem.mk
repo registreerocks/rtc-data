@@ -44,7 +44,7 @@ App_SRC_Files := $(shell find $(APP_PATH)/ -type f -name '*.rs') $(shell find $(
 App_Include_Paths := -I ./$(APP_PATH) -I./include -I$(SGX_SDK)/include -I$(RUST_EDL_PATH)
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
-App_Enclave_u_Object :=$(CUSTOM_LIBRARY_PATH)/libEnclave_u.a
+App_Enclave_u_Object := $(CUSTOM_LIBRARY_PATH)/libEnclave_u.a
 App_Name := $(CUSTOM_BIN_PATH)/rtc_data_service
 
 ######## Enclave Settings ########
