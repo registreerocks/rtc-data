@@ -2,6 +2,7 @@
 //#![warn(missing_docs)]
 #![deny(clippy::mem_forget)]
 #![feature(toowned_clone_into)]
+#![feature(try_blocks)]
 extern crate base64;
 #[cfg(test)]
 extern crate mockall;
@@ -21,72 +22,60 @@ extern crate sgx_types;
 extern crate simple_asn1;
 extern crate thiserror;
 
-use sgx_types::*;
+use crate::models::Status;
+use actix::SystemService;
+use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use dotenv::dotenv;
 
-use rtc_uenclave::{RtcEnclave, SgxEnclave};
+mod config;
+mod enclave_actor;
+use enclave_actor::*;
 
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    dotenv().ok();
 
-extern "C" {
-    fn say_something(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        some_string: *const u8,
-        len: usize,
-    ) -> sgx_status_t;
+    let config = config::Config::from_env().expect("Server config expected");
+
+    println!(
+        "Starting server at http://{}:{}/",
+        config.server.host, config.server.port
+    );
+    HttpServer::new(|| {
+        let app = App::new()
+            .route("/", web::get().to(server_status))
+            .service(get_report);
+
+        app
+    })
+    .bind(format!("{}:{}", config.server.host, config.server.port))?
+    .run()
+    .await
 }
 
-fn init_enclave() -> SgxResult<SgxEnclave> {
-    let mut launch_token: sgx_launch_token_t = [0; 1024];
-    let mut launch_token_updated: i32 = 0;
-    // call sgx_create_enclave to initialize an enclave instance
-    // Debug Support: set 2nd parameter to 1
-    let debug = 1;
-    let mut misc_attr = sgx_misc_attribute_t {
-        secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
-        misc_select: 0,
-    };
-    SgxEnclave::create(
-        ENCLAVE_FILE,
-        debug,
-        &mut launch_token,
-        &mut launch_token_updated,
-        &mut misc_attr,
-    )
+pub async fn server_status(_req: HttpRequest) -> impl Responder {
+    HttpResponse::Ok().json(Status {
+        status: "The server is up".to_string(),
+    })
 }
 
-fn main() {
-    let enclave = match init_enclave() {
-        Ok(r) => {
-            println!("[+] Init Enclave Successful {}!", r.geteid());
-            r
-        }
-        Err(x) => {
-            println!("[-] Init Enclave Failed {}!", x.as_str());
-            return;
-        }
-    };
+#[get("/report")]
+pub async fn get_report(_req: HttpRequest) -> impl Responder {
+    let res = EnclaveActor::from_registry()
+        .send(CreateReport::default())
+        .await;
 
-    println!("{:?}", enclave.create_report(&sgx_target_info_t::default()));
-
-    let input_string = String::from("This is a normal world string passed into Enclave!\n");
-    let mut retval = sgx_status_t::SGX_SUCCESS;
-
-    let result = unsafe {
-        say_something(
-            enclave.geteid(),
-            &mut retval,
-            input_string.as_ptr() as *const u8,
-            input_string.len(),
-        )
-    };
-    match result {
-        sgx_status_t::SGX_SUCCESS => {}
-        _ => {
-            println!("[-] ECALL Enclave Failed {}!", result.as_str());
-            return;
-        }
+    match try { res.ok()?.ok()? } {
+        Some(_) => HttpResponse::Ok().body("hi"),
+        None => HttpResponse::InternalServerError().body("HELP"),
     }
-    println!("[+] say_something success...");
-    enclave.destroy();
+}
+
+mod models {
+    use serde::Serialize;
+
+    #[derive(Serialize)]
+    pub struct Status {
+        pub status: String,
+    }
 }
