@@ -28,7 +28,7 @@ ENCLAVE_PATH := ./rtc_data_enclave
 APP_PATH := ./rtc_data_service
 ######## EDL Settings ########
 
-Enclave_EDL_Files := $(ENCLAVE_PATH)Enclave_t.c $(ENCLAVE_PATH)/Enclave_t.h $(APP_PATH)/Enclave_u.c $(APP_PATH)/Enclave_u.h
+Enclave_EDL_Files := $(ENCLAVE_PATH)/Enclave_t.c $(ENCLAVE_PATH)/Enclave_t.h $(APP_PATH)/Enclave_u.c $(APP_PATH)/Enclave_u.h
 
 ######## APP Settings ########
 
