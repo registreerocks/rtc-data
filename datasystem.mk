@@ -136,3 +136,5 @@ clean:
 	@cd $(APP_PATH) && cargo clean
 	@rm -df $(CUSTOM_LIBRARY_PATH)
 	@rm -df $(CUSTOM_BIN_PATH)
+	@rm -df $(CUSTOM_BUILD_PATH)
+	@rm -df $(BUILD_PATH)
