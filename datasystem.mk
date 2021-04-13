@@ -113,7 +113,7 @@ $(ENCLAVE_PATH)/Enclave_t.o: $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ENCLAVE_PATH)/Enclave_t.c -o $@
 	@echo "CC   <=  $<"
 
-$(RustEnclave_Name): $ enclave $(ENCLAVE_PATH)/Enclave_t.o
+$(RustEnclave_Name): enclave $(ENCLAVE_PATH)/Enclave_t.o
 	@$(CXX) $(ENCLAVE_PATH)/Enclave_t.o -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
