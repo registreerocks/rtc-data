@@ -1,0 +1,9 @@
+[data_enclave]
+debug = false
+# Relative to the binary
+lib_path = "enclave.signed.so"
+attestation_provider_url = "https://sharedeus.eus.attest.azure.net"
+
+[http_server]
+host = "127.0.0.1"
+port = "8080"
