@@ -48,7 +48,7 @@ pub struct EnclaveConfig {
 /// Struct for RTC Enclaves
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
-#[derive(Debug)]
+#[cfg_attr(not(test), derive(Debug))]
 pub struct RtcEnclave<T: Borrow<EnclaveConfig>> {
     base_enclave: SgxEnclave,
     quoting_enclave: QuotingEnclave,
