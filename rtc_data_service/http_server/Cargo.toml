@@ -1,0 +1,18 @@
+[package]
+name = "http_server"
+version = "0.1.0"
+authors = ["Herman <herman@registree.io>"]
+edition = "2018"
+
+[dependencies]
+thiserror = "1.0.24"
+base64 = "0.13.0"
+actix-web = "4.0.0-beta.5"
+actix = "0.11"
+config = "0.11.0"
+actix-rt = "2.2.0"
+rtc_data_service = { path = "../" }
+
+
+[build-dependencies]
+cc = "1.0.67"

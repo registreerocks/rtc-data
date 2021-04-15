@@ -11,7 +11,7 @@ use sgx_types::*;
 #[allow(dead_code)]
 mod ffi {
     use super::*;
-    // #[link(name = "Enclave_u", kind = "static")]
+    #[link(name = "Enclave_u", kind = "dylib")]
     extern "C" {
         pub(super) fn enclave_create_report(
             eid: sgx_enclave_id_t,

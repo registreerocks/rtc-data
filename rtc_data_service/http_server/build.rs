@@ -1,19 +1,24 @@
 use cc;
 use std::env;
+
 fn main() {
+    let test_enabled = env::var_os("CARGO_FEATURE_TEST").is_some();
+
+    let cur_dir = env::current_dir().unwrap();
+
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
-    let profile = env::var("PROFILE").unwrap();
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
+    let profile = env::var("PROFILE").unwrap();
 
     let includes = vec![
         format!("{}/include", sdk_dir),
-        "./codegen".to_string(),
-        "../include".to_string(),
+        "../codegen".to_string(),
+        "../../include".to_string(),
         "/root/sgx-rust/edl".to_string(),
     ];
 
     let mut base_u = cc::Build::new()
-        .file("./codegen/Enclave_u.c")
+        .file("../codegen/Enclave_u.c")
         .no_default_flags(true)
         .includes(includes)
         .flag("-fstack-protector")
@@ -30,25 +35,22 @@ fn main() {
         base_u.flag("-O0").flag("-g").compile("Enclave_u");
     }
 
-    // NOTE: This is for the integration tests. Currently this only works if the
-    // nightly toolchain is installed, and if you test running
-    // `cargo +nightly test -Z extra-link-arg`
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
-    println!("cargo:rustc-link-arg=-lsgx_uprotected_fs");
+    println!("cargo:rustc-link-lib=static=sgx_uprotected_fs");
 
-    println!("cargo:rustc-link-arg=-lsgx_dcap_ql");
+    println!("cargo:rustc-link-lib=dylib=sgx_dcap_ql");
 
     match is_sim.as_ref() {
         "SW" => {
             println!("cargo:rustc-cfg=sgx_mode=\"SW\"");
-            println!("cargo:rustc-link-arg=-lsgx_urts_sim");
-            println!("cargo:rustc-link-arg=-lsgx_uae_service_sim");
+            println!("cargo:rustc-link-lib=dylib=sgx_urts_sim");
+            println!("cargo:rustc-link-lib=dylib=sgx_uae_service_sim");
         }
         _ => {
             // HW by default
             println!("cargo:rustc-cfg=sgx_mode=\"HW\"");
-            println!("cargo:rustc-link-arg=-lsgx_urts");
-            println!("cargo:rustc-link-arg=-lsgx_uae_service");
+            println!("cargo:rustc-link-lib=dylib=sgx_urts");
+            println!("cargo:rustc-link-lib=dylib=sgx_uae_service");
         }
     }
 }

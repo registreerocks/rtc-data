@@ -11,7 +11,7 @@ impl Message for RequestAttestation {
     type Result = RequestAttestationResult;
 }
 
-pub(crate) struct EnclaveActor {
+pub struct EnclaveActor {
     enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
     config: Arc<EnclaveConfig>,
 }
