@@ -210,6 +210,12 @@ mod tests {
 
     #[test]
     fn dcap_azure_attestation_works() {
+        // FIXME: This mock rarely fails with a "No matching expectation found" error,
+        //        due to test thread concurrency.
+        //
+        // We can avoid this with a mutex, or serial_test, but in the meantime,
+        // a simple workaround is to run with --test-threads=1 or RUST_TEST_THREADS=1
+        //
         let _static_ctx = {
             let create_report_ctx = ecalls::create_report_context();
             create_report_ctx
