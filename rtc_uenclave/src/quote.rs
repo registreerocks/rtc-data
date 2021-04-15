@@ -6,7 +6,10 @@ use sgx_types::{sgx_quote3_error_t, sgx_report_t, sgx_target_info_t};
 mod qe_functions {
     use sgx_types::{sgx_quote3_error_t, sgx_report_t, sgx_target_info_t, uint32_t, uint8_t};
 
-    #[link(name = "sgx_dcap_ql")]
+    // This is causing issues with testing dependent packages locally.
+    // TODO: test if this line is required for correct interaction
+    // in the azure environment
+    // #[cfg_attr(not(test), link(name = "sgx_dcap_ql"))]
     extern "C" {
         pub fn sgx_qe_get_target_info(
             p_qe_target_info: *mut sgx_target_info_t,
