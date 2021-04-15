@@ -1,70 +1,65 @@
 use actix::prelude::*;
-use rtc_uenclave::{AttestationError, EnclaveReportResult, RtcEnclave, SgxEnclave};
-use sgx_types::*;
-use std::cell::Cell;
-
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
-
-// TODO: Move functionality to rtc_uenclave
-fn init_enclave() -> SgxResult<SgxEnclave> {
-    let mut launch_token: sgx_launch_token_t = [0; 1024];
-    let mut launch_token_updated: i32 = 0;
-    // call sgx_create_enclave to initialize an enclave instance
-    // Debug Support: set 2nd parameter to 1
-    let debug = 1;
-    let mut misc_attr = sgx_misc_attribute_t {
-        secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
-        misc_select: 0,
-    };
-    SgxEnclave::create(
-        ENCLAVE_FILE,
-        debug,
-        &mut launch_token,
-        &mut launch_token_updated,
-        &mut misc_attr,
-    )
-}
+use rtc_uenclave::{AttestationError, EnclaveConfig, RtcEnclave};
+use std::sync::Arc;
 
 #[derive(Default)]
-pub(crate) struct CreateReport(sgx_target_info_t);
+pub(crate) struct RequestAttestation;
 
-impl Message for CreateReport {
-    type Result = Result<EnclaveReportResult, AttestationError>;
+type RequestAttestationResult = Result<String, AttestationError>;
+
+impl Message for RequestAttestation {
+    type Result = RequestAttestationResult;
 }
 
-#[derive(Default)]
-pub(crate) struct EnclaveActor(Cell<SgxEnclave>);
+pub(crate) struct EnclaveActor {
+    enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
+    config: Arc<EnclaveConfig>,
+}
+
+impl EnclaveActor {
+    pub fn new(config: Arc<EnclaveConfig>) -> Self {
+        Self {
+            enclave: None,
+            config,
+        }
+    }
+}
+
+impl Drop for EnclaveActor {
+    fn drop(&mut self) {
+        println!("Dropping enclave actor");
+    }
+}
 
 impl Actor for EnclaveActor {
     type Context = Context<EnclaveActor>;
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
-        self.0.take().destroy();
+        self.enclave.take().map(|enclave| enclave.destroy());
     }
 
     fn started(&mut self, _ctx: &mut Self::Context) {
-        // TODO: Should we use expect here or handle the errors in some
-        // other way?
-        self.0
-            .set(init_enclave().expect("Enclave to be initialized"));
+        self.enclave
+            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to initialize"));
     }
 }
 
-impl Handler<CreateReport> for EnclaveActor {
-    type Result = Result<EnclaveReportResult, AttestationError>;
+impl Handler<RequestAttestation> for EnclaveActor {
+    type Result = RequestAttestationResult;
 
-    fn handle(&mut self, msg: CreateReport, _ctx: &mut Self::Context) -> Self::Result {
-        self.0.get_mut().create_report(&msg.0)
+    fn handle(&mut self, _msg: RequestAttestation, _ctx: &mut Self::Context) -> Self::Result {
+        self.enclave
+            .as_ref()
+            .expect("RequestAttestation sent to uninitialized EnclaveActor")
+            .dcap_attestation_azure()
     }
 }
 
 // TODO: Investigate supervisor returning `Err(Cancelled)` (see supervisor docs on Actix)
 impl actix::Supervised for EnclaveActor {
     fn restarting(&mut self, _ctx: &mut Context<EnclaveActor>) {
-        self.0
-            .replace(init_enclave().expect("enclave to be initialized"))
-            .destroy()
+        self.enclave
+            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to be initialized"))
+            .map(|enc| enc.destroy());
     }
 }
-
-impl SystemService for EnclaveActor {}

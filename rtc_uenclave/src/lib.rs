@@ -4,21 +4,13 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![feature(toowned_clone_into)]
 #![warn(missing_docs)]
-extern crate rtc_types;
-extern crate sgx_types;
-#[cfg(not(test))]
-extern crate sgx_urts;
+#![warn(rust_2018_idioms)]
 
-#[cfg(test)]
-extern crate mockall;
-extern crate mockall_double;
-
+mod azure_attestation;
 mod ecalls;
+mod http_client;
 mod quote;
 mod rtc_enclave;
 
 pub use ecalls::{CreateReportError, EnclaveReportResult};
 pub use rtc_enclave::*;
-
-// TODO: Use newtype construct?
-pub use rtc_enclave::SgxEnclave;
