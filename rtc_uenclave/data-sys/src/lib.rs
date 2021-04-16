@@ -2,6 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-pub use rtc_types::*;
-pub use sgx_types::*;
+use rtc_types::*;
+use sgx_types::*;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

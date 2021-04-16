@@ -4,17 +4,13 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    let test_enabled = env::var_os("CARGO_FEATURE_TEST").is_some();
-
-    let cur_dir = env::current_dir().unwrap();
-
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
-    let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
     let profile = env::var("PROFILE").unwrap();
+    let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
     let includes = vec![
         format!("{}/include", sdk_dir),
-        "./codegen".to_string(),
+        "../../codegen/data_enclave".to_string(),
         "../include".to_string(),
         "/root/sgx-rust/edl".to_string(),
     ];
@@ -22,7 +18,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
 
     let mut base_u = cc::Build::new()
-        .file("./codegen/Enclave_u.c")
+        .file("../../codegen/data_enclave/Enclave_u.c")
         .no_default_flags(true)
         .includes(&includes)
         .flag("-fstack-protector")
@@ -33,7 +29,7 @@ fn main() {
         .shared_flag(true)
         .to_owned();
 
-    if (profile == "release") {
+    if profile == "release" {
         base_u.flag("-O2").compile("Enclave_u");
     } else {
         base_u.flag("-O0").flag("-g").compile("Enclave_u");
@@ -53,15 +49,22 @@ fn main() {
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .with_codegen_config(CodegenConfig::FUNCTIONS | CodegenConfig::TYPES)
-        .whitelist_recursively(false)
+        .allowlist_recursively(false)
+        .array_pointers_in_arguments(true)
         .allowlist_function("enclave_create_report")
         .clang_args(&inc_args)
         .generate()
-        .expect("Unable to generate bindings");
+        .expect("Unable to generate bindings")
+        .to_string();
+
+    let mut bindings_string = "use mockall::automock;\n".to_owned();
+
+    bindings_string.push_str("#[automock]\npub mod ffi {\nuse super::*;\n");
+    bindings_string.push_str(&bindings);
+    bindings_string.push_str("}\n");
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+    std::fs::write(out_path.join("bindings.rs"), bindings_string.as_bytes())
+        .expect("Failed to save bindings");
 }

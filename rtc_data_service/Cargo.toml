@@ -3,7 +3,6 @@ name = "rtc_data_service"
 version = "0.0.1"
 authors = ["Registree"]
 edition = "2018"
-links = "Enclave_u"
 
 [lib]
 crate-type = ["rlib"]

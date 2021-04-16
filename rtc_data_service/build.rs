@@ -12,24 +12,6 @@ fn main() {
         "/root/sgx-rust/edl".to_string(),
     ];
 
-    let mut base_u = cc::Build::new()
-        .file("./codegen/Enclave_u.c")
-        .no_default_flags(true)
-        .includes(includes)
-        .flag("-fstack-protector")
-        .flag("-fPIC")
-        .flag("-Wno-attributes")
-        .flag("-m64")
-        .flag("-ggdb")
-        .shared_flag(true)
-        .to_owned();
-
-    if (profile == "release") {
-        base_u.flag("-O2").compile("Enclave_u");
-    } else {
-        base_u.flag("-O0").flag("-g").compile("Enclave_u");
-    }
-
     // NOTE: This is for the integration tests. Currently this only works if the
     // nightly toolchain is installed, and if you test running
     // `cargo +nightly test -Z extra-link-arg`
