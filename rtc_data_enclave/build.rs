@@ -14,8 +14,6 @@ fn main() {
     let sgx_rust = String::from("/root/sgx-rust");
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    run_edger8r(&sgx_sdk, &edger8r, &sgx_rust);
-
     cbindgen::Builder::new()
         .with_config(Config {
             export: ExportConfig {
@@ -39,6 +37,8 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("../codegen/data_enclave/bindings.h");
+
+    run_edger8r(&sgx_sdk, &edger8r, &sgx_rust);
 }
 
 fn run_edger8r(sgx_sdk: &str, edger8r: &str, sgx_rust: &str) {
