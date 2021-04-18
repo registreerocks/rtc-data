@@ -1,16 +1,18 @@
 use cc;
 use std::env;
+use std::process::Command;
 fn main() {
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
     let profile = env::var("PROFILE").unwrap();
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
-    let includes = vec![
-        format!("{}/include", sdk_dir),
-        "./codegen".to_string(),
-        "../include".to_string(),
-        "/root/sgx-rust/edl".to_string(),
-    ];
+    // TODO: Automatically build the enclave if anything changed?
+
+    // Build data-enclave file
+    Command::new("make")
+        .args(&["-c", "../rtc_data_enclave"])
+        .status()
+        .unwrap();
 
     // NOTE: This is for the integration tests. Currently this only works if the
     // nightly toolchain is installed, and if you test running

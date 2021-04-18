@@ -9,7 +9,7 @@ SGX_ARCH ?= x64
 # The path to the incubator-teaclave-sgx-sdk code.
 SGX_SDK_RUST ?= $(HOME)/sgx-rust
 
-TOP_DIR := .
+TOP_DIR ?= .
 include $(TOP_DIR)/buildenv.mk
 
 ifeq ($(shell getconf LONG_BIT), 32)

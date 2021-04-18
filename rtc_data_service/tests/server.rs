@@ -17,7 +17,7 @@ async fn data_service_attestation_ok() {
         App::new()
             .data(
                 EnclaveActor::new(Arc::new(EnclaveConfig {
-                    lib_path: "enclave.signed.so".to_string(),
+                    lib_path: "../rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
                     ..Default::default()
                 }))
                 .start(),

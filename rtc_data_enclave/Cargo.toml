@@ -5,7 +5,7 @@ authors = ["Registree"]
 edition = "2018"
 
 [lib]
-name = "rtc_data_enclave"
+name = "enclave"
 crate-type = ["staticlib"]
 
 [build-dependencies]
