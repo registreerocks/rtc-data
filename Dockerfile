@@ -63,6 +63,6 @@ RUN mkdir /root/sgx-rust && \
     curl -L https://github.com/apache/incubator-teaclave-sgx-sdk/archive/v${teaclave_version}.tar.gz | tar -xz -C /root/sgx-rust --strip-components=1
 
 # TODO: remove once all the code supports the later nightly toolchains
-RUN /root/.cargo/bin/rustup toolchain install nightly-2021-04-01 --force
+RUN /root/.cargo/bin/rustup toolchain install nightly-2021-03-25
 
 WORKDIR /root
