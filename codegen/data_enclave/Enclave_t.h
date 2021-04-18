@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 
-sgx_status_t say_something(const uint8_t* some_string, size_t len);
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, uint8_t enclave_pubkey[420], sgx_report_t* p_report);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);

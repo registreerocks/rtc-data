@@ -40,8 +40,6 @@ enclave {
 
     trusted {
         /* define ECALLs here. */
-
-        public sgx_status_t say_something([in, count=len] const uint8_t* some_string, size_t len);
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
                                               [out] uint8_t enclave_pubkey[420],
                                               [out]sgx_report_t* p_report);

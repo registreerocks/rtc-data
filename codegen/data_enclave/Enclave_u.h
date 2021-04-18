@@ -305,7 +305,6 @@ uint8_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fwrite_recovery_node, (vo
 int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_do_file_recovery, (const char* filename, const char* recovery_filename, uint32_t node_size));
 #endif
 
-sgx_status_t say_something(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* some_string, size_t len);
 sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, uint8_t enclave_pubkey[420], sgx_report_t* p_report);
 sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);

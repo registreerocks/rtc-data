@@ -1,12 +1,6 @@
 #include "Enclave_u.h"
 #include <errno.h>
 
-typedef struct ms_say_something_t {
-	sgx_status_t ms_retval;
-	const uint8_t* ms_some_string;
-	size_t ms_len;
-} ms_say_something_t;
-
 typedef struct ms_enclave_create_report_t {
 	CreateReportResult ms_retval;
 	const sgx_target_info_t* ms_p_qe3_target;
@@ -1147,17 +1141,6 @@ static const struct {
 		(void*)Enclave_u_sgxprotectedfs_do_file_recovery,
 	}
 };
-sgx_status_t say_something(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* some_string, size_t len)
-{
-	sgx_status_t status;
-	ms_say_something_t ms;
-	ms.ms_some_string = some_string;
-	ms.ms_len = len;
-	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
-	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
-	return status;
-}
-
 sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, uint8_t enclave_pubkey[420], sgx_report_t* p_report)
 {
 	sgx_status_t status;
@@ -1165,7 +1148,7 @@ sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* ret
 	ms.ms_p_qe3_target = p_qe3_target;
 	ms.ms_enclave_pubkey = (uint8_t*)enclave_pubkey;
 	ms.ms_p_report = p_report;
-	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1177,14 +1160,14 @@ sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_
 	ms.ms_id = id;
 	ms.ms_path = path;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 2, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
 	return status;
 }
 
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
-	status = sgx_ecall(eid, 3, &ocall_table_Enclave, NULL);
+	status = sgx_ecall(eid, 2, &ocall_table_Enclave, NULL);
 	return status;
 }
 
