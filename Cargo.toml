@@ -4,5 +4,4 @@ exclude = ["rtc_data_enclave"]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }
-sgx_tcrypto = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }
 sgx_urts = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }

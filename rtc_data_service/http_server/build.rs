@@ -10,31 +10,6 @@ fn main() {
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
     let profile = env::var("PROFILE").unwrap();
 
-    let includes = vec![
-        format!("{}/include", sdk_dir),
-        "../codegen".to_string(),
-        "../../include".to_string(),
-        "/root/sgx-rust/edl".to_string(),
-    ];
-
-    let mut base_u = cc::Build::new()
-        .file("../codegen/Enclave_u.c")
-        .no_default_flags(true)
-        .includes(includes)
-        .flag("-fstack-protector")
-        .flag("-fPIC")
-        .flag("-Wno-attributes")
-        .flag("-m64")
-        .flag("-ggdb")
-        .shared_flag(true)
-        .to_owned();
-
-    if (profile == "release") {
-        base_u.flag("-O2").compile("Enclave_u");
-    } else {
-        base_u.flag("-O0").flag("-g").compile("Enclave_u");
-    }
-
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
     println!("cargo:rustc-link-lib=static=sgx_uprotected_fs");
 
