@@ -9,28 +9,20 @@
 // TODO: Clean up existing cases causing a flood of warnings for this check, and re-enable
 // #![warn(missing_docs)]
 
-extern crate sgx_types;
+use sgx_types;
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
-extern crate bincode;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_big_array;
-extern crate sgx_crypto_helper;
-extern crate sgx_tcrypto;
-extern crate sgx_tse;
-extern crate simple_asn1;
-#[macro_use]
-extern crate thiserror;
+use bincode;
+use sgx_crypto_helper;
+use sgx_tcrypto;
+use sgx_tse;
+use thiserror;
 
-extern crate zeroize;
+use zeroize;
 
 pub mod rsa3072;
 
-use core::mem::size_of;
 use sgx_tse::rsgx_create_report;
 use sgx_types::*;
 use std::path::Path;
@@ -55,35 +47,6 @@ use zeroize::Zeroize;
 pub const KEYFILE: &str = "prov_key.bin";
 
 pub const PUBKEY_SIZE: usize = SGX_RSA3072_KEY_SIZE + SGX_RSA3072_PUB_EXP_SIZE;
-
-#[no_mangle]
-pub unsafe extern "C" fn say_something(some_string: *const u8, some_len: usize) -> sgx_status_t {
-    let str_slice = unsafe { slice::from_raw_parts(some_string, some_len) };
-    let _ = io::stdout().write(str_slice);
-
-    // A sample &'static string
-    let rust_raw_string = "This is a in-Enclave ";
-    // An array
-    let word: [u8; 4] = [82, 117, 115, 116];
-    // An vector
-    let word_vec: Vec<u8> = vec![32, 115, 116, 114, 105, 110, 103, 33];
-
-    // Construct a string from &'static string
-    let mut hello_string = String::from(rust_raw_string);
-
-    // Iterate on word array
-    for c in word.iter() {
-        hello_string.push(*c as char);
-    }
-
-    // Rust style convertion
-    hello_string += String::from_utf8(word_vec).expect("Invalid UTF-8").as_str();
-
-    // Ocall to normal world for output
-    println!("{}", &hello_string);
-
-    sgx_status_t::SGX_SUCCESS
-}
 
 fn create_report_impl(
     qe_target_info: &sgx_target_info_t,
