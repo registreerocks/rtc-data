@@ -9,6 +9,7 @@ links = "Enclave_u"
 
 [dependencies]
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "v1.1.3", features = ["extra_traits"] }
+sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "v1.1.3" }
 rtc_types = {path = "../../rtc_types"}
 # TODO: Move this to a seperate feature?
 mockall = { version = "0.9.1", features = ["nightly"] }

@@ -4,5 +4,6 @@
 
 use rtc_types::*;
 use sgx_types::*;
+use sgx_urts;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

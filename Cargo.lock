@@ -575,6 +575,7 @@ dependencies = [
  "mockall",
  "rtc_types",
  "sgx_types",
+ "sgx_urts",
 ]
 
 [[package]]
