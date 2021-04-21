@@ -6,6 +6,7 @@ fn main() {
     let profile = env::var("PROFILE").unwrap();
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
+    println!("cargo:rerun-if-env-changed=SGX_MODE");
     // TODO: Automatically build the enclave if anything changed?
 
     // Build data-enclave file
