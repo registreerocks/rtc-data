@@ -9,38 +9,37 @@ enclave {
 
     include "sgx_tprotected_fs.h"
     include "sgx_report.h"
+    include "bindings.h"
 
     // START: Generated with cbingen and modified for edl
-    enum Tag {
-      Success,
-      Sgx,
-      FailedToGetPublicKey,
-      FailedEncodePublicKey
-    };
+    // enum Tag {
+    //   Success,
+    //   Sgx,
+    //   FailedToGetPublicKey,
+    //   FailedEncodePublicKey
+    // };
 
-    struct Sgx_Body {
-      sgx_status_t _0;
-    };
+    // struct Sgx_Body {
+    //   sgx_status_t _0;
+    // };
 
-    struct FailedToGetPublicKey_Body {
-      sgx_status_t _0;
-    };
+    // struct FailedToGetPublicKey_Body {
+    //   sgx_status_t _0;
+    // };
 
-    union Payload {
-      Sgx_Body sgx;
-      FailedToGetPublicKey_Body failed_to_get_public_key;
-    };
+    // union Payload {
+    //   Sgx_Body sgx;
+    //   FailedToGetPublicKey_Body failed_to_get_public_key;
+    // };
 
-    struct CreateReportResult {
-      Payload payload;
-      Tag tag;
-    };
+    // struct CreateReportResult {
+    //   Payload payload;
+    //   Tag tag;
+    // };
     // END
 
     trusted {
         /* define ECALLs here. */
-
-        public sgx_status_t say_something([in, count=len] const uint8_t* some_string, size_t len);
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
                                               [out] uint8_t enclave_pubkey[420],
                                               [out]sgx_report_t* p_report);

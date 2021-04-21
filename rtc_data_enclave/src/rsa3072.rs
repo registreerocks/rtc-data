@@ -7,6 +7,9 @@ use simple_asn1::{to_der, ASN1Block, ASN1EncodeErr, BigInt, BigUint, OID};
 use std::prelude::v1::*;
 use std::vec::Vec;
 
+use serde_big_array::big_array;
+use serde_derive::{Deserialize, Serialize};
+
 big_array! {
     BigArray;
 }

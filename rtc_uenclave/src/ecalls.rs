@@ -2,29 +2,14 @@
 use mockall::automock;
 #[cfg(test)]
 use mockall::predicate::*;
-use mockall_double::double;
 
 use rtc_types::*;
 use sgx_types::*;
 
-#[cfg_attr(test, automock)]
-#[allow(dead_code)]
-mod ffi {
-    use super::*;
-    // #[link(name = "Enclave_u", kind = "static")]
-    extern "C" {
-        pub(super) fn enclave_create_report(
-            eid: sgx_enclave_id_t,
-            retval: *mut CreateReportResult,
-            p_qe3_target: *const sgx_target_info_t,
-            enclave_pubkey: *mut PubkeyPkcs8,
-            p_report: *mut sgx_report_t,
-        ) -> sgx_status_t;
-    }
-}
-
-#[double]
-use self::ffi as ecalls;
+#[cfg(not(test))]
+use data_sys::ffi as ecalls;
+#[cfg(test)]
+use data_sys::mock_ffi as ecalls;
 
 /// Report result from an enclave alongside a public key used to encrypt data for that enclave.
 #[derive(Debug, Clone, PartialEq)]

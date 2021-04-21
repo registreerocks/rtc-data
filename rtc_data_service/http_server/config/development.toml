@@ -1,0 +1,6 @@
+[data_enclave]
+debug = true
+# TODO: Mock this for dev environment
+attestation_provider_url = "https://example.com"
+
+lib_path = "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
