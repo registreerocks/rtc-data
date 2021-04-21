@@ -1,3 +1,5 @@
+#syntax=docker/dockerfile:1.2
+
 # Base with APT packages installed
 FROM ubuntu:18.04 AS apt-base
 
@@ -65,4 +67,45 @@ RUN mkdir /root/sgx-rust && \
 # TODO: remove once all the code supports the later nightly toolchains
 RUN /root/.cargo/bin/rustup toolchain install nightly-2021-03-25
 
+FROM teaclave-base AS builder
+ENV SGX_SDK=/opt/sgxsdk
 WORKDIR /root
+
+COPY --from=teaclave-base /root/sgx-rust/ ./sgx-rust/
+COPY --from=teaclave-base /root/.cargo/ ./.cargo/
+
+WORKDIR /root/rtc-data
+ARG SGX_MODE=HW
+
+COPY . .
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    --mount=type=cache,sharing=private,target=/root/rtc-data/target \
+    --mount=type=cache,sharing=private,target=/root/rtc-data/rtc_data_enclave/target \
+    ./runbuild.sh
+
+RUN --mount=type=cache,sharing=private,target=/root/rtc-data/target \
+    mkdir /root/out && \
+    cp target/release/http_server /root/out/http_server
+
+FROM teaclave-base AS runsw
+
+WORKDIR /root/rtc-data
+COPY --from=builder /root/rtc-data/rtc_data_service/http_server/config ./config
+COPY --from=builder /root/out/http_server ./http_server
+COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./enclave.signed.so
+
+EXPOSE 8080
+
+CMD ["./http_server"]
+
+FROM apt-base AS runhw
+
+WORKDIR /root/rtc-data
+COPY --from=builder /root/rtc-data/rtc_data_service/http_server/config ./config
+COPY --from=builder /root/out/http_server ./http_server
+COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./enclave.signed.so
+
+EXPOSE 8080
+
+CMD ["./http_server"]
