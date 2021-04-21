@@ -1,0 +1,4 @@
+[unstable]
+# Docs: https://doc.rust-lang.org/cargo/reference/unstable.html#extra-link-arg
+# Used by rtc_data_service/build.rs
+extra-link-arg = true
