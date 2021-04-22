@@ -7,11 +7,14 @@ edition = "2018"
 [dependencies]
 thiserror = "1.0.24"
 base64 = "0.13.0"
-actix-web = "4.0.0-beta.5"
+actix-web = { version = "4.0.0-beta.6", features = ["rustls"] }
 actix = "0.11"
 config = "0.11.0"
 actix-rt = "2.2.0"
 rtc_data_service = { path = "../" }
+rustls = "0.19"
+rustls-pemfile = "0.2"
+webpki = "0.21.0"
 
 
 [build-dependencies]

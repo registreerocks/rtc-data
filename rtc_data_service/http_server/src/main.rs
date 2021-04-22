@@ -3,11 +3,16 @@
 #![feature(try_blocks)]
 #![warn(rust_2018_idioms)]
 
+mod tls;
+
 use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::enclave_actor::*;
 use rtc_data_service::handlers::*;
 use rtc_data_service::merge_error;
+use rustls::{AllowAnyAuthenticatedClient, NoClientAuth, RootCertStore, ServerConfig};
 
+use std::fs::File;
+use std::io::BufReader;
 use std::sync::Arc;
 
 use actix::{Arbiter, Supervisor};
@@ -37,7 +42,7 @@ async fn main() -> std::io::Result<()> {
         config.http_server.host, config.http_server.port
     );
 
-    HttpServer::new(move || {
+    let server = HttpServer::new(move || {
         let app = App::new()
             .app_data(enclave_addr.clone())
             .route("/", web::get().to(server_status))
@@ -48,7 +53,25 @@ async fn main() -> std::io::Result<()> {
     .bind(format!(
         "{}:{}",
         config.http_server.host, config.http_server.port
-    ))?
-    .run()
-    .await
+    ))
+    .expect("Failed to bind HTTP server");
+
+    if config.enable_tls {
+        println!(
+            "Starting HTTPS server at https://{}:{}/",
+            config.http_server.host, config.http_server.port_https
+        );
+        server
+            .bind_rustls(
+                format!(
+                    "{}:{}",
+                    config.http_server.host, config.http_server.port_https,
+                ),
+                tls::get_tls_server_config(config.tls).expect("Valid TLS config"),
+            )?
+            .run()
+            .await
+    } else {
+        server.run().await
+    }
 }

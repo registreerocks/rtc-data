@@ -98,6 +98,9 @@ target
 !.vscode/extensions.json
 *.code-workspace
 
+### LOCAL CONFIG ###
+local/
+
 # End of https://www.toptal.com/developers/gitignore/api/rust,emacs,vscode
 
 # https://insta.rs/
