@@ -7,6 +7,7 @@ use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::enclave_actor::*;
 use rtc_data_service::handlers::*;
 use rtc_data_service::merge_error;
+use web::service;
 
 use std::sync::Arc;
 
@@ -41,7 +42,8 @@ async fn main() -> std::io::Result<()> {
         let app = App::new()
             .app_data(enclave_addr.clone())
             .route("/", web::get().to(server_status))
-            .service(data_enclave_attestation);
+            .service(data_enclave_attestation)
+            .service(upload_encrypted_file);
 
         app
     })
