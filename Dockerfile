@@ -85,8 +85,8 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
-    --mount=type=cache,sharing=private,target=/root/rtc-data/target \
-    --mount=type=cache,sharing=private,target=/root/rtc-data/rtc_data_enclave/target \
+    --mount=type=cache,target=/root/rtc-data/target \
+    --mount=type=cache,target=/root/rtc-data/rtc_data_enclave/target \
     ./runbuild.sh && \
     mkdir /root/out && \
     cp target/release/http_server /root/out/http_server
