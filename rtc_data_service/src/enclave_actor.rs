@@ -1,24 +1,23 @@
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcEnclave};
 use std::sync::Arc;
-use std::io::Error;
 
 #[derive(Default)]
 pub(crate) struct RequestAttestation;
 
 #[derive(Message)]
-#[rtype(result = "String")]
+#[rtype(result = "UploadResult")]
 pub struct DataPayload;
 
 type RequestAttestationResult = Result<String, AttestationError>;
-// type UploadResponse = String;
+type UploadResult = String;
 
 impl Message for RequestAttestation {
     type Result = RequestAttestationResult;
 }
 
 // impl Message for DataPayload {
-//     type Result = UploadResponse;
+//     type Result = UploadResult;
 // }
 
 pub struct EnclaveActor {
@@ -71,7 +70,7 @@ impl Handler<DataPayload> for EnclaveActor {
     fn handle(&mut self, msg: DataPayload, ctx: &mut Self::Context) -> Self::Result {
         // TODO: Handle file upload
         println!("Inside DataPayload Handler");
-        "Successfully Uploaded Encrypted file".to_string()
+        "Successfully Uploaded Encrypted file".to_string()    
     }
 }
 
