@@ -99,3 +99,6 @@ target
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,emacs,vscode
+
+# https://insta.rs/
+*.snap.new
