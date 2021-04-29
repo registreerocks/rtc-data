@@ -1,6 +1,6 @@
-use crate::key_management::Error as CryptoError;
-use crate::key_management::SodaBoxCrypto as Crypto;
-use crate::key_management::{EncryptedMessage, RtcCrypto};
+use crate::crypto::Error as CryptoError;
+use crate::crypto::SodaBoxCrypto as Crypto;
+use crate::crypto::{EncryptedMessage, RtcCrypto};
 use rand::prelude::*;
 use secrecy::{ExposeSecret, Secret};
 use sgx_tseal::SgxSealedData;
