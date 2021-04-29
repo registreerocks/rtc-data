@@ -40,3 +40,4 @@ rand = { git = "https://github.com/mesalock-linux/rand-sgx", tag = "v0.7.3_sgx1.
 zeroize = "1.2.0"
 # Using the git version here for no-std support
 sodiumoxide = { git = "https://github.com/sodiumoxide/sodiumoxide.git", default-features = false }
+ring = { version = "0.17.0-alpha.8", default-features = false }

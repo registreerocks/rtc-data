@@ -1,10 +1,8 @@
 use crate::key_management::get_or_create_report_keypair;
-use rand::prelude::*;
+use rand::{prelude::*, Error};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
-use sodiumoxide::crypto::box_;
-use sodiumoxide::crypto::secretbox;
-use std::prelude::v1::*;
+use std::{prelude::v1::*, sync::SgxMutex};
 use uuid::Uuid;
 
 pub struct UploadPayload {
@@ -26,7 +24,6 @@ pub enum DataError {
     Sealing(sgx_status_t),
     Unknown,
 }
-
 impl From<()> for DataError {
     fn from(err: ()) -> Self {
         DataError::Unknown
@@ -47,12 +44,10 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
         Some(_) => return Err(DataError::Validation),
     };
 
-    let ephemeral_key = match secretbox::Key::from_slice(&plaintext[..32]) {
-        Some(key) => key,
+    let (client_payload, data_uuid) = match generate_client_payload(&plaintext[..32]) {
+        Some(res) => res,
         None => return Err(DataError::Validation),
     };
-
-    let (client_payload, data_uuid) = generate_client_payload(ephemeral_key);
     let sealed_data = seal_data(&plaintext).map_err(|err| DataError::Sealing(err))?;
 
     return Ok(SealedResult {
@@ -61,22 +56,73 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
     });
 }
 
-fn generate_client_payload(key: secretbox::Key) -> (Box<[u8]>, Uuid) {
+// TODO: Use feature flags to toggle use of different crypto libs
+fn generate_client_payload_ring(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
+    use ring::aead;
+
+    let key = match aead::UnboundKey::new(&aead::CHACHA20_POLY1305, key_bytes) {
+        Ok(k) => aead::LessSafeKey::new(k),
+        Err(_) => return None,
+    };
     let mut rng = rand::thread_rng();
-    let uuid = Uuid::new_v4();
-    let mut pass = [0u8; 24];
-    match rng.try_fill(&mut pass) {
-        Ok(_) => {
+    // TODO: use static SecureRandom from ring instead
+    match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
+        Ok((mut pass, uuid)) => {
+            let mut in_out = [
+                &mut uuid.as_bytes().clone() as &mut [u8],
+                &mut pass as &mut [u8],
+            ]
+            .concat();
+
+            let mut nonce = [0u8; 12];
+
+            if rng.try_fill(&mut nonce).is_err() {
+                return None;
+            }
+
+            key.seal_in_place_append_tag(
+                aead::Nonce::assume_unique_for_key(nonce),
+                aead::Aad::empty(),
+                &mut in_out,
+            );
+            Some((in_out.into_boxed_slice(), uuid))
+        }
+        Err(_) => None,
+    }
+}
+
+fn generate_client_payload(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
+    use sodiumoxide::crypto::box_;
+    use sodiumoxide::crypto::secretbox;
+
+    let key = match secretbox::Key::from_slice(key_bytes) {
+        Some(key) => key,
+        None => return None,
+    };
+
+    let mut rng = rand::thread_rng();
+    match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
+        Ok((mut pass, uuid)) => {
             let nonce = secretbox::gen_nonce();
             let ciphertext = secretbox::seal(
                 &[uuid.as_bytes() as &[u8], &pass as &[u8]].concat(),
                 &nonce,
                 &key,
             );
-            (ciphertext.into_boxed_slice(), uuid)
+            Some((ciphertext.into_boxed_slice(), uuid))
         }
-        Err(err) => todo!(),
+        Err(_) => None,
     }
+}
+
+fn generate_pass_and_uuid<TErr, F>(mut rand_fn: F) -> Result<([u8; 24], Uuid), TErr>
+where
+    F: FnMut(&mut [u8; 24]) -> Result<(), TErr>,
+{
+    let mut pass = [0u8; 24];
+    rand_fn(&mut pass)?;
+
+    Ok((pass, Uuid::new_v4()))
 }
 
 fn seal_data(data: &[u8]) -> Result<Box<[u8]>, sgx_status_t> {
