@@ -4,7 +4,7 @@
 typedef struct ms_enclave_create_report_t {
 	CreateReportResult ms_retval;
 	const sgx_target_info_t* ms_p_qe3_target;
-	uint8_t* ms_enclave_pubkey;
+	EnclaveHeldData* ms_enclave_data;
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
@@ -1141,12 +1141,12 @@ static const struct {
 		(void*)Enclave_u_sgxprotectedfs_do_file_recovery,
 	}
 };
-sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, uint8_t enclave_pubkey[420], sgx_report_t* p_report)
+sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData* enclave_data, sgx_report_t* p_report)
 {
 	sgx_status_t status;
 	ms_enclave_create_report_t ms;
 	ms.ms_p_qe3_target = p_qe3_target;
-	ms.ms_enclave_pubkey = (uint8_t*)enclave_pubkey;
+	ms.ms_enclave_data = enclave_data;
 	ms.ms_p_report = p_report;
 	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;

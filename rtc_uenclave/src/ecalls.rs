@@ -17,7 +17,7 @@ pub struct EnclaveReportResult {
     /// Report containing the hash of the public key in the report data field
     pub enclave_report: sgx_report_t,
     /// Public key of the enclave the report is for.
-    pub enclave_pubkey: PubkeyPkcs8,
+    pub enclave_held_data: EnclaveHeldData,
 }
 
 /// Error returned when the enclave fails to create a report
@@ -33,7 +33,7 @@ pub(crate) mod inner {
     ) -> Result<EnclaveReportResult, CreateReportError> {
         let mut retval = CreateReportResult::Success;
         let mut ret_report: sgx_report_t = sgx_report_t::default();
-        let mut ret_pubkey: PubkeyPkcs8 = [0; RSA3072_PKCS8_DER_SIZE];
+        let mut ret_enclave_data: EnclaveHeldData = [0; ENCLAVE_HELD_DATA_SIZE];
 
         // Safety
         // SGX will return the correct type and the mutable values will be written to
@@ -43,7 +43,7 @@ pub(crate) mod inner {
                 eid,
                 &mut retval,
                 qe_target_info,
-                &mut ret_pubkey,
+                &mut ret_enclave_data,
                 &mut ret_report,
             )
         };
@@ -53,7 +53,7 @@ pub(crate) mod inner {
                 // TODO: add check that ensures the out variables are correctly written to by unsafe code?
                 Ok(EnclaveReportResult {
                     enclave_report: ret_report,
-                    enclave_pubkey: ret_pubkey,
+                    enclave_held_data: ret_enclave_data,
                 })
             }
             (sgx_status_t::SGX_SUCCESS, err) => Err(CreateReportError::RtcEnclave(err)),
@@ -77,7 +77,7 @@ mod test {
     fn it_works() {
         let eid = 12u64;
         let qe_target_info = sgx_target_info_t::default();
-        let pubkey = [2; RSA3072_PKCS8_DER_SIZE];
+        let ehd = [2; ENCLAVE_HELD_DATA_SIZE];
         let report = sgx_report_t::default();
 
         let ffi_ctx = ecalls::enclave_create_report_context();
@@ -87,7 +87,7 @@ mod test {
             .returning(move |_, ret, _, key, rep| {
                 unsafe {
                     *rep = report;
-                    (*key).copy_from_slice(&pubkey);
+                    (*key).copy_from_slice(&ehd);
                     *ret = CreateReportResult::Success;
                 }
                 sgx_status_t::SGX_SUCCESS
@@ -97,6 +97,6 @@ mod test {
         assert!(result.is_ok());
         let ok_res = result.unwrap();
         assert_eq!(ok_res.enclave_report, report);
-        assert_eq!(ok_res.enclave_pubkey, pubkey);
+        assert_eq!(ok_res.enclave_held_data, ehd);
     }
 }

@@ -32,6 +32,9 @@ fn main() {
         .with_std_types(false)
         .with_language(cbindgen::Language::C)
         .with_no_includes()
+        .with_parse_deps(true)
+        .with_parse_include(&["rtc_types"])
+        .with_parse_extra_bindings(&["rtc_types"])
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("../codegen/data_enclave/bindings.h");

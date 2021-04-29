@@ -30,7 +30,7 @@
 typedef struct ms_enclave_create_report_t {
 	CreateReportResult ms_retval;
 	const sgx_target_info_t* ms_p_qe3_target;
-	uint8_t* ms_enclave_pubkey;
+	EnclaveHeldData* ms_enclave_data;
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
@@ -541,15 +541,15 @@ static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 	const sgx_target_info_t* _tmp_p_qe3_target = ms->ms_p_qe3_target;
 	size_t _len_p_qe3_target = sizeof(sgx_target_info_t);
 	sgx_target_info_t* _in_p_qe3_target = NULL;
-	uint8_t* _tmp_enclave_pubkey = ms->ms_enclave_pubkey;
-	size_t _len_enclave_pubkey = 420 * sizeof(uint8_t);
-	uint8_t* _in_enclave_pubkey = NULL;
+	EnclaveHeldData* _tmp_enclave_data = ms->ms_enclave_data;
+	size_t _len_enclave_data = sizeof(EnclaveHeldData);
+	EnclaveHeldData* _in_enclave_data = NULL;
 	sgx_report_t* _tmp_p_report = ms->ms_p_report;
 	size_t _len_p_report = sizeof(sgx_report_t);
 	sgx_report_t* _in_p_report = NULL;
 
 	CHECK_UNIQUE_POINTER(_tmp_p_qe3_target, _len_p_qe3_target);
-	CHECK_UNIQUE_POINTER(_tmp_enclave_pubkey, _len_enclave_pubkey);
+	CHECK_UNIQUE_POINTER(_tmp_enclave_data, _len_enclave_data);
 	CHECK_UNIQUE_POINTER(_tmp_p_report, _len_p_report);
 
 	//
@@ -570,18 +570,13 @@ static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 		}
 
 	}
-	if (_tmp_enclave_pubkey != NULL && _len_enclave_pubkey != 0) {
-		if ( _len_enclave_pubkey % sizeof(*_tmp_enclave_pubkey) != 0)
-		{
-			status = SGX_ERROR_INVALID_PARAMETER;
-			goto err;
-		}
-		if ((_in_enclave_pubkey = (uint8_t*)malloc(_len_enclave_pubkey)) == NULL) {
+	if (_tmp_enclave_data != NULL && _len_enclave_data != 0) {
+		if ((_in_enclave_data = (EnclaveHeldData*)malloc(_len_enclave_data)) == NULL) {
 			status = SGX_ERROR_OUT_OF_MEMORY;
 			goto err;
 		}
 
-		memset((void*)_in_enclave_pubkey, 0, _len_enclave_pubkey);
+		memset((void*)_in_enclave_data, 0, _len_enclave_data);
 	}
 	if (_tmp_p_report != NULL && _len_p_report != 0) {
 		if ((_in_p_report = (sgx_report_t*)malloc(_len_p_report)) == NULL) {
@@ -592,9 +587,9 @@ static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 		memset((void*)_in_p_report, 0, _len_p_report);
 	}
 
-	ms->ms_retval = enclave_create_report((const sgx_target_info_t*)_in_p_qe3_target, _in_enclave_pubkey, _in_p_report);
-	if (_in_enclave_pubkey) {
-		if (memcpy_s(_tmp_enclave_pubkey, _len_enclave_pubkey, _in_enclave_pubkey, _len_enclave_pubkey)) {
+	ms->ms_retval = enclave_create_report((const sgx_target_info_t*)_in_p_qe3_target, _in_enclave_data, _in_p_report);
+	if (_in_enclave_data) {
+		if (memcpy_s(_tmp_enclave_data, _len_enclave_data, _in_enclave_data, _len_enclave_data)) {
 			status = SGX_ERROR_UNEXPECTED;
 			goto err;
 		}
@@ -608,7 +603,7 @@ static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 
 err:
 	if (_in_p_qe3_target) free(_in_p_qe3_target);
-	if (_in_enclave_pubkey) free(_in_enclave_pubkey);
+	if (_in_enclave_data) free(_in_enclave_data);
 	if (_in_p_report) free(_in_p_report);
 	return status;
 }

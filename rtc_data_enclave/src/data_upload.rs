@@ -1,4 +1,3 @@
-use crate::key_management::get_or_create_report_keypair;
 use rand::{prelude::*, Error};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
@@ -163,7 +162,6 @@ fn validate_data(data: &Box<[u8]>) -> Option<()> {
 }
 
 fn decrypt_data(cipertext: Box<[u8]>) -> Result<Box<[u8]>, ()> {
-    let keypair = get_or_create_report_keypair();
-
+    // Use decrypt func in the key_management module
     todo!();
 }

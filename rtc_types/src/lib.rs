@@ -1,7 +1,14 @@
 // TODO: Document
 
+#![cfg_attr(feature = "teaclave_sgx", no_std)]
+#[cfg(feature = "teaclave_sgx")]
+extern crate sgx_tstd as std;
 extern crate sgx_types;
+#[cfg(not(feature = "teaclave_sgx"))]
 extern crate thiserror;
+#[cfg(feature = "teaclave_sgx")]
+extern crate thiserror_sgx as thiserror;
+
 use std::fmt::Display;
 use thiserror::Error;
 
@@ -20,7 +27,20 @@ pub enum CreateReportResult {
     FailedEncodePublicKey,
 }
 
+impl From<sgx_status_t> for CreateReportResult {
+    fn from(err: sgx_status_t) -> Self {
+        CreateReportResult::Sgx(err)
+    }
+}
+
 pub const RSA3072_PKCS8_DER_SIZE: usize = 420;
+
+pub const ENCLAVE_HELD_PUB_KEY_SIZE: usize = 32;
+
+/// Size of all the enclave held data shared and validated during attestation
+pub const ENCLAVE_HELD_DATA_SIZE: usize = ENCLAVE_HELD_PUB_KEY_SIZE;
+
+pub type EnclaveHeldData = [u8; ENCLAVE_HELD_DATA_SIZE];
 
 pub type PubkeyPkcs8 = [u8; RSA3072_PKCS8_DER_SIZE];
 

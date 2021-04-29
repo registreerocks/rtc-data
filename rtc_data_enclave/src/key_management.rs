@@ -1,58 +1,66 @@
-use crate::rsa3072::{PublicKeyEncoding, Rsa3072KeyPair, RSA3072_PKCS8_DER_SIZE};
+use rand::{prelude::*, Error};
+use secrecy::{ExposeSecret, Secret};
 use sgx_tse::{rsgx_get_key, rsgx_self_report};
 use sgx_types::*;
+use sodalite;
 use std::io;
 use std::path::Path;
 use std::prelude::v1::*;
 use std::sgxfs::SgxFile;
 use std::untrusted::path::PathEx;
 use thiserror::Error;
+use zeroize::Zeroize;
 
-use sgx_crypto_helper::RsaKeyPair;
+pub fn decrypt_upload_data(
+    ciphertext: &[u8],
+    uploader_pk: &sodalite::BoxPublicKey,
+) -> Result<Box<[u8]>, ()> {
+    let mut rng = rand::thread_rng();
+    let mut nonce = [0_u8; 24];
+    rng.try_fill(&mut nonce).map_err(|_| ())?;
 
-pub const KEYFILE: &str = "prov_key.bin";
+    let (_, our_sk) = get_upload_keypair();
 
-pub fn get_or_create_report_keypair() -> Result<Rsa3072KeyPair, GetKeypairError> {
-    let file_key = get_file_key();
+    let mut message = vec![0_u8; ciphertext.len()];
 
-    let path = Path::new(KEYFILE);
-    let key: Rsa3072KeyPair = if path.exists() {
-        match SgxFile::open_ex(path, &file_key) {
-            // TODO bad error handling, clean up
-            Ok(f) => bincode::deserialize_from(f)?,
-            Err(x) => return Err(x.into()),
-        }
-    } else {
-        match SgxFile::create_ex(path, &file_key) {
-            Ok(f) => {
-                // TODO bad error handling here, clean up
-                let keypair = Rsa3072KeyPair::new()?;
-                bincode::serialize_into(f, &keypair)?;
-                keypair
-            }
-            Err(x) => return Err(x.into()),
-        }
-    };
-    Ok(key)
-}
-
-#[derive(Error, Debug)]
-pub enum GetKeypairError {
-    #[error("Failed to create or open key file: {}", .0)]
-    IO(#[from] io::Error),
-    #[error("Failed to serialize or deserialize key file: {}", .0)]
-    Serialize(#[from] bincode::Error),
-    #[error("Failed to generate keypair: {}", .0.as_str())]
-    Sgx(sgx_status_t),
-}
-
-impl From<sgx_status_t> for GetKeypairError {
-    fn from(err: sgx_status_t) -> Self {
-        GetKeypairError::Sgx(err)
+    match sodalite::box_open(
+        &mut message,
+        ciphertext,
+        &nonce,
+        uploader_pk,
+        our_sk.expose_secret(),
+    ) {
+        Ok(_) => Ok(message.into_boxed_slice()),
+        // TODO: return compound error type
+        Err(_) => Err(()),
     }
 }
 
-fn get_file_key() -> sgx_key_128bit_t {
+pub fn get_upload_pubkey() -> sodalite::BoxPublicKey {
+    get_upload_keypair().0
+}
+
+fn get_upload_keypair() -> (sodalite::BoxPublicKey, Secret<sodalite::BoxSecretKey>) {
+    let file_key = get_file_key();
+    let mut pub_key = [0_u8; 32];
+    let mut priv_key = [0_u8; 32];
+    let mut seed = [0_u8; 32];
+    let (left, right) = seed.split_at_mut(16);
+
+    // This should never panic since the file_key is size 16
+    left.copy_from_slice(file_key.expose_secret());
+    right.copy_from_slice(file_key.expose_secret());
+
+    // TODO: Create a PR to make the requirement for seed broader if possible
+    sodalite::box_keypair_seed(&mut pub_key, &mut priv_key, &seed);
+
+    // Zero copies from exposed secret
+    seed.zeroize();
+
+    (pub_key, Secret::new(priv_key))
+}
+
+fn get_file_key() -> Secret<sgx_key_128bit_t> {
     // Retrieve file key from some kind of persistent state. This is crucial to allow persistent file keypairs
     create_file_key()
 }
@@ -60,7 +68,7 @@ fn get_file_key() -> sgx_key_128bit_t {
 // From my testing, this is deterministic if the environment and binary is the same
 // TODO: Test in Azure VM using HW mode
 // TODO: Find documentation that confirms that the effect is normative
-fn create_file_key() -> sgx_key_128bit_t {
+fn create_file_key() -> Secret<sgx_key_128bit_t> {
     let report = rsgx_self_report();
     let attribute_mask = sgx_attributes_t {
         flags: TSEAL_DEFAULT_FLAGSMASK,
@@ -82,5 +90,6 @@ fn create_file_key() -> sgx_key_128bit_t {
     };
 
     // This should never fail since the input values are constant
-    rsgx_get_key(&key_request).expect("Failed to create a new file key")
+    // TODO: remove unwrap and deal with error?
+    Secret::new(rsgx_get_key(&key_request).unwrap())
 }
