@@ -8,15 +8,13 @@
 // TODO: Clean up existing cases causing a flood of warnings for this check, and re-enable
 // #![warn(missing_docs)]
 
+use key_management::{RtcCrypto, SodaBoxCrypto};
 use sgx_types;
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
-use bincode;
-use sgx_crypto_helper;
 use sgx_tcrypto;
 use sgx_tse;
-use thiserror;
 
 mod data_upload;
 mod key_management;
@@ -24,25 +22,16 @@ mod key_management;
 use rtc_types::*;
 use sgx_tse::rsgx_create_report;
 use sgx_types::*;
-use std::io::{self, Write};
-use std::path::Path;
 use std::prelude::v1::*;
-use std::sgxfs::SgxFile;
-use std::slice;
-use std::string::String;
-use std::untrusted::path::PathEx;
-use std::vec::Vec;
-
-use sgx_tse::{rsgx_get_key, rsgx_self_report};
 
 use sgx_tcrypto::rsgx_sha256_slice;
-use thiserror::Error;
 use zeroize::Zeroize;
 
 fn create_report_impl(
     qe_target_info: &sgx_target_info_t,
 ) -> Result<([u8; ENCLAVE_HELD_PUB_KEY_SIZE], sgx_report_t), CreateReportResult> {
-    let pubkey = key_management::get_upload_pubkey();
+    let crypto = SodaBoxCrypto::new();
+    let pubkey = crypto.get_pubkey();
 
     let pubkey_hash = match rsgx_sha256_slice(&pubkey) {
         Ok(hash) => hash,
@@ -50,7 +39,7 @@ fn create_report_impl(
     };
 
     let mut p_data = sgx_report_data_t::default();
-    p_data.d[0..32].copy_from_slice(&pubkey);
+    p_data.d[0..32].copy_from_slice(&pubkey_hash);
 
     // AFAIK any SGX function with out-variables provide no guarantees on what
     // data will be written to those variables in the case of failure. It is

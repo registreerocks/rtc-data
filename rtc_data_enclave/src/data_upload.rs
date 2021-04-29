@@ -1,7 +1,12 @@
-use rand::{prelude::*, Error};
+use crate::key_management::Error as CryptoError;
+use crate::key_management::SodaBoxCrypto as Crypto;
+use crate::key_management::{EncryptedMessage, RtcCrypto};
+use rand::prelude::*;
+use secrecy::{ExposeSecret, Secret};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
-use std::{prelude::v1::*, sync::SgxMutex};
+use std::prelude::v1::*;
+use thiserror::Error;
 use uuid::Uuid;
 
 pub struct UploadPayload {
@@ -9,22 +14,34 @@ pub struct UploadPayload {
     blob: Box<[u8]>,
 }
 
-pub struct Metadata {}
+pub struct Metadata {
+    uploader_pub_key: [u8; 32],
+    nonce: [u8; 24],
+}
 
 pub struct SealedResult {
     /// Uploaded data sealed for this enclave
     sealed_data: Box<[u8]>,
     /// Payload for client encrypted with the client's ephemeral key
-    client_payload: Box<[u8]>,
+    client_payload: EncryptedMessage,
+
+    uuid: Uuid,
 }
 
+#[derive(Debug, Error)]
 pub enum DataError {
+    #[error("Data validation failed")]
     Validation,
+    #[error("Data sealing failed: {}", .0)]
     Sealing(sgx_status_t),
+    #[error("Crypto failed: {}", .0)]
+    Crypto(#[from] CryptoError),
+    #[error("Unkown data upload error")]
     Unknown,
 }
+
 impl From<()> for DataError {
-    fn from(err: ()) -> Self {
+    fn from(_err: ()) -> Self {
         DataError::Unknown
     }
 }
@@ -35,83 +52,48 @@ pub struct UploadedData {
 }
 
 pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataError> {
+    let mut crypto = Crypto::new();
     let UploadPayload { metadata, blob } = payload;
-    let plaintext = decrypt_data(blob)?;
+    let plaintext = crypto.decrypt_message(&blob, &metadata.uploader_pub_key, &metadata.nonce)?;
 
-    match validate_data(&plaintext) {
+    match validate_data(plaintext.expose_secret()) {
         None => {}
         Some(_) => return Err(DataError::Validation),
     };
 
-    let (client_payload, data_uuid) = match generate_client_payload(&plaintext[..32]) {
-        Some(res) => res,
-        None => return Err(DataError::Validation),
-    };
-    let sealed_data = seal_data(&plaintext).map_err(|err| DataError::Sealing(err))?;
+    let (client_payload, data_uuid) =
+        match generate_client_payload(&metadata.uploader_pub_key, &mut crypto) {
+            Ok(res) => res,
+            Err(err) => return Err(DataError::Crypto(err)),
+        };
+    let sealed_data =
+        seal_data(plaintext.expose_secret()).map_err(|err| DataError::Sealing(err))?;
 
     return Ok(SealedResult {
         client_payload,
         sealed_data,
+        uuid: data_uuid,
     });
 }
 
-// TODO: Use feature flags to toggle use of different crypto libs
-fn generate_client_payload_ring(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
-    use ring::aead;
-
-    let key = match aead::UnboundKey::new(&aead::CHACHA20_POLY1305, key_bytes) {
-        Ok(k) => aead::LessSafeKey::new(k),
-        Err(_) => return None,
-    };
+fn generate_client_payload(
+    their_pk: &[u8; 32],
+    crypto: &mut Crypto,
+) -> Result<(EncryptedMessage, Uuid), CryptoError> {
     let mut rng = rand::thread_rng();
-    // TODO: use static SecureRandom from ring instead
-    match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
-        Ok((mut pass, uuid)) => {
-            let mut in_out = [
-                &mut uuid.as_bytes().clone() as &mut [u8],
-                &mut pass as &mut [u8],
-            ]
-            .concat();
 
-            let mut nonce = [0u8; 12];
-
-            if rng.try_fill(&mut nonce).is_err() {
-                return None;
-            }
-
-            key.seal_in_place_append_tag(
-                aead::Nonce::assume_unique_for_key(nonce),
-                aead::Aad::empty(),
-                &mut in_out,
-            );
-            Some((in_out.into_boxed_slice(), uuid))
-        }
-        Err(_) => None,
-    }
-}
-
-fn generate_client_payload(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
-    use sodiumoxide::crypto::box_;
-    use sodiumoxide::crypto::secretbox;
-
-    let key = match secretbox::Key::from_slice(key_bytes) {
-        Some(key) => key,
-        None => return None,
+    let (pass, uuid) = match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
+        Ok(res) => res,
+        Err(err) => return Err(CryptoError::Rand(err)),
     };
 
-    let mut rng = rand::thread_rng();
-    match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
-        Ok((mut pass, uuid)) => {
-            let nonce = secretbox::gen_nonce();
-            let ciphertext = secretbox::seal(
-                &[uuid.as_bytes() as &[u8], &pass as &[u8]].concat(),
-                &nonce,
-                &key,
-            );
-            Some((ciphertext.into_boxed_slice(), uuid))
-        }
-        Err(_) => None,
-    }
+    let message = Secret::new(
+        [pass.to_vec(), uuid.as_bytes().to_vec()]
+            .concat()
+            .into_boxed_slice(),
+    );
+
+    Ok((crypto.encrypt_message(message, their_pk)?, uuid))
 }
 
 fn generate_pass_and_uuid<TErr, F>(mut rand_fn: F) -> Result<([u8; 24], Uuid), TErr>
@@ -157,11 +139,6 @@ fn seal_data(data: &[u8]) -> Result<Box<[u8]>, sgx_status_t> {
     }
 }
 
-fn validate_data(data: &Box<[u8]>) -> Option<()> {
+fn validate_data(_data: &Box<[u8]>) -> Option<()> {
     None
-}
-
-fn decrypt_data(cipertext: Box<[u8]>) -> Result<Box<[u8]>, ()> {
-    // Use decrypt func in the key_management module
-    todo!();
 }
