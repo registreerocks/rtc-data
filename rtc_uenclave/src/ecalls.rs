@@ -27,6 +27,25 @@ pub type CreateReportError = EcallError<CreateReportResult>;
 pub(crate) mod inner {
     use super::*;
 
+    pub fn validate_and_save(
+        eid: sgx_enclave_id_t,
+        payload: &[u8],
+        metadata: UploadMetadata,
+    ) -> sgx_status_t {
+        let mut retval = sgx_status_t::SGX_SUCCESS;
+
+        let res = unsafe {
+            ecalls::rtc_validate_and_save(
+                eid,
+                &mut retval,
+                payload.as_ptr(),
+                payload.len(),
+                metadata,
+            )
+        };
+        res
+    }
+
     pub fn create_report(
         eid: sgx_enclave_id_t,
         qe_target_info: &sgx_target_info_t,

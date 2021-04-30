@@ -2,6 +2,7 @@ use crate::crypto::Error as CryptoError;
 use crate::crypto::SodaBoxCrypto as Crypto;
 use crate::crypto::{EncryptedMessage, RtcCrypto};
 use rand::prelude::*;
+use rtc_types::UploadMetadata as Metadata;
 use secrecy::{ExposeSecret, Secret};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
@@ -10,22 +11,17 @@ use thiserror::Error;
 use uuid::Uuid;
 
 pub struct UploadPayload {
-    metadata: Metadata,
-    blob: Box<[u8]>,
-}
-
-pub struct Metadata {
-    uploader_pub_key: [u8; 32],
-    nonce: [u8; 24],
+    pub metadata: Metadata,
+    pub blob: Box<[u8]>,
 }
 
 pub struct SealedResult {
     /// Uploaded data sealed for this enclave
-    sealed_data: Box<[u8]>,
+    pub sealed_data: Box<[u8]>,
     /// Payload for client encrypted with the client's ephemeral key
-    client_payload: EncryptedMessage,
+    pub client_payload: EncryptedMessage,
 
-    uuid: Uuid,
+    pub uuid: Uuid,
 }
 
 #[derive(Debug, Error)]
@@ -36,7 +32,7 @@ pub enum DataError {
     Sealing(sgx_status_t),
     #[error("Crypto failed: {}", .0)]
     Crypto(#[from] CryptoError),
-    #[error("Unkown data upload error")]
+    #[error("Unknown data upload error")]
     Unknown,
 }
 
@@ -55,6 +51,7 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
     let mut crypto = Crypto::new();
     let UploadPayload { metadata, blob } = payload;
     let plaintext = crypto.decrypt_message(&blob, &metadata.uploader_pub_key, &metadata.nonce)?;
+    println!("{:?}", plaintext.expose_secret());
 
     match validate_data(plaintext.expose_secret()) {
         None => {}
@@ -111,6 +108,7 @@ fn seal_data(data: &[u8]) -> Result<Box<[u8]>, sgx_status_t> {
         flags: TSEAL_DEFAULT_FLAGSMASK,
         xfrm: 0,
     };
+    // TODO: Save the UUID as additional text
     let additional_text = [0_u8; 0];
     let sealed_data = SgxSealedData::<[u8]>::seal_data_ex(
         SGX_KEYPOLICY_MRENCLAVE | SGX_KEYPOLICY_MRSIGNER,

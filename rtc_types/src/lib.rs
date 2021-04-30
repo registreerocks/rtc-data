@@ -56,6 +56,12 @@ pub enum EcallError<T: 'static + std::error::Error + Display> {
     RtcEnclave(#[from] T),
 }
 
+#[repr(C)]
+pub struct UploadMetadata {
+    pub uploader_pub_key: [u8; 32],
+    pub nonce: [u8; 24],
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

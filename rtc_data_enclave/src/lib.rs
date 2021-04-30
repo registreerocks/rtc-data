@@ -18,7 +18,9 @@ use sgx_tse;
 
 mod crypto;
 mod data_upload;
+mod ocalls;
 
+use core::slice;
 use rtc_types::*;
 use sgx_tse::rsgx_create_report;
 use sgx_types::*;
@@ -85,4 +87,34 @@ pub unsafe extern "C" fn enclave_create_report(
     }
 
     CreateReportResult::Success
+}
+
+/// Validates and save a payload encrypted for the enclave
+///
+/// # Safety
+/// The caller (SGX) should ensure that `payload_ptr` is valid for a slice of
+/// length `payload_len`
+#[no_mangle]
+pub unsafe extern "C" fn rtc_validate_and_save(
+    payload_ptr: *const u8,
+    payload_len: usize,
+    metadata: UploadMetadata,
+) -> sgx_status_t {
+    if payload_ptr.is_null() {
+        return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
+    }
+
+    // TODO: Add out-vars that contain the client payload
+
+    let payload: Box<[u8]> = unsafe { slice::from_raw_parts(payload_ptr, payload_len) }.into();
+    let sealed = match data_upload::validate_and_seal(data_upload::UploadPayload {
+        metadata,
+        blob: payload,
+    }) {
+        Ok(res) => res,
+        // TODO: Better error handling
+        Err(err) => return sgx_status_t::SGX_ERROR_INVALID_PARAMETER,
+    };
+
+    ocalls::save_sealed_blob_u(sealed.sealed_data, sealed.uuid)
 }

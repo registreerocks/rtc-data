@@ -32,6 +32,7 @@ num-traits = "0.2"
 # This should be removed once the rust-crypto rsa crate updates with export functionality
 simple_asn1 = { version = "0.5.1" }
 insta = "1.7.1"
+sodalite = "0.4.0"
 
 [features]
 test = []

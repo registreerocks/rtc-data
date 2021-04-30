@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+#ifndef RTC_SAVE_SEALED_BLOB_U_DEFINED__
+#define RTC_SAVE_SEALED_BLOB_U_DEFINED__
+sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_save_sealed_blob_u, (const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16]));
+#endif
 #ifndef U_THREAD_SET_EVENT_OCALL_DEFINED__
 #define U_THREAD_SET_EVENT_OCALL_DEFINED__
 int SGX_UBRIDGE(SGX_NOCONVENTION, u_thread_set_event_ocall, (int* error, const void* tcs));
@@ -305,7 +309,8 @@ uint8_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fwrite_recovery_node, (vo
 int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_do_file_recovery, (const char* filename, const char* recovery_filename, uint32_t node_size));
 #endif
 
-sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData* enclave_data, sgx_report_t* p_report);
+sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
 sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
 

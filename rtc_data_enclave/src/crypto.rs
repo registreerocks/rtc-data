@@ -111,11 +111,14 @@ impl RtcCrypto for SodaBoxCrypto {
         their_pk: &Self::PublicKey,
     ) -> Result<EncryptedMessage, Error> {
         let nonce = self.get_nonce()?;
-        let mut ciphertext = vec![0_u8; message.expose_secret().len()].into_boxed_slice();
+        // Length is padded here since the message needs to be padded with 32 `0_u8`
+        // at the front
+        let mut ciphertext = vec![0_u8; message.expose_secret().len() + 32].into_boxed_slice();
 
         match sodalite::box_(
             &mut ciphertext,
-            message.expose_secret(),
+            // Need to pad with 32 0s see https://nacl.cr.yp.to/secretbox.html
+            &[&[0u8; 32] as &[u8], message.expose_secret()].concat(),
             &nonce,
             their_pk,
             self.private_key.expose_secret(),

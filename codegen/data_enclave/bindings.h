@@ -24,3 +24,8 @@ typedef struct CreateReportResult {
 } CreateReportResult;
 
 typedef uint8_t EnclaveHeldData[ENCLAVE_HELD_DATA_SIZE];
+
+typedef struct UploadMetadata {
+  uint8_t uploader_pub_key[32];
+  uint8_t nonce[24];
+} UploadMetadata;

@@ -7,6 +7,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
+use rtc_types::UploadMetadata;
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -93,7 +94,7 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         )
     }
 
-    fn create_report(
+    pub fn create_report(
         &self,
         qe_target_info: &sgx_target_info_t,
     ) -> Result<EnclaveReportResult, AttestationError> {
@@ -128,6 +129,10 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
             .attest(body, &self.config.borrow().attestation_provider_url)?;
 
         Ok(response.token)
+    }
+
+    pub fn upload_data(&self, payload: &[u8], metadata: UploadMetadata) -> sgx_status_t {
+        ecalls::validate_and_save(self.base_enclave.geteid(), payload, metadata)
     }
 
     /// Take ownership of self and drop resources
