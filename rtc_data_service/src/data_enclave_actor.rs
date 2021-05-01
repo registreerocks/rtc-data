@@ -20,12 +20,12 @@ impl Message for RequestAttestation {
 //     type Result = UploadResult;
 // }
 
-pub struct EnclaveActor {
+pub struct DataEnclaveActor {
     enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
     config: Arc<EnclaveConfig>,
 }
 
-impl EnclaveActor {
+impl DataEnclaveActor {
     pub fn new(config: Arc<EnclaveConfig>) -> Self {
         Self {
             enclave: None,
@@ -34,14 +34,14 @@ impl EnclaveActor {
     }
 }
 
-impl Drop for EnclaveActor {
+impl Drop for DataEnclaveActor {
     fn drop(&mut self) {
         println!("Dropping enclave actor");
     }
 }
 
-impl Actor for EnclaveActor {
-    type Context = Context<EnclaveActor>;
+impl Actor for DataEnclaveActor {
+    type Context = Context<DataEnclaveActor>;
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         self.enclave.take().map(|enclave| enclave.destroy());
@@ -53,7 +53,7 @@ impl Actor for EnclaveActor {
     }
 }
 
-impl Handler<RequestAttestation> for EnclaveActor {
+impl Handler<RequestAttestation> for DataEnclaveActor {
     type Result = RequestAttestationResult;
 
     fn handle(&mut self, _msg: RequestAttestation, _ctx: &mut Self::Context) -> Self::Result {
@@ -64,19 +64,19 @@ impl Handler<RequestAttestation> for EnclaveActor {
     }
 }
 
-impl Handler<DataPayload> for EnclaveActor {
+impl Handler<DataPayload> for DataEnclaveActor {
     type Result = String;
 
     fn handle(&mut self, msg: DataPayload, ctx: &mut Self::Context) -> Self::Result {
         // TODO: Handle file upload
         println!("Inside DataPayload Handler");
-        "Successfully Uploaded Encrypted file".to_string()    
+        "Successfully Uploaded Encrypted file".to_string()
     }
 }
 
 // TODO: Investigate supervisor returning `Err(Cancelled)` (see supervisor docs on Actix)
-impl actix::Supervised for EnclaveActor {
-    fn restarting(&mut self, _ctx: &mut Context<EnclaveActor>) {
+impl actix::Supervised for DataEnclaveActor {
+    fn restarting(&mut self, _ctx: &mut Context<DataEnclaveActor>) {
         self.enclave
             .replace(RtcEnclave::init(self.config.clone()).expect("enclave to be initialized"))
             .map(|enc| enc.destroy());

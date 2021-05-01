@@ -14,7 +14,7 @@ pub async fn server_status(_req: HttpRequest) -> HttpResponse {
 #[get("/data/attest")]
 pub async fn data_enclave_attestation(
     _req: HttpRequest,
-    enclave: web::Data<Addr<EnclaveActor>>,
+    enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let jwt = enclave
         .send(RequestAttestation::default())
@@ -32,7 +32,7 @@ pub async fn data_enclave_attestation(
 #[post("/data/upload/encrypted")]
 pub async fn upload_encrypted_file(
     _req: HttpRequest,
-    enclave: web::Data<Addr<EnclaveActor>>,
+    enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let uploadResult = enclave.send(DataPayload).await;
 
