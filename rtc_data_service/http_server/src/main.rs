@@ -51,7 +51,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(enclave_addr.clone())
             .route("/", web::get().to(server_status))
-            .service(data_enclave_attestation);
+            .service(data_enclave_attestation)
+            .service(upload_encrypted_file);
 
         app
     })

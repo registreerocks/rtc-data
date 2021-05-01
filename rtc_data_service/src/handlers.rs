@@ -1,5 +1,5 @@
 use actix::Addr;
-use actix_web::{error::ErrorInternalServerError, get, web, HttpRequest, HttpResponse};
+use actix_web::{error::ErrorInternalServerError, get, post, web, HttpRequest, HttpResponse};
 use models::Status;
 
 use crate::enclave_actor::*;
@@ -25,6 +25,24 @@ pub async fn data_enclave_attestation(
     match jwt {
         Ok(result) => Ok(result),
         // TODO: Look at the result here - change the error format and see if we want to sanitise the output in some way
+        Err(err) => Err(ErrorInternalServerError(err)),
+    }
+}
+
+#[post("/data/upload/encrypted")]
+pub async fn upload_encrypted_file(
+    _req: HttpRequest,
+    // enclave: web::Data<Addr<EnclaveActor>>,
+) -> actix_web::Result<String> {
+    println!("Inside Post Req");
+    // let uploadResponse = enclave
+    //     .send(DataPayload)
+    //     .await;
+
+    
+    let response : Result<String, &str> = Ok("Successful".to_string());
+    match response {
+        Ok(response) => Ok(response),
         Err(err) => Err(ErrorInternalServerError(err)),
     }
 }
