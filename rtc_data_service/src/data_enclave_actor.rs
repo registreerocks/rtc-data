@@ -5,20 +5,11 @@ use std::sync::Arc;
 #[derive(Default)]
 pub(crate) struct RequestAttestation;
 
-#[derive(Message)]
-#[rtype(result = "UploadResult")]
-pub struct DataPayload;
-
 type RequestAttestationResult = Result<String, AttestationError>;
-type UploadResult = String;
 
 impl Message for RequestAttestation {
     type Result = RequestAttestationResult;
 }
-
-// impl Message for DataPayload {
-//     type Result = UploadResult;
-// }
 
 pub struct DataEnclaveActor {
     enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
@@ -31,6 +22,12 @@ impl DataEnclaveActor {
             enclave: None,
             config,
         }
+    }
+
+    pub(crate) fn get_enclave(&self) -> &RtcEnclave<Arc<EnclaveConfig>> {
+        self.enclave
+            .as_ref()
+            .expect("Message sent to unintialized actor")
     }
 }
 
@@ -57,20 +54,7 @@ impl Handler<RequestAttestation> for DataEnclaveActor {
     type Result = RequestAttestationResult;
 
     fn handle(&mut self, _msg: RequestAttestation, _ctx: &mut Self::Context) -> Self::Result {
-        self.enclave
-            .as_ref()
-            .expect("RequestAttestation sent to uninitialized EnclaveActor")
-            .dcap_attestation_azure()
-    }
-}
-
-impl Handler<DataPayload> for DataEnclaveActor {
-    type Result = String;
-
-    fn handle(&mut self, msg: DataPayload, ctx: &mut Self::Context) -> Self::Result {
-        // TODO: Handle file upload
-        println!("Inside DataPayload Handler");
-        "Successfully Uploaded Encrypted file".to_string()
+        self.get_enclave().dcap_attestation_azure()
     }
 }
 

@@ -22,6 +22,8 @@ rtc_types = { path = "../rtc_types" }
 serde_json = "1.0.64"
 actix-rt = "2.2.0"
 cfg-if = "1.0.0"
+base64-serde = "0.6.1"
+anyhow = "1.0.40"
 
 [dev-dependencies]
 rand = "0.7.3"
