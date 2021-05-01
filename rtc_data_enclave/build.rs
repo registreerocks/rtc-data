@@ -6,6 +6,7 @@ use std::env;
 
 fn main() {
     println!("cargo:rerun-if-changed=Enclave.edl");
+    println!("cargo:rerun-if-changed=src");
 
     let sgx_sdk = env::var("SGX_SDK").unwrap();
     let _edger8r = format!("{}/bin/x64/sgx_edger8r", sgx_sdk);

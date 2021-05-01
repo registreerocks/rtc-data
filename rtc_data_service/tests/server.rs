@@ -65,13 +65,19 @@ fn test_test() {
 
     println!("{:?}", ciphertext);
 
-    let res = enclave.upload_data(
-        &ciphertext,
-        UploadMetadata {
-            uploader_pub_key: pubkey,
-            nonce,
-        },
-    );
-
+    let res = enclave
+        .upload_data(
+            &ciphertext,
+            UploadMetadata {
+                uploader_pub_key: pubkey,
+                nonce,
+            },
+        )
+        .unwrap();
     println!("res: {:?}", res);
+
+    let mut m = vec![0_u8; res.ciphertext.len()];
+    sodalite::box_open(&mut m, &res.ciphertext, &res.nonce, &ehd, &privkey);
+
+    println!("msg: {:?}", m);
 }

@@ -310,7 +310,7 @@ int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_do_file_recovery, (const 
 #endif
 
 sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
 sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
 

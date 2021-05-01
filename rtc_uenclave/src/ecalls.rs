@@ -31,9 +31,10 @@ pub(crate) mod inner {
         eid: sgx_enclave_id_t,
         payload: &[u8],
         metadata: UploadMetadata,
-    ) -> sgx_status_t {
-        let mut retval = sgx_status_t::SGX_SUCCESS;
+    ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
+        let mut retval = DataUploadResult::default();
 
+        // TODO: Safety
         let res = unsafe {
             ecalls::rtc_validate_and_save(
                 eid,
@@ -43,7 +44,7 @@ pub(crate) mod inner {
                 metadata,
             )
         };
-        res
+        retval.to_ecall_err(res).into()
     }
 
     pub fn create_report(

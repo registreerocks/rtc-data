@@ -7,7 +7,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
-use rtc_types::UploadMetadata;
+use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -131,7 +131,11 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         Ok(response.token)
     }
 
-    pub fn upload_data(&self, payload: &[u8], metadata: UploadMetadata) -> sgx_status_t {
+    pub fn upload_data(
+        &self,
+        payload: &[u8],
+        metadata: UploadMetadata,
+    ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
         ecalls::validate_and_save(self.base_enclave.geteid(), payload, metadata)
     }
 

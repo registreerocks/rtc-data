@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-sgx_status_t rtc_validate_and_save(const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+DataUploadResult rtc_validate_and_save(const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
 

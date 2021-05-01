@@ -1,9 +1,12 @@
-use crate::crypto::Error as CryptoError;
+use crate::crypto::RtcCrypto;
 use crate::crypto::SodaBoxCrypto as Crypto;
-use crate::crypto::{EncryptedMessage, RtcCrypto};
+use crate::util;
+use core::convert::TryInto;
 use rand::prelude::*;
 use rtc_types::UploadMetadata as Metadata;
-use secrecy::{ExposeSecret, Secret};
+use rtc_types::{CryptoError, DataUploadResponse, EncryptedMessage};
+use rtc_types::{DataUploadError as DataError, SizedEncryptedMessage};
+use secrecy::{ExposeSecret, Secret, Zeroize};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
 use std::prelude::v1::*;
@@ -19,27 +22,9 @@ pub struct SealedResult {
     /// Uploaded data sealed for this enclave
     pub sealed_data: Box<[u8]>,
     /// Payload for client encrypted with the client's ephemeral key
-    pub client_payload: EncryptedMessage,
+    pub client_payload: DataUploadResponse,
 
     pub uuid: Uuid,
-}
-
-#[derive(Debug, Error)]
-pub enum DataError {
-    #[error("Data validation failed")]
-    Validation,
-    #[error("Data sealing failed: {}", .0)]
-    Sealing(sgx_status_t),
-    #[error("Crypto failed: {}", .0)]
-    Crypto(#[from] CryptoError),
-    #[error("Unknown data upload error")]
-    Unknown,
-}
-
-impl From<()> for DataError {
-    fn from(_err: ()) -> Self {
-        DataError::Unknown
-    }
 }
 
 pub struct UploadedData {
@@ -51,7 +36,6 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
     let mut crypto = Crypto::new();
     let UploadPayload { metadata, blob } = payload;
     let plaintext = crypto.decrypt_message(&blob, &metadata.uploader_pub_key, &metadata.nonce)?;
-    println!("{:?}", plaintext.expose_secret());
 
     match validate_data(plaintext.expose_secret()) {
         None => {}
@@ -67,7 +51,7 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
         seal_data(plaintext.expose_secret()).map_err(|err| DataError::Sealing(err))?;
 
     return Ok(SealedResult {
-        client_payload,
+        client_payload: client_payload.into(),
         sealed_data,
         uuid: data_uuid,
     });
@@ -76,21 +60,19 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
 fn generate_client_payload(
     their_pk: &[u8; 32],
     crypto: &mut Crypto,
-) -> Result<(EncryptedMessage, Uuid), CryptoError> {
+) -> Result<(SizedEncryptedMessage<{ 24 + 16 + 32 }>, Uuid), CryptoError> {
     let mut rng = rand::thread_rng();
 
-    let (pass, uuid) = match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
+    let (mut pass, uuid) = match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
         Ok(res) => res,
-        Err(err) => return Err(CryptoError::Rand(err)),
+        Err(err) => return Err(CryptoError::Rand(err.code().map_or(0, |code| code.get()))),
     };
 
-    let message = Secret::new(
-        [pass.to_vec(), uuid.as_bytes().to_vec()]
-            .concat()
-            .into_boxed_slice(),
-    );
+    let mut message = util::concat_u8(&pass, uuid.as_bytes());
 
-    Ok((crypto.encrypt_message(message, their_pk)?, uuid))
+    pass.zeroize();
+
+    Ok((crypto.encrypt_sized_message(message, their_pk)?, uuid))
 }
 
 fn generate_pass_and_uuid<TErr, F>(mut rand_fn: F) -> Result<([u8; 24], Uuid), TErr>

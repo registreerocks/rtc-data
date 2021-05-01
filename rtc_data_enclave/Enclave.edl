@@ -17,7 +17,7 @@ enclave {
                                               [out, isary]EnclaveHeldData enclave_data,
                                               [out]sgx_report_t* p_report);
 
-        public sgx_status_t rtc_validate_and_save([in, count=payload_len]const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+        public DataUploadResult rtc_validate_and_save([in, count=payload_len]const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
     };
 
     untrusted {

@@ -35,7 +35,7 @@ typedef struct ms_enclave_create_report_t {
 } ms_enclave_create_report_t;
 
 typedef struct ms_rtc_validate_and_save_t {
-	sgx_status_t ms_retval;
+	DataUploadResult ms_retval;
 	const uint8_t* ms_payload_ptr;
 	size_t ms_payload_len;
 	UploadMetadata ms_metadata;

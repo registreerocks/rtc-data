@@ -1,4 +1,6 @@
 use rand::prelude::*;
+use rtc_types::EncryptedMessage;
+use rtc_types::{CryptoError as Error, SizedEncryptedMessage};
 use secrecy::{ExposeSecret, Secret};
 use sgx_tse::{rsgx_get_key, rsgx_self_report};
 use sgx_types::*;
@@ -8,11 +10,6 @@ use thiserror::Error;
 use zeroize::Zeroize;
 
 pub type SecretBytes = Secret<Box<[u8]>>;
-
-pub struct EncryptedMessage {
-    ciphertext: Box<[u8]>,
-    nonce: [u8; 24],
-}
 
 pub trait RtcCrypto {
     type PublicKey; // = [u8; 32];
@@ -32,17 +29,15 @@ pub trait RtcCrypto {
         their_pk: &Self::PublicKey,
     ) -> Result<EncryptedMessage, self::Error>;
 
+    fn encrypt_sized_message<const MESSAGE_LEN: usize>(
+        &mut self,
+        message: [u8; MESSAGE_LEN],
+        their_pk: &Self::PublicKey,
+    ) -> Result<SizedEncryptedMessage<{ MESSAGE_LEN + 32 }>, Error>;
+
     fn get_pubkey(&self) -> Self::PublicKey;
 
     fn get_nonce(&mut self) -> Result<Self::Nonce, self::Error>;
-}
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("Crypto rng error: {}", .0)]
-    Rand(#[from] rand::Error),
-    #[error("Unknown crypto error")]
-    Unknown,
 }
 
 pub struct SodaBoxCrypto {
@@ -105,6 +100,35 @@ impl RtcCrypto for SodaBoxCrypto {
         }
     }
 
+    fn encrypt_sized_message<const MESSAGE_LEN: usize>(
+        &mut self,
+        // Cannot be wrapped in a secret because of unknown size, will be zeroed manually
+        mut message: [u8; MESSAGE_LEN],
+        their_pk: &Self::PublicKey,
+    ) -> Result<SizedEncryptedMessage<{ MESSAGE_LEN + 32 }>, Error> {
+        let nonce = self.get_nonce()?;
+        let mut ciphertext = [0_u8; MESSAGE_LEN + 32];
+
+        // NOTE: the message gets copied here, the copied value will be zeroed manually
+        let mut padded_message: [u8; MESSAGE_LEN + 32] = pad_msg(&message);
+
+        let res = match sodalite::box_(
+            &mut ciphertext,
+            &padded_message,
+            &nonce,
+            their_pk,
+            self.private_key.expose_secret(),
+        ) {
+            Ok(_) => Ok(SizedEncryptedMessage { ciphertext, nonce }),
+            Err(_) => Err(self::Error::Unknown),
+        };
+
+        (&mut padded_message as &mut [u8]).zeroize();
+        message.zeroize();
+
+        res
+    }
+
     fn encrypt_message(
         &mut self,
         message: SecretBytes,
@@ -138,7 +162,7 @@ impl RtcCrypto for SodaBoxCrypto {
         // be applicable to all situations
         match self.rng.try_fill(&mut nonce) {
             Ok(_) => Ok(nonce),
-            Err(err) => Err(self::Error::Rand(err)),
+            Err(err) => Err(self::Error::Rand(err.code().map_or(0, |code| code.get()))),
         }
     }
 }
@@ -170,6 +194,13 @@ fn get_enclave_key() -> Secret<sgx_key_128bit_t> {
     // This should never fail since the input values are constant
     // TODO: remove unwrap and deal with error?
     Secret::new(rsgx_get_key(&key_request).unwrap())
+}
+
+fn pad_msg<const MESSAGE_LEN: usize>(msg: &[u8; MESSAGE_LEN]) -> [u8; { MESSAGE_LEN + 32 }] {
+    let mut whole = [0_u8; MESSAGE_LEN + 32];
+    let (_, msg_dest) = whole.split_at_mut(32);
+    msg_dest.copy_from_slice(msg);
+    whole
 }
 
 // TODO: Use feature flags to toggle use of different crypto libs

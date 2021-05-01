@@ -3,7 +3,8 @@
 #![crate_type = "staticlib"]
 #![cfg_attr(not(target_env = "sgx"), no_std)]
 #![cfg_attr(target_env = "sgx", feature(rustc_private))]
-#![feature(min_const_generics)]
+#![feature(const_generics)]
+#![feature(const_evaluatable_checked)]
 #![deny(clippy::mem_forget)]
 // TODO: Clean up existing cases causing a flood of warnings for this check, and re-enable
 // #![warn(missing_docs)]
@@ -19,6 +20,7 @@ use sgx_tse;
 mod crypto;
 mod data_upload;
 mod ocalls;
+mod util;
 
 use core::slice;
 use rtc_types::*;
@@ -99,11 +101,7 @@ pub unsafe extern "C" fn rtc_validate_and_save(
     payload_ptr: *const u8,
     payload_len: usize,
     metadata: UploadMetadata,
-) -> sgx_status_t {
-    if payload_ptr.is_null() {
-        return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
-    }
-
+) -> DataUploadResult {
     // TODO: Add out-vars that contain the client payload
 
     let payload: Box<[u8]> = unsafe { slice::from_raw_parts(payload_ptr, payload_len) }.into();
@@ -112,9 +110,11 @@ pub unsafe extern "C" fn rtc_validate_and_save(
         blob: payload,
     }) {
         Ok(res) => res,
-        // TODO: Better error handling
-        Err(err) => return sgx_status_t::SGX_ERROR_INVALID_PARAMETER,
+        Err(err) => return EcallResult::Err(err),
     };
 
-    ocalls::save_sealed_blob_u(sealed.sealed_data, sealed.uuid)
+    match ocalls::save_sealed_blob_u(sealed.sealed_data, sealed.uuid) {
+        (sgx_status_t::SGX_SUCCESS) => EcallResult::Ok(sealed.client_payload.into()),
+        (err) => EcallResult::Err(DataUploadError::Sealing(err)),
+    }
 }

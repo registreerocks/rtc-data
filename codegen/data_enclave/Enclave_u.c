@@ -9,7 +9,7 @@ typedef struct ms_enclave_create_report_t {
 } ms_enclave_create_report_t;
 
 typedef struct ms_rtc_validate_and_save_t {
-	sgx_status_t ms_retval;
+	DataUploadResult ms_retval;
 	const uint8_t* ms_payload_ptr;
 	size_t ms_payload_len;
 	UploadMetadata ms_metadata;
@@ -1176,7 +1176,7 @@ sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* ret
 	return status;
 }
 
-sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata)
+sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata)
 {
 	sgx_status_t status;
 	ms_rtc_validate_and_save_t ms;

@@ -1,5 +1,5 @@
 // TODO: Document
-
+#![feature(min_const_generics)]
 #![cfg_attr(feature = "teaclave_sgx", no_std)]
 #[cfg(feature = "teaclave_sgx")]
 extern crate sgx_tstd as std;
@@ -13,6 +13,37 @@ use std::fmt::Display;
 use thiserror::Error;
 
 use sgx_types::*;
+
+use std::boxed::Box;
+
+mod data_upload;
+pub use data_upload::*;
+
+mod ecall_result;
+pub use ecall_result::*;
+
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub struct EncryptedMessage {
+    pub ciphertext: Box<[u8]>,
+    pub nonce: [u8; 24],
+}
+
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub struct SizedEncryptedMessage<const MESSAGE_LEN: usize> {
+    pub ciphertext: [u8; MESSAGE_LEN],
+    pub nonce: [u8; 24],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug, Error)]
+pub enum CryptoError {
+    #[error("Crypto rng error: {}", .0)]
+    Rand(u32),
+    #[error("Unknown crypto error")]
+    Unknown,
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug, Error)]
@@ -54,12 +85,6 @@ pub enum EcallError<T: 'static + std::error::Error + Display> {
     // called from RTC code, including any sgx library.
     #[error("Ecall failed in the RTC enclave: {}", .0)]
     RtcEnclave(#[from] T),
-}
-
-#[repr(C)]
-pub struct UploadMetadata {
-    pub uploader_pub_key: [u8; 32],
-    pub nonce: [u8; 24],
 }
 
 #[cfg(test)]
