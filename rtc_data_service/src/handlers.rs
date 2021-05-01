@@ -2,7 +2,7 @@ use actix::Addr;
 use actix_web::{error::ErrorInternalServerError, get, post, web, HttpRequest, HttpResponse};
 use models::Status;
 
-use crate::enclave_actor::*;
+use crate::data_enclave_actor::*;
 use crate::merge_error::*;
 
 pub async fn server_status(_req: HttpRequest) -> HttpResponse {
@@ -34,9 +34,7 @@ pub async fn upload_encrypted_file(
     _req: HttpRequest,
     enclave: web::Data<Addr<EnclaveActor>>,
 ) -> actix_web::Result<String> {
-    let uploadResult = enclave
-        .send(DataPayload)
-        .await;
+    let uploadResult = enclave.send(DataPayload).await;
 
     match uploadResult {
         Ok(result) => Ok(result),
