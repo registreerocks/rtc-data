@@ -32,17 +32,15 @@ pub async fn data_enclave_attestation(
 #[post("/data/upload/encrypted")]
 pub async fn upload_encrypted_file(
     _req: HttpRequest,
-    // enclave: web::Data<Addr<EnclaveActor>>,
+    enclave: web::Data<Addr<EnclaveActor>>,
 ) -> actix_web::Result<String> {
-    println!("Inside Post Req");
-    // let uploadResponse = enclave
-    //     .send(DataPayload)
-    //     .await;
+    let uploadResult = enclave
+        .send(DataPayload)
+        .await;
 
-    
-    let response : Result<String, &str> = Ok("Successful".to_string());
-    match response {
-        Ok(response) => Ok(response),
+    match uploadResult {
+        Ok(result) => Ok(result),
+        // TODO: Handle Result
         Err(err) => Err(ErrorInternalServerError(err)),
     }
 }
