@@ -78,6 +78,11 @@ WORKDIR /root/rtc-data
 ARG SGX_MODE=HW
 
 COPY . .
+
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    . /root/.cargo/env && cargo fetch
+    
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
     --mount=type=cache,sharing=private,target=/root/rtc-data/target \
