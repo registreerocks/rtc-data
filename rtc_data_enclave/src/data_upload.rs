@@ -51,7 +51,7 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
         seal_data(plaintext.expose_secret()).map_err(|err| DataError::Sealing(err))?;
 
     return Ok(SealedResult {
-        client_payload: client_payload.into(),
+        client_payload,
         sealed_data,
         uuid: data_uuid,
     });
@@ -60,7 +60,7 @@ pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataErr
 fn generate_client_payload(
     their_pk: &[u8; 32],
     crypto: &mut Crypto,
-) -> Result<(SizedEncryptedMessage<{ 24 + 16 + 32 }>, Uuid), CryptoError> {
+) -> Result<(DataUploadResponse, Uuid), CryptoError> {
     let mut rng = rand::thread_rng();
 
     let (mut pass, uuid) = match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
@@ -73,7 +73,10 @@ fn generate_client_payload(
 
     pass.zeroize();
 
-    Ok((crypto.encrypt_sized_message(message, their_pk)?, uuid))
+    Ok((
+        crypto.encrypt_sized_message(message, their_pk)?.into(),
+        uuid,
+    ))
 }
 
 fn generate_pass_and_uuid<TErr, F>(mut rand_fn: F) -> Result<([u8; 24], Uuid), TErr>
