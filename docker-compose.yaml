@@ -1,3 +1,22 @@
+# Services / profiles:
+#
+#   devrun (default profile) - Build and run the http_server executable.
+#   devrunhw - Same, with SGX_MODE=HW
+#
+#   dev - Start an development environment, without building the project.
+#   devhw - Same, with SGX_MODE=HW
+#
+# (Each service aside from the default is in a profile with the same name.)
+#
+# To use a non-default profile:
+#
+#   docker-compose --profile devrunhw up
+#
+# To use the development environment interactively:
+#
+#   docker-compose build dev
+#   docker-compose run dev
+#
 services:
   dev:
     build:
