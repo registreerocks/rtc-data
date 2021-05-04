@@ -10,4 +10,4 @@ attestation_provider_url = "https://sharedeus.eus.attest.azure.net"
 host = "127.0.0.1"
 port = "8080"
 port_https = "8081"
-
+allowed_origins = []

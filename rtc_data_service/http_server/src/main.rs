@@ -16,7 +16,9 @@ use std::io::BufReader;
 use std::sync::Arc;
 
 use actix::{Arbiter, Supervisor};
+use actix_cors::Cors;
 use actix_web::{
+    http::header,
     web::{self, Data},
     App, HttpServer,
 };
@@ -25,6 +27,7 @@ use actix_web::{
 async fn main() -> std::io::Result<()> {
     let config = AppConfig::new().expect("Server config expected");
     let enclave_config = Arc::new(config.data_enclave.clone());
+    let allowed_origin = config.http_server.allowed_origins.clone();
 
     let enclave_arbiter = Arbiter::new();
 
@@ -43,7 +46,9 @@ async fn main() -> std::io::Result<()> {
     );
 
     let server = HttpServer::new(move || {
+        let cors = build_cors(allowed_origin.clone());
         let app = App::new()
+            .wrap(cors)
             .app_data(enclave_addr.clone())
             .route("/", web::get().to(server_status))
             .service(data_enclave_attestation);
@@ -74,4 +79,26 @@ async fn main() -> std::io::Result<()> {
     } else {
         server.run().await
     }
+}
+
+fn build_cors(allowed_origins: Vec<String>) -> Cors {
+    match &allowed_origins[..] {
+        [allow_any] if allow_any == "*" => {
+            println!("WARNING(CORS): All origins are allowed",);
+            Cors::default().allow_any_origin()
+        }
+        [] => {
+            println!("WARNING(CORS): No origins are allowed",);
+            Cors::default()
+        }
+        _ => allowed_origins
+            .into_iter()
+            .fold(Cors::default(), |acc, el| acc.allowed_origin(el.as_ref())),
+    }
+    .allowed_methods(vec!["GET", "HEAD", "POST", "PUT", "OPTIONS"])
+    .allowed_headers(vec![
+        header::AUTHORIZATION,
+        header::ACCEPT,
+        header::CONTENT_TYPE,
+    ])
 }
