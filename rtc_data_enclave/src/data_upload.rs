@@ -13,11 +13,6 @@ use std::prelude::v1::*;
 use thiserror::Error;
 use uuid::Uuid;
 
-pub struct UploadPayload {
-    pub metadata: Metadata,
-    pub blob: Box<[u8]>,
-}
-
 pub struct SealedResult {
     /// Uploaded data sealed for this enclave
     pub sealed_data: Box<[u8]>,
@@ -27,9 +22,8 @@ pub struct SealedResult {
     pub uuid: Uuid,
 }
 
-pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataError> {
+pub fn validate_and_seal(metadata: Metadata, blob: Box<[u8]>) -> Result<SealedResult, DataError> {
     let mut crypto = Crypto::new();
-    let UploadPayload { metadata, blob } = payload;
     let plaintext = crypto.decrypt_message(&blob, &metadata.uploader_pub_key, &metadata.nonce)?;
 
     match validate_data(plaintext.expose_secret()) {

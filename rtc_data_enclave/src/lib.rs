@@ -105,10 +105,7 @@ pub unsafe extern "C" fn rtc_validate_and_save(
     // TODO: Add out-vars that contain the client payload
 
     let payload: Box<[u8]> = unsafe { slice::from_raw_parts(payload_ptr, payload_len) }.into();
-    let sealed = match data_upload::validate_and_seal(data_upload::UploadPayload {
-        metadata,
-        blob: payload,
-    }) {
+    let sealed = match data_upload::validate_and_seal(metadata, payload) {
         Ok(res) => res,
         Err(err) => return EcallResult::Err(err),
     };
