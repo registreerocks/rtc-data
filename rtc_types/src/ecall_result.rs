@@ -24,11 +24,11 @@ where
     }
 }
 
-impl<T, E> Into<Result<T, E>> for EcallResult<T, E> {
-    fn into(self) -> Result<T, E> {
-        match self {
-            EcallResult::Ok(res) => Result::Ok(res),
-            EcallResult::Err(err) => Result::Err(err),
+impl<T, E> From<EcallResult<T, E>> for Result<T, E> {
+    fn from(result: EcallResult<T, E>) -> Self {
+        match result {
+            EcallResult::Ok(res) => Ok(res),
+            EcallResult::Err(err) => Err(err),
         }
     }
 }
