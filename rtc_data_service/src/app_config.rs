@@ -54,8 +54,3 @@ impl AppConfig {
         conf.try_into()
     }
 }
-
-enum ValidationResult {
-    Invalid(String),
-    Valid,
-}
