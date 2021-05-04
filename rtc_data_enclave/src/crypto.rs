@@ -162,6 +162,7 @@ impl RtcCrypto for SodaBoxCrypto {
         // be applicable to all situations
         match self.rng.try_fill(&mut nonce) {
             Ok(_) => Ok(nonce),
+            // TODO: Better conversion from rand::Error? (See also data_upload.rs)
             Err(err) => Err(self::Error::Rand(err.code().map_or(0, |code| code.get()))),
         }
     }

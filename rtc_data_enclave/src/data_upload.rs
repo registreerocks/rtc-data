@@ -65,6 +65,7 @@ fn generate_client_payload(
 
     let (mut pass, uuid) = match generate_pass_and_uuid(move |x| rng.try_fill(x)) {
         Ok(res) => res,
+        // TODO: Better conversion from rand::Error? (See also crypto.rs)
         Err(err) => return Err(CryptoError::Rand(err.code().map_or(0, |code| code.get()))),
     };
 
