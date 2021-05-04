@@ -4,4 +4,4 @@
 which cargo >/dev/null || . "$HOME/.cargo/env"
 
 cargo build --release
-cd rtc_data_service && make
+cd rtc_data_enclave && make
