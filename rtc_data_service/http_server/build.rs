@@ -10,6 +10,8 @@ fn main() {
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
     let profile = env::var("PROFILE").unwrap();
 
+    println!("cargo:rerun-if-env-changed=SGX_MODE");
+
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
     println!("cargo:rustc-link-lib=static=sgx_uprotected_fs");
 

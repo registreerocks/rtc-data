@@ -2,12 +2,22 @@ use config::{Config, ConfigError, Environment, File};
 use rtc_uenclave::EnclaveConfig;
 use serde::Deserialize;
 use std::env;
+use std::path::Path;
 
 // Configuration specific to the server
 #[derive(Deserialize, Clone, Default)]
 pub struct ServerConfig {
     pub host: String,
     pub port: i32,
+    pub port_https: i32,
+}
+
+// TLS configuration
+#[derive(Deserialize, Clone, Default)]
+pub struct TlsConfig {
+    pub client_cert_path: Option<String>,
+    pub server_cert_path: String,
+    pub priv_key_path: String,
 }
 
 // App configuration
@@ -15,6 +25,8 @@ pub struct ServerConfig {
 pub struct AppConfig {
     pub http_server: ServerConfig,
     pub data_enclave: EnclaveConfig,
+    pub enable_tls: bool,
+    pub tls: TlsConfig,
 }
 
 impl AppConfig {

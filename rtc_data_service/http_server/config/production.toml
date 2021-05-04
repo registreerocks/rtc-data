@@ -1,0 +1,18 @@
+enable_tls = true
+
+[data_enclave]
+debug = false
+lib_path = "enclave.signed.so"
+attestation_provider_url = "https://sharedeus.eus.attest.azure.net"
+
+[http_server]
+host = "0.0.0.0"
+port = "8080"
+port_https = "443"
+
+[tls]
+# Cloudflare authenticated origin pull cert for client validation
+client_cert_path = "/root/tls/cloudflare_client_cert.pem"
+# Cloudflare generated orgin certificate
+server_cert_path = "/root/tls/server_cert.pem"
+priv_key_path = "/root/tls/privkey-pkcs8.pem"

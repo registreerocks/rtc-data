@@ -1,8 +1,31 @@
+# Services / profiles:
+#
+#   devrun (default profile) - Build and run the http_server executable.
+#   devrunhw - Same, with SGX_MODE=HW
+#
+#   dev - Start an development environment, without building the project.
+#   devhw - Same, with SGX_MODE=HW
+#
+# (Each service aside from the default is in a profile with the same name.)
+#
+# To use a non-default profile:
+#
+#   docker-compose --profile devrunhw up
+#
+# To use the development environment interactively:
+#
+#   docker-compose build dev
+#   docker-compose run dev
+#
 services:
   dev:
-    build: .
+    build:
+      context: ./
+      target: teaclave-base
     stdin_open: true # docker run -i
     tty: true        # docker run -t
+    profiles:
+      - dev
     volumes:
       - ./:/root/rtc-data
       - cargo-cache:/root/.cargo  # Keep Cargo cache between runs
@@ -10,10 +33,15 @@ services:
       - SGX_SDK=/opt/sgxsdk
       - LD_LIBRARY_PATH=/opt/sgxsdk/sdk_libs
       - SGX_MODE=SW
+
   devhw:
-    build: .
+    build:
+      context: ./
+      target: teaclave-base
     stdin_open: true # docker run -i
     tty: true        # docker run -t
+    profiles:
+      - devhw
     volumes:
       - ./:/root/rtc-data
       - cargo-cache:/root/.cargo  # Keep Cargo cache between runs
@@ -23,7 +51,39 @@ services:
     devices:
       - /dev/sgx/enclave
       - /dev/sgx/provision
-  
-  
+
+  devrun:
+    build:
+      context: ./
+      target: runsw
+      args:
+        SGX_MODE: SW
+    ports:
+      - "8080:8080"
+    environment:
+      - SGX_SDK=/opt/sgxsdk
+      - LD_LIBRARY_PATH=/opt/sgxsdk/sdk_libs
+      - SGX_MODE=SW
+      - RUN_MODE=production
+
+  devrunhw:
+    build:
+      context: ./
+      target: runhw
+      args:
+        SGX_MODE: HW
+    profiles:
+      - devrunhw
+    ports:
+      - "443:443"
+    environment:
+      - SGX_SDK=/opt/sgxsdk
+      - SGX_MODE=HW
+      - RUN_MODE=production
+    devices:
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
+    volumes: # Note this will only work in the dev env we have on azure
+      - /etc/tls:/root/tls
 volumes:
   cargo-cache:
