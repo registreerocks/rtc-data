@@ -56,7 +56,7 @@ services:
     profiles:
       - devrunhw
     ports:
-      - "8080:8080"
+      - "443:443"
     environment:
       - SGX_SDK=/opt/sgxsdk
       - SGX_MODE=HW
@@ -64,5 +64,7 @@ services:
     devices:
       - /dev/sgx/enclave
       - /dev/sgx/provision
+    volumes: # Note this will only work in the dev env we have on azure
+      - /etc/tls:/root/tls
 volumes:
   cargo-cache:
