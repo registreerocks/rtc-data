@@ -100,5 +100,4 @@ target
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,emacs,vscode
 
-target
-Dockerfile
+rtc_data_enclave/target
