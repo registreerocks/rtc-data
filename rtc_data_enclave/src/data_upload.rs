@@ -27,11 +27,6 @@ pub struct SealedResult {
     pub uuid: Uuid,
 }
 
-pub struct UploadedData {
-    ephemeral_key: Box<[u8]>,
-    data: Box<[u8]>,
-}
-
 pub fn validate_and_seal(payload: UploadPayload) -> Result<SealedResult, DataError> {
     let mut crypto = Crypto::new();
     let UploadPayload { metadata, blob } = payload;
