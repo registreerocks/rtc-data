@@ -26,7 +26,6 @@ pub struct TlsConfig {
 pub struct AppConfig {
     pub http_server: ServerConfig,
     pub data_enclave: EnclaveConfig,
-    pub enable_tls: bool,
     pub tls: Option<TlsConfig>,
 }
 
