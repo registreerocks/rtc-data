@@ -7,6 +7,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
+use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -93,7 +94,7 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         )
     }
 
-    fn create_report(
+    pub fn create_report(
         &self,
         qe_target_info: &sgx_target_info_t,
     ) -> Result<EnclaveReportResult, AttestationError> {
@@ -116,7 +117,7 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         let qe_ti = self.quoting_enclave.get_target_info()?;
         let EnclaveReportResult {
             enclave_report,
-            enclave_pubkey,
+            enclave_held_data: enclave_pubkey,
         } = self.create_report(&qe_ti)?;
 
         let quote = self.quoting_enclave.request_quote(enclave_report)?;
@@ -130,16 +131,18 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         Ok(response.token)
     }
 
+    pub fn upload_data(
+        &self,
+        payload: &[u8],
+        metadata: UploadMetadata,
+    ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
+        ecalls::validate_and_save(self.base_enclave.geteid(), payload, metadata)
+    }
+
     /// Take ownership of self and drop resources
     pub fn destroy(self) {
         println!("Destroying Enclave");
         // Take ownership of self and drop
-    }
-}
-
-impl<T: Borrow<EnclaveConfig>> Drop for RtcEnclave<T> {
-    fn drop(&mut self) {
-        println!("Dropping Enclave");
     }
 }
 
@@ -204,7 +207,7 @@ mod tests {
     use num_traits::FromPrimitive;
     use proptest::collection::size_range;
     use proptest::prelude::*;
-    use rtc_types::RSA3072_PKCS8_DER_SIZE;
+    use rtc_types::{ENCLAVE_HELD_DATA_SIZE, RSA3072_PKCS8_DER_SIZE};
     use simple_asn1::{to_der, ASN1Block, BigInt, BigUint, OID};
     use std::convert::TryInto;
 
@@ -221,7 +224,7 @@ mod tests {
             create_report_ctx
                 .expect()
                 .return_const(Ok(EnclaveReportResult {
-                    enclave_pubkey: [0; RSA3072_PKCS8_DER_SIZE],
+                    enclave_held_data: [0; ENCLAVE_HELD_DATA_SIZE],
                     enclave_report: sgx_report_t::default(),
                 }));
             create_report_ctx
@@ -342,7 +345,7 @@ mod tests {
 
     proptest! {
         #[test]
-        fn create_report(qe_ti in arb_sgx_target_info_t(), (key_arr, _key_e, _key_n) in arb_pubkey()) {
+        fn create_report(qe_ti in arb_sgx_target_info_t(), ehd in any::<[u8; ENCLAVE_HELD_DATA_SIZE]>()) {
 
             let enclave_id = 3u64;
             let report = sgx_report_t::default();
@@ -360,7 +363,7 @@ mod tests {
 
             let ctx = ecalls::create_report_context();
             ctx.expect().with(eq(enclave_id), eq(qe_ti)).return_const(Ok(ecalls::EnclaveReportResult{
-                enclave_pubkey: key_arr,
+                enclave_held_data: ehd,
                 enclave_report: report
             }));
 

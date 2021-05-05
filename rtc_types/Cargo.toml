@@ -4,8 +4,21 @@ version = "0.1.0"
 authors = ["Herman <herman@registree.io>"]
 edition = "2018"
 
+[lib]
+crate-type = ["staticlib", "rlib"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["thiserror"]
+teaclave_sgx = ["thiserror_sgx", "sgx_tstd"]
+
 [dependencies]
-sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "v1.1.3", features = ["extra_traits"] }
-thiserror = "1.0.24"
+sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["extra_traits"] }
+
+# default
+thiserror = { version = "1.0.24", optional = true}
+
+# teaclave_sgx
+thiserror_sgx = { git = "https://github.com/mesalock-linux/thiserror-sgx.git", package = "thiserror", optional = true }
+sgx_tstd = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["backtrace"] , rev = "v1.1.3", optional = true }

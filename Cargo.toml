@@ -1,7 +1,7 @@
 [workspace]
-members = [ "rtc_tenclave", "rtc_uenclave", "rtc_types", "rtc_data_service", "rtc_data_service/http_server", "rtc_uenclave/data-sys"]
+members = [ "rtc_tenclave", "rtc_uenclave", "rtc_types", "rtc_data_service", "rtc_data_service/http_server", "rtc_uenclave/data-sys", "rtc_uenclave/data-ocalls"]
 exclude = ["rtc_data_enclave"]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
-sgx_types = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }
-sgx_urts = { git = "https://github.com/registreerocks/incubator-teaclave-sgx-sdk.git", branch = "impl-derive-traits-sgx_types" }
+sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }

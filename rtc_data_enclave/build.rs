@@ -6,10 +6,11 @@ use std::env;
 
 fn main() {
     println!("cargo:rerun-if-changed=Enclave.edl");
+    println!("cargo:rerun-if-changed=src");
 
     let sgx_sdk = env::var("SGX_SDK").unwrap();
-    let edger8r = format!("{}/bin/x64/sgx_edger8r", sgx_sdk);
-    let sgx_rust = String::from("/root/sgx-rust");
+    let _edger8r = format!("{}/bin/x64/sgx_edger8r", sgx_sdk);
+    let _sgx_rust = String::from("/root/sgx-rust");
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
     cbindgen::Builder::new()
@@ -32,6 +33,9 @@ fn main() {
         .with_std_types(false)
         .with_language(cbindgen::Language::C)
         .with_no_includes()
+        .with_parse_deps(true)
+        .with_parse_include(&["rtc_types"])
+        .with_parse_extra_bindings(&["rtc_types"])
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("../codegen/data_enclave/bindings.h");

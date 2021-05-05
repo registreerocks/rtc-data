@@ -4,15 +4,29 @@
 typedef struct ms_enclave_create_report_t {
 	CreateReportResult ms_retval;
 	const sgx_target_info_t* ms_p_qe3_target;
-	uint8_t* ms_enclave_pubkey;
+	EnclaveHeldData*  ms_enclave_data;
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
+
+typedef struct ms_rtc_validate_and_save_t {
+	DataUploadResult ms_retval;
+	const uint8_t* ms_payload_ptr;
+	size_t ms_payload_len;
+	UploadMetadata ms_metadata;
+} ms_rtc_validate_and_save_t;
 
 typedef struct ms_t_global_init_ecall_t {
 	uint64_t ms_id;
 	const uint8_t* ms_path;
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
+
+typedef struct ms_rtc_save_sealed_blob_u_t {
+	sgx_status_t ms_retval;
+	const uint8_t* ms_blob_ptr;
+	size_t ms_blob_len;
+	uint8_t* ms_uuid;
+} ms_rtc_save_sealed_blob_u_t;
 
 typedef struct ms_u_thread_set_event_ocall_t {
 	int ms_retval;
@@ -502,6 +516,14 @@ typedef struct ms_u_sgxprotectedfs_do_file_recovery_t {
 	const char* ms_recovery_filename;
 	uint32_t ms_node_size;
 } ms_u_sgxprotectedfs_do_file_recovery_t;
+
+static sgx_status_t SGX_CDECL Enclave_rtc_save_sealed_blob_u(void* pms)
+{
+	ms_rtc_save_sealed_blob_u_t* ms = SGX_CAST(ms_rtc_save_sealed_blob_u_t*, pms);
+	ms->ms_retval = rtc_save_sealed_blob_u(ms->ms_blob_ptr, ms->ms_blob_len, ms->ms_uuid);
+
+	return SGX_SUCCESS;
+}
 
 static sgx_status_t SGX_CDECL Enclave_u_thread_set_event_ocall(void* pms)
 {
@@ -1065,10 +1087,11 @@ static sgx_status_t SGX_CDECL Enclave_u_sgxprotectedfs_do_file_recovery(void* pm
 
 static const struct {
 	size_t nr_ocall;
-	void * table[70];
+	void * table[71];
 } ocall_table_Enclave = {
-	70,
+	71,
 	{
+		(void*)Enclave_rtc_save_sealed_blob_u,
 		(void*)Enclave_u_thread_set_event_ocall,
 		(void*)Enclave_u_thread_wait_event_ocall,
 		(void*)Enclave_u_thread_set_multiple_events_ocall,
@@ -1141,14 +1164,26 @@ static const struct {
 		(void*)Enclave_u_sgxprotectedfs_do_file_recovery,
 	}
 };
-sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, uint8_t enclave_pubkey[420], sgx_report_t* p_report)
+sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report)
 {
 	sgx_status_t status;
 	ms_enclave_create_report_t ms;
 	ms.ms_p_qe3_target = p_qe3_target;
-	ms.ms_enclave_pubkey = (uint8_t*)enclave_pubkey;
+	ms.ms_enclave_data = (EnclaveHeldData *)&enclave_data[0];
 	ms.ms_p_report = p_report;
 	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
+sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata)
+{
+	sgx_status_t status;
+	ms_rtc_validate_and_save_t ms;
+	ms.ms_payload_ptr = payload_ptr;
+	ms.ms_payload_len = payload_len;
+	ms.ms_metadata = metadata;
+	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1160,14 +1195,14 @@ sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_
 	ms.ms_id = id;
 	ms.ms_path = path;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 2, &ocall_table_Enclave, &ms);
 	return status;
 }
 
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
-	status = sgx_ecall(eid, 2, &ocall_table_Enclave, NULL);
+	status = sgx_ecall(eid, 3, &ocall_table_Enclave, NULL);
 	return status;
 }
 

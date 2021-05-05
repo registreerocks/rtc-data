@@ -11,37 +11,18 @@ enclave {
     include "sgx_report.h"
     include "bindings.h"
 
-    // START: Generated with cbingen and modified for edl
-    // enum Tag {
-    //   Success,
-    //   Sgx,
-    //   FailedToGetPublicKey,
-    //   FailedEncodePublicKey
-    // };
-
-    // struct Sgx_Body {
-    //   sgx_status_t _0;
-    // };
-
-    // struct FailedToGetPublicKey_Body {
-    //   sgx_status_t _0;
-    // };
-
-    // union Payload {
-    //   Sgx_Body sgx;
-    //   FailedToGetPublicKey_Body failed_to_get_public_key;
-    // };
-
-    // struct CreateReportResult {
-    //   Payload payload;
-    //   Tag tag;
-    // };
-    // END
-
     trusted {
         /* define ECALLs here. */
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
-                                              [out] uint8_t enclave_pubkey[420],
+                                              [out, isary]EnclaveHeldData enclave_data,
                                               [out]sgx_report_t* p_report);
+
+        public DataUploadResult rtc_validate_and_save([in, count=payload_len]const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+    };
+
+    untrusted {
+        /* define OCALLs here. */
+
+        sgx_status_t rtc_save_sealed_blob_u([in, count=blob_len]const uint8_t* blob_ptr, size_t blob_len,[in]uint8_t uuid[16]);
     };
 };
