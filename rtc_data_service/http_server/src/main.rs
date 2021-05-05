@@ -61,23 +61,24 @@ async fn main() -> std::io::Result<()> {
     ))
     .expect("Failed to bind HTTP server");
 
-    if config.enable_tls {
-        println!(
-            "Starting HTTPS server at https://{}:{}/",
-            config.http_server.host, config.http_server.port_https
-        );
-        server
-            .bind_rustls(
-                format!(
-                    "{}:{}",
-                    config.http_server.host, config.http_server.port_https,
-                ),
-                tls::get_tls_server_config(config.tls).expect("Valid TLS config"),
-            )?
-            .run()
-            .await
-    } else {
-        server.run().await
+    match config.tls {
+        Some(tls_conf) => {
+            println!(
+                "Starting HTTPS server at https://{}:{}/",
+                config.http_server.host, config.http_server.port_https
+            );
+            server
+                .bind_rustls(
+                    format!(
+                        "{}:{}",
+                        config.http_server.host, config.http_server.port_https,
+                    ),
+                    tls::get_tls_server_config(tls_conf).expect("Valid TLS config"),
+                )?
+                .run()
+                .await
+        }
+        None => server.run().await,
     }
 }
 
