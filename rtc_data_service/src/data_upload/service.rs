@@ -1,5 +1,5 @@
 use actix::{Addr, MailboxError};
-use actix_web::{error::ErrorInternalServerError, post, web, HttpRequest};
+use actix_web::{error::ErrorInternalServerError, post, web};
 use models::*;
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError};
 
@@ -11,7 +11,6 @@ use std::convert::TryInto;
 
 #[post("/data/uploads")]
 pub async fn upload_file(
-    _req: HttpRequest,
     req_body: web::Json<RequestBody>,
     enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<web::Json<ResponseBody>> {
