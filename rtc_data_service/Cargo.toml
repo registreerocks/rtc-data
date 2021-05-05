@@ -35,6 +35,7 @@ num-traits = "0.2"
 simple_asn1 = { version = "0.5.1" }
 insta = "1.7.1"
 sodalite = "0.4.0"
+uuid = "0.8.2"
 
 [features]
 test = []

@@ -1642,6 +1642,7 @@ dependencies = [
  "simple_asn1 0.5.2",
  "sodalite",
  "thiserror 1.0.24",
+ "uuid",
 ]
 
 [[package]]
