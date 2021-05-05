@@ -2,7 +2,6 @@
 
 use actix::Actor;
 use actix_web::{
-    http,
     test::{self, read_body},
     App,
 };
