@@ -10,8 +10,9 @@ use rtc_data_service::data_upload::*;
 use rtc_uenclave::EnclaveConfig;
 use sgx_types::sgx_target_info_t;
 use sodalite;
+use uuid::Uuid;
 
-use std::{convert::TryInto, sync::Arc};
+use std::{convert::TryInto, path::Path, sync::Arc};
 
 /// Upload some data, decrypt and check the result.
 #[actix_rt::test]
@@ -94,5 +95,19 @@ async fn data_service_data_upload_ok() {
         &privkey,
     );
 
-    assert!(open_result.is_ok())
+    assert!(open_result.is_ok());
+
+    // Skip over the padding
+    let padding: &[u8; 32] = m[..32].try_into().expect("bad padding");
+    assert_eq!(padding, &[0_u8; 32], "padding should be zero");
+
+    // Parse the rest of the result
+    let _access_key: &[u8; 24] = &m[32..32 + 24].try_into().expect("bad access key");
+    let uuid = Uuid::from_slice(&m[32 + 24..]).expect("bad UUID length");
+
+    // TODO: Test access key validity?
+
+    let uuid_text = uuid.to_string();
+    let path = Path::new(&uuid_text);
+    assert!(path.exists(), "saved upload file {:?} should exist", path);
 }
