@@ -11,6 +11,7 @@ impl Message for DataUploadMessage {
     type Result = Result<DataUploadResponse, EcallError<DataUploadError>>;
 }
 
+/// Handle upload using [`rtc_uenclave::RtcEnclave::upload_data`].
 impl Handler<DataUploadMessage> for DataEnclaveActor {
     type Result = <DataUploadMessage as Message>::Result;
 

@@ -24,10 +24,15 @@ impl DataEnclaveActor {
         }
     }
 
+    /// Return a reference to this actor's RTC enclave.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the enclave was not initialised.
     pub(crate) fn get_enclave(&self) -> &RtcEnclave<Arc<EnclaveConfig>> {
         self.enclave
             .as_ref()
-            .expect("Message sent to unintialized actor")
+            .expect("DataEnclaveActor: tried to access enclave while not initialised")
     }
 }
 

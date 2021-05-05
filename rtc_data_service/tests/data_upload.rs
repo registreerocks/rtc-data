@@ -1,3 +1,5 @@
+//! Tests for [`rtc_data_service::data_upload`]
+
 use actix::Actor;
 use actix_web::{
     http,
@@ -12,6 +14,7 @@ use sodalite;
 
 use std::{convert::TryInto, sync::Arc};
 
+/// Upload some data, decrypt and check the result.
 #[actix_rt::test]
 async fn data_service_data_upload_ok() {
     // TODO: Split this test into re-usable components

@@ -1,3 +1,5 @@
+//! Data validation error types
+
 use std::{error, fmt};
 
 use actix_web::ResponseError;

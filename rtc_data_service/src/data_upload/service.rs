@@ -9,6 +9,13 @@ use crate::merge_error::*;
 use super::DataUploadMessage;
 use std::convert::TryInto;
 
+/// Save uploaded data file using a [`DataUploadMessage`] for [`DataEnclaveActor`].
+///
+/// * Request: POST [`RequestBody`]
+/// * Response: [`DataUploadMessage`]
+///
+/// FIXME: We should use a more efficient binary format (rather than Base64 over JSON) for the data file here.
+///
 #[post("/data/uploads")]
 pub async fn upload_file(
     req_body: web::Json<RequestBody>,
