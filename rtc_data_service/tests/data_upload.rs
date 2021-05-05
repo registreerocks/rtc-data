@@ -60,7 +60,8 @@ async fn data_service_data_upload_ok() {
         &nonce,
         &enclave_pubkey,
         &privkey,
-    );
+    )
+    .unwrap();
 
     println!("{:?}", ciphertext);
 
