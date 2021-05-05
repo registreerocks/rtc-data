@@ -32,7 +32,7 @@ pub mod models {
     use crate::Base64Standard;
     use rtc_types::{DataUploadResponse, UploadMetadata};
     use serde::{Deserialize, Serialize};
-    use std::convert::TryInto;
+    use std::convert::TryFrom;
 
     use crate::data_upload::DataUploadMessage;
 
@@ -68,19 +68,13 @@ pub mod models {
         }
     }
 
-    impl TryInto<DataUploadMessage> for RequestBody {
+    impl TryFrom<RequestBody> for DataUploadMessage {
         type Error = ValidationError;
 
-        fn try_into(self) -> Result<DataUploadMessage, Self::Error> {
-            let uploader_pub_key = self
-                .metadata
-                .uploader_pub_key
-                .try_into()
+        fn try_from(request_body: RequestBody) -> Result<Self, Self::Error> {
+            let uploader_pub_key = TryFrom::try_from(request_body.metadata.uploader_pub_key)
                 .or(Err(ValidationError::new("Invalid pub key")))?;
-            let nonce = self
-                .metadata
-                .nonce
-                .try_into()
+            let nonce = TryFrom::try_from(request_body.metadata.nonce)
                 .or(Err(ValidationError::new("Invalid nonce")))?;
 
             Ok(DataUploadMessage {
@@ -88,7 +82,7 @@ pub mod models {
                     uploader_pub_key,
                     nonce,
                 },
-                payload: self.payload.into_boxed_slice(),
+                payload: request_body.payload.into_boxed_slice(),
             })
         }
     }
