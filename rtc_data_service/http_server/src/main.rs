@@ -27,7 +27,7 @@ use actix_web::{
 async fn main() -> std::io::Result<()> {
     let config = AppConfig::new().expect("Server config expected");
     let enclave_config = Arc::new(config.data_enclave.clone());
-    let allowed_origin = config.http_server.allowed_origins.clone();
+    let allowed_origins = config.http_server.allowed_origins.clone();
 
     let enclave_arbiter = Arbiter::new();
 
@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
     );
 
     let server = HttpServer::new(move || {
-        let cors = build_cors(allowed_origin.clone());
+        let cors = build_cors(allowed_origins.clone());
         let app = App::new()
             .wrap(cors)
             .app_data(enclave_addr.clone())
