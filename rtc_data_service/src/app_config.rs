@@ -10,6 +10,7 @@ pub struct ServerConfig {
     pub host: String,
     pub port: i32,
     pub port_https: i32,
+    pub allowed_origins: Vec<String>,
 }
 
 // TLS configuration
