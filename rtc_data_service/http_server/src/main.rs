@@ -11,11 +11,7 @@ use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::*;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::handlers::*;
-use rtc_data_service::merge_error;
-use rustls::{AllowAnyAuthenticatedClient, NoClientAuth, RootCertStore, ServerConfig};
 
-use std::fs::File;
-use std::io::BufReader;
 use std::sync::Arc;
 
 use actix::{Arbiter, Supervisor};

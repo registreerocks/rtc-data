@@ -8,7 +8,6 @@ use thiserror::Error;
 
 use std::io::BufReader;
 use std::iter;
-use std::sync::Arc;
 use std::{fs, io};
 
 pub fn get_tls_server_config(config: TlsConfig) -> Result<TlsServerConfig, TlsConfigError> {
