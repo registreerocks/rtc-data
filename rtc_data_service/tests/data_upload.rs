@@ -106,7 +106,7 @@ async fn data_service_data_upload_ok() {
 
     // TODO: Test access key validity?
 
-    let uuid_text = uuid.to_string();
-    let path = Path::new(&uuid_text);
+    let path = format!("sealed_data/{}", uuid);
+    let path = Path::new(&path);
     assert!(path.exists(), "saved upload file {:?} should exist", path);
 }
