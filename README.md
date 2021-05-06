@@ -23,6 +23,12 @@ To run the application inside of the container, do `cd rtc-data` and then `./run
 
 ## Running tests
 
+Helper script:
+
+```shell
+./runtests.sh
+```
+
 Currently, some tests with static mocks can intermittently fail due to test thread concurrency.
 (For example, see test `rtc_enclave::tests::dcap_azure_attestation_works`.)
 
