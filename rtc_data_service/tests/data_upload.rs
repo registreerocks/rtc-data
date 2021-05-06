@@ -63,8 +63,6 @@ async fn data_service_data_upload_ok() {
     )
     .unwrap();
 
-    println!("{:?}", ciphertext);
-
     let req_body = models::RequestBody {
         metadata: models::Metadata {
             uploader_pub_key: pubkey.to_vec(),
