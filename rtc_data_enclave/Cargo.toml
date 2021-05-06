@@ -26,6 +26,7 @@ sgx_crypto_helper = { package = "sgx_tcrypto_helper", git = "https://github.com/
 sgx_tunittest = { git = "https://github.com/apache/teaclave-sgx-sdk.git" , rev = "v1.1.3" }
 sgx_tseal = { git = "https://github.com/apache/teaclave-sgx-sdk.git" , rev = "v1.1.3" }
 rtc_types = { path = "../rtc_types", features = ["teaclave_sgx"]}
+rtc_tenclave = { path = "../rtc_tenclave" }
 
 [dependencies]
 # The build fails when specifying rev here, I don't know what is causing it.

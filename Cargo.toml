@@ -2,14 +2,15 @@
 members = [
     "rtc_data_service",
     "rtc_data_service/http_server",
-    "rtc_tenclave",
     "rtc_types",
     "rtc_uenclave",
     "rtc_uenclave/data-ocalls",
     "rtc_uenclave/data-sys",
 ]
+# TODO: Look at creating a seperate workspace for enclave code to share lockfile?
 exclude = [
     "rtc_data_enclave",
+    "rtc_tenclave",
 ]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
