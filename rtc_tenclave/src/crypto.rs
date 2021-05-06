@@ -2,12 +2,13 @@ use rand::prelude::*;
 use rtc_types::EncryptedMessage;
 use rtc_types::{CryptoError as Error, SizedEncryptedMessage};
 use secrecy::{ExposeSecret, Secret};
-use sgx_tse::{rsgx_get_key, rsgx_self_report};
 use sgx_types::*;
 use sodalite;
 use std::prelude::v1::*;
-use thiserror::Error;
 use zeroize::Zeroize;
+
+#[cfg(not(test))]
+use sgx_tse::{rsgx_get_key, rsgx_self_report};
 
 pub type SecretBytes = Secret<Box<[u8]>>;
 
@@ -168,6 +169,7 @@ impl RtcCrypto for SodaBoxCrypto {
     }
 }
 
+#[cfg(not(test))]
 fn get_enclave_key() -> Secret<sgx_key_128bit_t> {
     // From my testing, this is deterministic if the environment and binary is the same
     // TODO: Test in Azure VM using HW mode
@@ -197,7 +199,13 @@ fn get_enclave_key() -> Secret<sgx_key_128bit_t> {
     Secret::new(rsgx_get_key(&key_request).unwrap())
 }
 
-fn pad_msg<const MESSAGE_LEN: usize>(msg: &[u8; MESSAGE_LEN]) -> [u8; { MESSAGE_LEN + 32 }] {
+// TODO: rather create a mock with mockall
+#[cfg(test)]
+fn get_enclave_key() -> Secret<sgx_key_128bit_t> {
+    Secret::new([12_u8; 16])
+}
+
+fn pad_msg<const MESSAGE_LEN: usize>(msg: &[u8; MESSAGE_LEN]) -> [u8; MESSAGE_LEN + 32] {
     let mut whole = [0_u8; MESSAGE_LEN + 32];
     let (_, msg_dest) = whole.split_at_mut(32);
     msg_dest.copy_from_slice(msg);
