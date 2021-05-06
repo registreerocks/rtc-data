@@ -1,0 +1,13 @@
+enclave {
+    from "sgx_tstd.edl" import *;
+    from "sgx_backtrace.edl" import *;
+
+    include "sgx_report.h"
+    include "bindings.h"
+
+    trusted {
+        public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
+                                              [out, isary]EnclaveHeldData enclave_data,
+                                              [out]sgx_report_t* p_report);
+    };
+};
