@@ -1646,10 +1646,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rtc_tenclave"
-version = "0.1.0"
-
-[[package]]
 name = "rtc_types"
 version = "0.1.0"
 dependencies = [

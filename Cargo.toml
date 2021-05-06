@@ -1,6 +1,17 @@
 [workspace]
-members = [ "rtc_tenclave", "rtc_uenclave", "rtc_types", "rtc_data_service", "rtc_data_service/http_server", "rtc_uenclave/data-sys", "rtc_uenclave/data-ocalls"]
-exclude = ["rtc_data_enclave"]
+members = [
+    "rtc_data_service",
+    "rtc_data_service/http_server",
+    "rtc_types",
+    "rtc_uenclave",
+    "rtc_uenclave/data-ocalls",
+    "rtc_uenclave/data-sys",
+]
+# TODO: Look at creating a seperate workspace for enclave code to share lockfile?
+exclude = [
+    "rtc_data_enclave",
+    "rtc_tenclave",
+]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }

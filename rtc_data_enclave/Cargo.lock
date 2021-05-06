@@ -419,6 +419,7 @@ dependencies = [
  "cc",
  "rand 0.7.3",
  "ring",
+ "rtc_tenclave",
  "rtc_types",
  "secrecy",
  "serde 1.0.118",
@@ -436,6 +437,22 @@ dependencies = [
  "sodalite",
  "thiserror 1.0.9",
  "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "rtc_tenclave"
+version = "0.1.0"
+dependencies = [
+ "rand 0.7.3",
+ "ring",
+ "rtc_types",
+ "secrecy",
+ "sgx_tse",
+ "sgx_tstd",
+ "sgx_types",
+ "sodalite",
+ "thiserror 1.0.9",
  "zeroize",
 ]
 

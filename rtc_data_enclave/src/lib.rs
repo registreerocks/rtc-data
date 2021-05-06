@@ -9,7 +9,7 @@
 // TODO: Clean up existing cases causing a flood of warnings for this check, and re-enable
 // #![warn(missing_docs)]
 
-use crypto::{RtcCrypto, SodaBoxCrypto};
+use rtc_tenclave::crypto::{RtcCrypto, SodaBoxCrypto};
 use sgx_types;
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
@@ -17,10 +17,8 @@ extern crate sgx_tstd as std;
 use sgx_tcrypto;
 use sgx_tse;
 
-mod crypto;
 mod data_upload;
 mod ocalls;
-mod util;
 
 use core::slice;
 use rtc_types::*;

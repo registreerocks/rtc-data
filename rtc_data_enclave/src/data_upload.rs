@@ -1,8 +1,8 @@
-use crate::crypto::RtcCrypto;
-use crate::crypto::SodaBoxCrypto as Crypto;
-use crate::util;
 use core::convert::TryInto;
 use rand::prelude::*;
+use rtc_tenclave::crypto::RtcCrypto;
+use rtc_tenclave::crypto::SodaBoxCrypto as Crypto;
+use rtc_tenclave::util;
 use rtc_types::UploadMetadata as Metadata;
 use rtc_types::{CryptoError, DataUploadResponse, EncryptedMessage};
 use rtc_types::{DataUploadError as DataError, SizedEncryptedMessage};
