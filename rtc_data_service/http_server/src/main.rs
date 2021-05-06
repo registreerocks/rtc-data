@@ -6,7 +6,8 @@
 mod tls;
 
 use rtc_data_service::app_config::AppConfig;
-use rtc_data_service::enclave_actor::*;
+use rtc_data_service::data_enclave_actor::*;
+use rtc_data_service::data_upload::*;
 use rtc_data_service::handlers::*;
 use rtc_data_service::merge_error;
 use rustls::{AllowAnyAuthenticatedClient, NoClientAuth, RootCertStore, ServerConfig};
@@ -37,7 +38,7 @@ async fn main() -> std::io::Result<()> {
     // is a big deal atm.
     let enclave_addr = Data::new(Supervisor::start_in_arbiter(
         &enclave_arbiter.handle(),
-        move |_| EnclaveActor::new(enclave_config.clone()),
+        move |_| DataEnclaveActor::new(enclave_config.clone()),
     ));
 
     println!(
@@ -51,7 +52,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(enclave_addr.clone())
             .route("/", web::get().to(server_status))
-            .service(data_enclave_attestation);
+            .service(data_enclave_attestation)
+            .service(upload_file);
 
         app
     })

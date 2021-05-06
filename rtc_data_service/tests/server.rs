@@ -4,10 +4,11 @@ use actix_web::{
     test::{self, read_body},
     App,
 };
+use base64;
 use insta;
-use rtc_data_service::enclave_actor::*;
+use rtc_data_service::data_enclave_actor::*;
 use rtc_data_service::handlers::*;
-use rtc_types::UploadMetadata;
+use rtc_types::{DataUploadResponse, UploadMetadata};
 use rtc_uenclave::EnclaveConfig;
 use sgx_types::sgx_target_info_t;
 use sodalite;
@@ -19,7 +20,7 @@ async fn data_service_attestation_ok() {
     let mut app = test::init_service(
         App::new()
             .data(
-                EnclaveActor::new(Arc::new(EnclaveConfig {
+                DataEnclaveActor::new(Arc::new(EnclaveConfig {
                     lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
                         .to_string(),
                     ..Default::default()
@@ -37,47 +38,4 @@ async fn data_service_attestation_ok() {
 
     let body = read_body(resp).await;
     insta::assert_debug_snapshot!(body);
-}
-
-#[test]
-fn test_test() {
-    println!("hi");
-    let enclave = rtc_uenclave::RtcEnclave::init(EnclaveConfig {
-        lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
-        ..Default::default()
-    })
-    .unwrap();
-    let ehd = enclave
-        .create_report(&sgx_target_info_t::default())
-        .unwrap()
-        .enclave_held_data;
-
-    let mut pubkey = [0_u8; 32];
-    let mut privkey = [0_u8; 32];
-
-    sodalite::box_keypair_seed(&mut pubkey, &mut privkey, &[2_u8; 32]);
-
-    let plaintext = [[0_u8; 32], [12_u8; 32]].concat();
-    let mut ciphertext = vec![0_u8; plaintext.len()];
-    let nonce = [8_u8; 24];
-
-    sodalite::box_(&mut ciphertext, &plaintext, &nonce, &ehd, &privkey);
-
-    println!("{:?}", ciphertext);
-
-    let res = enclave
-        .upload_data(
-            &ciphertext,
-            UploadMetadata {
-                uploader_pub_key: pubkey,
-                nonce,
-            },
-        )
-        .unwrap();
-    println!("res: {:?}", res);
-
-    let mut m = vec![0_u8; res.ciphertext.len()];
-    sodalite::box_open(&mut m, &res.ciphertext, &res.nonce, &ehd, &privkey);
-
-    println!("msg: {:?}", m);
 }

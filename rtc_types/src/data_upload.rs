@@ -14,6 +14,7 @@ pub enum DataUploadError {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct UploadMetadata {
     pub uploader_pub_key: [u8; 32],
     pub nonce: [u8; 24],

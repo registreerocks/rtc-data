@@ -2,7 +2,7 @@ use actix::Addr;
 use actix_web::{error::ErrorInternalServerError, get, web, HttpRequest, HttpResponse};
 use models::Status;
 
-use crate::enclave_actor::*;
+use crate::data_enclave_actor::*;
 use crate::merge_error::*;
 
 pub async fn server_status(_req: HttpRequest) -> HttpResponse {
@@ -14,7 +14,7 @@ pub async fn server_status(_req: HttpRequest) -> HttpResponse {
 #[get("/data/attest")]
 pub async fn data_enclave_attestation(
     _req: HttpRequest,
-    enclave: web::Data<Addr<EnclaveActor>>,
+    enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let jwt = enclave
         .send(RequestAttestation::default())
