@@ -3,7 +3,6 @@ use rtc_types::EncryptedMessage;
 use rtc_types::{CryptoError as Error, SizedEncryptedMessage};
 use secrecy::{ExposeSecret, Secret};
 use sgx_types::*;
-use sodalite;
 use std::prelude::v1::*;
 use zeroize::Zeroize;
 
