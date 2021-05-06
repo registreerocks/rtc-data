@@ -1,3 +1,5 @@
+#![deny(unsafe_op_in_unsafe_fn)]
+
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
