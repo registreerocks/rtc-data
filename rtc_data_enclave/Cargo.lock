@@ -444,6 +444,7 @@ dependencies = [
 name = "rtc_tenclave"
 version = "0.1.0"
 dependencies = [
+ "cfg-if 1.0.0",
  "rand 0.7.3",
  "ring",
  "rtc_types",
