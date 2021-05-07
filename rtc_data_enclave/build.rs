@@ -7,7 +7,9 @@ use std::env;
 fn main() {
     println!("cargo:rerun-if-changed=Enclave.edl");
     println!("cargo:rerun-if-changed=src");
-    println!("cargo:rerun-if-changed=../codegen/data_enclave");
+
+    // Also rebuild if we delete bindings.h
+    println!("cargo:rerun-if-changed=../codegen/data_enclave/bindings.h");
 
     let sgx_sdk = env::var("SGX_SDK").unwrap();
     let _edger8r = format!("{}/bin/x64/sgx_edger8r", sgx_sdk);
