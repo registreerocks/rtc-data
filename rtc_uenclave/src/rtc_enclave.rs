@@ -7,7 +7,10 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
-use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata};
+use rtc_types::{
+    DataUploadError, DataUploadResponse, EcallError, ExecTokenError, ExecTokenResponse,
+    UploadMetadata,
+};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -143,6 +146,15 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
     pub fn destroy(self) {
         println!("Destroying Enclave");
         // Take ownership of self and drop
+    }
+
+    pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
+        let execution_token: Vec<u8> = vec![128; 9];
+
+        let resp = ExecTokenResponse {
+            execution_token: execution_token,
+        };
+        Ok(resp)
     }
 }
 
