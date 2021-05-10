@@ -150,9 +150,11 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
 
     pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
         let execution_token: Vec<u8> = vec![128; 9];
+        let nonce: [u8; 24] = [7; 24];
 
         let resp = ExecTokenResponse {
             execution_token: execution_token,
+            nonce: nonce,
         };
         Ok(resp)
     }
