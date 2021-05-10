@@ -9,6 +9,7 @@ members = [
 ]
 # TODO: Look at creating a seperate workspace for enclave code to share lockfile?
 exclude = [
+    "rtc_auth_enclave",
     "rtc_data_enclave",
     "rtc_tenclave",
 ]

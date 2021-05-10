@@ -9,7 +9,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src");
 
     // Also rebuild if we delete bindings.h
-    println!("cargo:rerun-if-changed=../codegen/data_enclave/bindings.h");
+    println!("cargo:rerun-if-changed=../codegen/auth_enclave/bindings.h");
 
     let sgx_sdk = env::var("SGX_SDK").unwrap();
     let _edger8r = format!("{}/bin/x64/sgx_edger8r", sgx_sdk);
@@ -41,5 +41,5 @@ fn main() {
         .with_parse_extra_bindings(&["rtc_types"])
         .generate()
         .expect("Unable to generate bindings")
-        .write_to_file("../codegen/data_enclave/bindings.h");
+        .write_to_file("../codegen/auth_enclave/bindings.h");
 }
