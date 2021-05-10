@@ -3,8 +3,7 @@ use std::convert::TryInto;
 use actix::{Addr, MailboxError};
 use actix_web::{error::ErrorInternalServerError, post, web, HttpRequest};
 use models::*;
-use rtc_types::{EcallError, ExecTokenError, ExecTokenResponse};
-use std::convert::TryFrom;
+use rtc_types::{ExecTokenError, ExecTokenResponse};
 
 use crate::data_enclave_actor::DataEnclaveActor;
 use crate::merge_error::*;

@@ -15,7 +15,7 @@ impl Message for ExecTokenMessage {
 impl Handler<ExecTokenMessage> for DataEnclaveActor {
     type Result = <ExecTokenMessage as Message>::Result;
 
-    fn handle(&mut self, msg: ExecTokenMessage, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _msg: ExecTokenMessage, _ctx: &mut Self::Context) -> Self::Result {
         self.get_enclave().get_exec_token()
     }
 }
