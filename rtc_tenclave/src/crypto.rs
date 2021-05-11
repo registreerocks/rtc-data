@@ -196,7 +196,6 @@ impl RtcCrypto for SodaBoxCrypto {
         //
         match sodalite::box_(
             &mut ciphertext,
-            // Need to pad with 32 0s see https://nacl.cr.yp.to/secretbox.html
             &[
                 &[0u8; CRYPTO_BOX_ZEROBYTES] as &[u8],
                 message.expose_secret(),
