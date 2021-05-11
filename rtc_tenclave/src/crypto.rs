@@ -97,6 +97,13 @@ impl RtcCrypto for SodaBoxCrypto {
         let padded_ciphertext = &[&[0u8; 16] as &[u8], ciphertext].concat();
         let mut message = vec![0_u8; padded_ciphertext.len()];
 
+        // Docs: https://nacl.cr.yp.to/box.html
+        //
+        // "The caller must ensure, before calling the crypto_box_open function,
+        // that the first crypto_box_BOXZEROBYTES bytes of the ciphertext c are all 0.
+        // The crypto_box_open function ensures (in case of success) that
+        // the first crypto_box_ZEROBYTES bytes of the plaintext m are all 0."
+        //
         match sodalite::box_open(
             &mut message,
             padded_ciphertext,
@@ -125,6 +132,13 @@ impl RtcCrypto for SodaBoxCrypto {
         // NOTE: the message gets copied here, the copied value will be zeroed manually
         let mut padded_message: [u8; MESSAGE_LEN + 32] = pad_msg(&message);
 
+        // Docs: https://nacl.cr.yp.to/box.html
+        //
+        // "The caller must ensure, before calling the C NaCl crypto_box function,
+        // that the first crypto_box_ZEROBYTES bytes of the message m are all 0.
+        // The crypto_box function ensures that the first crypto_box_BOXZEROBYTES
+        // bytes of the ciphertext c are all 0."
+        //
         let res = match sodalite::box_(
             &mut ciphertext,
             &padded_message,
@@ -157,6 +171,13 @@ impl RtcCrypto for SodaBoxCrypto {
         // at the front
         let mut ciphertext = vec![0_u8; message.expose_secret().len() + 32];
 
+        // Docs: https://nacl.cr.yp.to/box.html
+        //
+        // "The caller must ensure, before calling the C NaCl crypto_box function,
+        // that the first crypto_box_ZEROBYTES bytes of the message m are all 0.
+        // The crypto_box function ensures that the first crypto_box_BOXZEROBYTES
+        // bytes of the ciphertext c are all 0."
+        //
         match sodalite::box_(
             &mut ciphertext,
             // Need to pad with 32 0s see https://nacl.cr.yp.to/secretbox.html
