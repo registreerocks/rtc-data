@@ -72,9 +72,9 @@ pub mod models {
 
         fn try_from(request_body: RequestBody) -> Result<Self, Self::Error> {
             let uploader_pub_key = TryFrom::try_from(request_body.metadata.uploader_pub_key)
-                .or(Err(ValidationError::new("Invalid pub key")))?;
+                .map_err(|_| ValidationError::new("Invalid pub key"))?;
             let nonce = TryFrom::try_from(request_body.metadata.nonce)
-                .or(Err(ValidationError::new("Invalid nonce")))?;
+                .map_err(|_| ValidationError::new("Invalid nonce"))?;
 
             Ok(ExecTokenMessage {
                 metadata: ExecReqMetadata {
