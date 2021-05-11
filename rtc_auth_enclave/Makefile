@@ -32,7 +32,7 @@ CUSTOM_LIBRARY_PATH := $(CUSTOM_BUILD_PATH)/lib
 CUSTOM_BIN_PATH := $(CUSTOM_BUILD_PATH)/bin
 
 Crate_Files := $(wildcard src/*.rs)
-Out_Library := $(CRATE_BUILD_PATH)/lib$(CRATE_LIB_NAME).a
+Out_StaticLib := $(CRATE_BUILD_PATH)/lib$(CRATE_LIB_NAME).a
 Out_Bindings := $(CODEGEN_PATH)/bindings.h
 
 Out_EdgeObject := $(CUSTOM_LIBRARY_PATH)/Enclave_t.o
