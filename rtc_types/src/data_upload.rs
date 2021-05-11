@@ -20,8 +20,8 @@ pub struct UploadMetadata {
     pub nonce: [u8; 24],
 }
 
-/// (16 byte padding) + (password length) + (uuid)
-pub const DATA_UPLOAD_RESPONSE_LEN: usize = 24 + 16 + 16;
+/// 16 byte MAC + encrypted payload (24 byte data access key + 16 byte UUID)
+pub const DATA_UPLOAD_RESPONSE_LEN: usize = 16 + (24 + 16);
 
 #[repr(C)]
 #[derive(Clone, Debug)]

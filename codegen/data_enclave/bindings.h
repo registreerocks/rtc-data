@@ -8,9 +8,9 @@
 #define ENCLAVE_HELD_DATA_SIZE ENCLAVE_HELD_PUB_KEY_SIZE
 
 /**
- * (16 byte padding) + (password length) + (uuid)
+ * 16 byte MAC + encrypted payload (24 byte data access key + 16 byte UUID)
  */
-#define DATA_UPLOAD_RESPONSE_LEN ((24 + 16) + 16)
+#define DATA_UPLOAD_RESPONSE_LEN (16 + (24 + 16))
 
 typedef enum CreateReportResult_Tag {
   Success,
