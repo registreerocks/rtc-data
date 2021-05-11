@@ -207,7 +207,7 @@ impl RtcCrypto for SodaBoxCrypto {
         ) {
             Ok(_) => {
                 ciphertext.rotate_left(CRYPTO_BOX_BOXZEROBYTES);
-                ciphertext.truncate(CRYPTO_BOX_BOXZEROBYTES);
+                ciphertext.truncate(ciphertext.len() - CRYPTO_BOX_BOXZEROBYTES);
                 Ok(EncryptedMessage {
                     ciphertext: ciphertext.into_boxed_slice(),
                     nonce,
