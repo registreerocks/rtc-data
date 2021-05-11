@@ -34,7 +34,7 @@ async fn data_service_data_upload_ok() {
 
     // TODO: Add a test that can run inside of the enclave and use the JWT token to get
     // the enclave key
-    let enclave = rtc_uenclave::RtcEnclave::init(EnclaveConfig {
+    let enclave = rtc_uenclave::RtcDataEnclave::init(EnclaveConfig {
         lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
         ..Default::default()
     })

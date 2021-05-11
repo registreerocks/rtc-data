@@ -1,16 +1,15 @@
 use std::borrow::Borrow;
 
-use crate::{azure_attestation::AttestSgxEnclaveRequest, http_client::HttpRequestError};
+use crate::{
+    azure_attestation::AttestSgxEnclaveRequest, ecalls::RtcEcalls, http_client::HttpRequestError,
+};
 use ecalls::EnclaveReportResult;
 #[cfg(test)]
 use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
-use rtc_types::{
-    DataUploadError, DataUploadResponse, EcallError, ExecTokenError, ExecTokenResponse,
-    UploadMetadata,
-};
+use rtc_types::{ExecTokenError, ExecTokenResponse};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -53,21 +52,23 @@ pub struct EnclaveConfig {
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
 #[cfg_attr(not(test), derive(Debug))]
-pub struct RtcEnclave<T: Borrow<EnclaveConfig>> {
-    base_enclave: SgxEnclave,
-    quoting_enclave: QuotingEnclave,
-    attestation_client: AzureAttestationClient<ureq::Agent>,
-    config: T,
+pub(crate) struct RtcEnclave<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> {
+    pub(crate) base_enclave: SgxEnclave,
+    pub(crate) quoting_enclave: QuotingEnclave,
+    pub(crate) attestation_client: AzureAttestationClient<ureq::Agent>,
+    pub(crate) config: TCfg,
+    ecalls: TEcalls,
 }
 
-impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
+impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> RtcEnclave<TCfg, TEcalls> {
     /// Creates a new enclave instance with the provided configuration
-    pub fn init(cfg: T) -> Result<RtcEnclave<T>, sgx_status_t> {
+    pub fn init(cfg: TCfg) -> Result<Self, sgx_status_t> {
         Ok(RtcEnclave {
             attestation_client: Self::init_attestation_client(),
             quoting_enclave: Self::init_quoting_enclave(),
             base_enclave: Self::init_base_enclave(cfg.borrow())?,
             config: cfg,
+            ecalls: TEcalls::default(),
         })
     }
 
@@ -101,10 +102,9 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         &self,
         qe_target_info: &sgx_target_info_t,
     ) -> Result<EnclaveReportResult, AttestationError> {
-        Ok(ecalls::create_report(
-            self.base_enclave.geteid(),
-            qe_target_info,
-        )?)
+        Ok(self
+            .ecalls
+            .create_report(self.base_enclave.geteid(), qe_target_info)?)
     }
 
     /// `true` if the enclave have been initialized
@@ -134,12 +134,8 @@ impl<T: Borrow<EnclaveConfig>> RtcEnclave<T> {
         Ok(response.token)
     }
 
-    pub fn upload_data(
-        &self,
-        payload: &[u8],
-        metadata: UploadMetadata,
-    ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
-        ecalls::validate_and_save(self.base_enclave.geteid(), payload, metadata)
+    pub fn geteid(&self) -> sgx_enclave_id_t {
+        self.base_enclave.geteid()
     }
 
     /// Take ownership of self and drop resources
@@ -218,29 +214,15 @@ mod tests {
     use num_traits::FromPrimitive;
     use proptest::collection::size_range;
     use proptest::prelude::*;
+    use rtc_ecalls::MockRtcEnclaveEcalls;
+    use rtc_types::CreateReportResult;
+    use rtc_types::EnclaveHeldData;
     use rtc_types::{ENCLAVE_HELD_DATA_SIZE, RSA3072_PKCS8_DER_SIZE};
     use simple_asn1::{to_der, ASN1Block, BigInt, BigUint, OID};
     use std::convert::TryInto;
 
     #[test]
     fn dcap_azure_attestation_works() {
-        // FIXME: This mock rarely fails with a "No matching expectation found" error,
-        //        due to test thread concurrency.
-        //
-        // We can avoid this with a mutex, or serial_test, but in the meantime,
-        // a simple workaround is to run with --test-threads=1 or RUST_TEST_THREADS=1
-        //
-        let _static_ctx = {
-            let create_report_ctx = ecalls::create_report_context();
-            create_report_ctx
-                .expect()
-                .return_const(Ok(EnclaveReportResult {
-                    enclave_held_data: [0; ENCLAVE_HELD_DATA_SIZE],
-                    enclave_report: sgx_report_t::default(),
-                }));
-            create_report_ctx
-        };
-
         let sut = {
             let enclave_id = 3u64;
             let mut mock_qe = QuotingEnclave::default();
@@ -261,11 +243,28 @@ mod tests {
                 .expect_attest()
                 .returning(|_, _| Ok(AttestationResponse::default()));
 
+            let eid = 12u64;
+            let qe_target_info = sgx_target_info_t::default();
+            let ehd = [2; ENCLAVE_HELD_DATA_SIZE];
+            let report = sgx_report_t::default();
+            let mut sys_mock = MockRtcEnclaveEcalls::default();
+            sys_mock
+                .expect_enclave_create_report()
+                .returning(move |_, ret, _, key, rep| {
+                    unsafe {
+                        *rep = report;
+                        (*key).copy_from_slice(&ehd);
+                        *ret = CreateReportResult::Success;
+                    }
+                    sgx_status_t::SGX_SUCCESS
+                });
+
             RtcEnclave {
                 base_enclave: mock_be,
                 quoting_enclave: mock_qe,
                 attestation_client: mock_aa_client,
                 config: EnclaveConfig::default(),
+                ecalls: sys_mock,
             }
         };
 
@@ -364,19 +363,27 @@ mod tests {
             let mut mock = MockSgxEnclave::default();
             mock.expect_geteid().return_const(enclave_id as sgx_enclave_id_t);
 
+            let eid = 12u64;
+            let qe_target_info = sgx_target_info_t::default();
+            let mut sys_mock = MockRtcEnclaveEcalls::default();
+            sys_mock
+                .expect_enclave_create_report()
+                .returning(move |_, ret, _, key, rep| {
+                    unsafe {
+                        *rep = report;
+                        (*key).copy_from_slice(&ehd);
+                        *ret = CreateReportResult::Success;
+                    }
+                    sgx_status_t::SGX_SUCCESS
+                });
+
             let sut = RtcEnclave{
                 base_enclave: mock,
                 quoting_enclave: QuotingEnclave::default(),
                 attestation_client: AzureAttestationClient::<ureq::Agent>::default(),
                 config: EnclaveConfig::default(),
-
+                ecalls: sys_mock,
             };
-
-            let ctx = ecalls::create_report_context();
-            ctx.expect().with(eq(enclave_id), eq(qe_ti)).return_const(Ok(ecalls::EnclaveReportResult{
-                enclave_held_data: ehd,
-                enclave_report: report
-            }));
 
             let res = sut.create_report(&qe_ti).unwrap();
 

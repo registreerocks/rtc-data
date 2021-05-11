@@ -8,9 +8,11 @@
 
 mod azure_attestation;
 mod ecalls;
+mod enclaves;
 mod http_client;
 mod quote;
 mod rtc_enclave;
 
 pub use ecalls::{CreateReportError, EnclaveReportResult};
+pub use enclaves::*;
 pub use rtc_enclave::*;
