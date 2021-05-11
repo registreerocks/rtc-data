@@ -1,9 +1,8 @@
 [package]
-name = "data-sys"
+name = "auth-sys"
 version = "0.1.0"
 authors = ["Herman <herman@registree.io>"]
 edition = "2018"
-links = "Enclave_u"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,8 +10,7 @@ links = "Enclave_u"
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["extra_traits"] }
 sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 rtc_types = { path = "../../rtc_types" }
-data-ocalls = { path = "../data-ocalls" }
-# TODO: Move this to a seperate feature?
+
 mockall = { version = "0.9.1", features = ["nightly"] }
 rtc-ecalls = { path = "../rtc-ecalls" }
 

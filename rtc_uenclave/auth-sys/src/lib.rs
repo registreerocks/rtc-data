@@ -1,19 +1,12 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
-use data_ocalls;
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::*;
 use sgx_types::*;
 use sgx_urts;
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
 #[derive(Default)]
-pub struct DataSys();
+pub struct AuthSys();
 
-impl RtcEnclaveEcalls for DataSys {
+impl RtcEnclaveEcalls for AuthSys {
     unsafe fn enclave_create_report(
         &self,
         eid: sgx_enclave_id_t,
@@ -22,6 +15,6 @@ impl RtcEnclaveEcalls for DataSys {
         enclave_data: *mut EnclaveHeldData,
         p_report: *mut sgx_report_t,
     ) -> sgx_status_t {
-        ffi::enclave_create_report(eid, retval, p_qe3_target, enclave_data, p_report)
+        todo!();
     }
 }
