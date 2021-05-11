@@ -14,6 +14,10 @@ use uuid::Uuid;
 
 use std::{convert::TryInto, path::Path, sync::Arc};
 
+// See rtc_tenclave/src/crypto.rs
+const CRYPTO_BOX_ZEROBYTES: usize = 32;
+const CRYPTO_BOX_BOXZEROBYTES: usize = 16;
+
 /// Upload some data, decrypt and check the result.
 #[actix_rt::test]
 async fn data_service_data_upload_ok() {
@@ -68,7 +72,7 @@ async fn data_service_data_upload_ok() {
             uploader_pub_key: pubkey.to_vec(),
             nonce: nonce.to_vec(),
         },
-        payload: ciphertext[16..].to_vec(),
+        payload: ciphertext[CRYPTO_BOX_BOXZEROBYTES..].to_vec(),
     };
 
     let req = test::TestRequest::post()
@@ -83,13 +87,13 @@ async fn data_service_data_upload_ok() {
     let body: models::ResponseBody = serde_json::from_slice(&read_body(resp).await).unwrap();
 
     // NOTE: re-add padding since sodalite supports the C-style nacl api
-    let mut m = vec![0_u8; body.ciphertext.len() + 16];
+    let mut m = vec![0_u8; body.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
 
     // TODO: Test bad privkey, nonce etc and ensure failure
 
     let open_result = sodalite::box_open(
         &mut m,
-        &[&[0_u8; 16] as &[u8], &body.ciphertext].concat(),
+        &[&[0_u8; CRYPTO_BOX_BOXZEROBYTES] as &[u8], &body.ciphertext].concat(),
         &body.nonce.try_into().unwrap(),
         &enclave_pubkey,
         &privkey,
@@ -98,12 +102,18 @@ async fn data_service_data_upload_ok() {
     assert!(open_result.is_ok());
 
     // Skip over the padding
-    let padding: &[u8; 32] = m[..32].try_into().expect("bad padding");
-    assert_eq!(padding, &[0_u8; 32], "padding should be zero");
+    let padding: &[u8; CRYPTO_BOX_ZEROBYTES] =
+        m[..CRYPTO_BOX_ZEROBYTES].try_into().expect("bad padding");
+    assert_eq!(
+        padding, &[0_u8; CRYPTO_BOX_ZEROBYTES],
+        "padding should be zero"
+    );
 
     // Parse the rest of the result
-    let _access_key: &[u8; 24] = &m[32..32 + 24].try_into().expect("bad access key");
-    let uuid = Uuid::from_slice(&m[32 + 24..]).expect("bad UUID length");
+    let _access_key: &[u8; 24] = &m[CRYPTO_BOX_ZEROBYTES..CRYPTO_BOX_ZEROBYTES + 24]
+        .try_into()
+        .expect("bad access key");
+    let uuid = Uuid::from_slice(&m[CRYPTO_BOX_ZEROBYTES + 24..]).expect("bad UUID length");
 
     // TODO: Test access key validity?
 
