@@ -9,6 +9,15 @@ use zeroize::Zeroize;
 #[cfg(not(test))]
 use sgx_tse::{rsgx_get_key, rsgx_self_report};
 
+// FIXME: sodalite should expose these padding constants.
+// Values referenced from https://tweetnacl.cr.yp.to/20140427/tweetnacl.h
+
+/// C NaCl Box API: Zero padding for plaintext.
+const CRYPTO_BOX_ZEROBYTES: usize = 32;
+
+/// C NaCl Box API: Zero padding for ciphertext.
+const CRYPTO_BOX_BOXZEROBYTES: usize = 16;
+
 pub type SecretBytes = Secret<Box<[u8]>>;
 
 pub trait RtcCrypto {
@@ -33,14 +42,17 @@ pub trait RtcCrypto {
         &mut self,
         message: [u8; MESSAGE_LEN],
         their_pk: &Self::PublicKey,
-    ) -> Result<SizedEncryptedMessage<{ MESSAGE_LEN + 16 }>, Error>
+    ) -> Result<
+        SizedEncryptedMessage<{ MESSAGE_LEN + 16 }>, // 16 = CRYPTO_BOX_ZEROBYTES - CRYPTO_BOX_BOXZEROBYTES
+        Error,
+    >
     // NOTE: We need to indicate to the compiler that `MESSAGE_LEN + 32`
     // should be a valid usize (that wont overflow) so that it can enforce
     // this at compile time.
     // see: https://github.com/rust-lang/rust/issues/82509
     // Also see compiler error if omitted on later compilers
     where
-        [(); MESSAGE_LEN + 32]: ;
+        [(); MESSAGE_LEN + /* CRYPTO_BOX_ZEROBYTES */ 32]: ;
 
     fn get_pubkey(&self) -> Self::PublicKey;
 
@@ -94,7 +106,7 @@ impl RtcCrypto for SodaBoxCrypto {
     ) -> Result<SecretBytes, Error> {
         // It is the responsibility of the caller to pad ciphertext
         // see: https://github.com/registreerocks/rtc-data/issues/51
-        let padded_ciphertext = &[&[0u8; 16] as &[u8], ciphertext].concat();
+        let padded_ciphertext = &[&[0u8; CRYPTO_BOX_BOXZEROBYTES] as &[u8], ciphertext].concat();
         let mut message = vec![0_u8; padded_ciphertext.len()];
 
         // Docs: https://nacl.cr.yp.to/box.html
@@ -122,15 +134,19 @@ impl RtcCrypto for SodaBoxCrypto {
         // Cannot be wrapped in a secret because of unknown size, will be zeroed manually
         mut message: [u8; MESSAGE_LEN],
         their_pk: &Self::PublicKey,
-    ) -> Result<SizedEncryptedMessage<{ MESSAGE_LEN + 16 }>, Error>
+    ) -> Result<
+        SizedEncryptedMessage<{ MESSAGE_LEN + 16 }>, // 16 = CRYPTO_BOX_ZEROBYTES - CRYPTO_BOX_BOXZEROBYTES
+        Error,
+    >
     where
-        [(); MESSAGE_LEN + 32]: ,
+        [(); MESSAGE_LEN + /* CRYPTO_BOX_ZEROBYTES */ 32]: ,
     {
         let nonce = self.get_nonce()?;
-        let mut ciphertext = [0_u8; MESSAGE_LEN + 32];
+        let mut ciphertext = [0_u8; MESSAGE_LEN + /* CRYPTO_BOX_ZEROBYTES */ 32];
 
         // NOTE: the message gets copied here, the copied value will be zeroed manually
-        let mut padded_message: [u8; MESSAGE_LEN + 32] = pad_msg(&message);
+        let mut padded_message: [u8; MESSAGE_LEN + /* CRYPTO_BOX_ZEROBYTES */ 32] =
+            pad_msg(&message);
 
         // Docs: https://nacl.cr.yp.to/box.html
         //
@@ -149,7 +165,7 @@ impl RtcCrypto for SodaBoxCrypto {
             Ok(_) => Ok(SizedEncryptedMessage {
                 // This should never panic since
                 // (MESSAGE_LEN + 32 - 16) = (MESSAGE_LEN + 16)
-                ciphertext: ciphertext[16..].try_into().unwrap(),
+                ciphertext: ciphertext[CRYPTO_BOX_BOXZEROBYTES..].try_into().unwrap(),
                 nonce,
             }),
             Err(_) => Err(self::Error::Unknown),
@@ -169,7 +185,7 @@ impl RtcCrypto for SodaBoxCrypto {
         let nonce = self.get_nonce()?;
         // Length is padded here since the message needs to be padded with 32 `0_u8`
         // at the front
-        let mut ciphertext = vec![0_u8; message.expose_secret().len() + 32];
+        let mut ciphertext = vec![0_u8; message.expose_secret().len() + CRYPTO_BOX_ZEROBYTES];
 
         // Docs: https://nacl.cr.yp.to/box.html
         //
@@ -181,14 +197,18 @@ impl RtcCrypto for SodaBoxCrypto {
         match sodalite::box_(
             &mut ciphertext,
             // Need to pad with 32 0s see https://nacl.cr.yp.to/secretbox.html
-            &[&[0u8; 32] as &[u8], message.expose_secret()].concat(),
+            &[
+                &[0u8; CRYPTO_BOX_ZEROBYTES] as &[u8],
+                message.expose_secret(),
+            ]
+            .concat(),
             &nonce,
             their_pk,
             self.private_key.expose_secret(),
         ) {
             Ok(_) => {
-                ciphertext.rotate_left(16);
-                ciphertext.truncate(16);
+                ciphertext.rotate_left(CRYPTO_BOX_BOXZEROBYTES);
+                ciphertext.truncate(CRYPTO_BOX_BOXZEROBYTES);
                 Ok(EncryptedMessage {
                     ciphertext: ciphertext.into_boxed_slice(),
                     nonce,
