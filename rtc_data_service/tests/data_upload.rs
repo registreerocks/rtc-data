@@ -68,7 +68,7 @@ async fn data_service_data_upload_ok() {
             uploader_pub_key: pubkey.to_vec(),
             nonce: nonce.to_vec(),
         },
-        payload: ciphertext,
+        payload: ciphertext[16..].to_vec(),
     };
 
     let req = test::TestRequest::post()
@@ -82,13 +82,14 @@ async fn data_service_data_upload_ok() {
 
     let body: models::ResponseBody = serde_json::from_slice(&read_body(resp).await).unwrap();
 
-    let mut m = vec![0_u8; body.ciphertext.len()];
+    // NOTE: re-add padding since sodalite supports the C-style nacl api
+    let mut m = vec![0_u8; body.ciphertext.len() + 16];
 
     // TODO: Test bad privkey, nonce etc and ensure failure
 
     let open_result = sodalite::box_open(
         &mut m,
-        &body.ciphertext,
+        &[&[0_u8; 16] as &[u8], &body.ciphertext].concat(),
         &body.nonce.try_into().unwrap(),
         &enclave_pubkey,
         &privkey,
