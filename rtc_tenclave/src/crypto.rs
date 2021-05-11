@@ -25,6 +25,10 @@ pub trait RtcCrypto {
     type PrivateKey; // = Secret<[u8; 32]>;
     type Nonce; // = [u8; 24];
 
+    // TODO: This currently hardcodes various constants for the message padding and MAC sizes to
+    //       what's used by tweetnacl / sodalite. These should be changed to associated constants
+    //       once we have another implementation?
+
     fn decrypt_message(
         &self,
         ciphertext: &[u8],
