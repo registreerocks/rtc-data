@@ -37,8 +37,8 @@ fn main() {
         .with_language(cbindgen::Language::C)
         .with_no_includes()
         .with_parse_deps(true)
-        .with_parse_include(&["rtc_types"])
-        .with_parse_extra_bindings(&["rtc_types"])
+        .with_parse_include(&["rtc_types", "rtc_tenclave"])
+        .with_parse_extra_bindings(&["rtc_types", "rtc_tenclave"])
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("../codegen/auth_enclave/bindings.h");

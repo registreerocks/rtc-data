@@ -15,8 +15,10 @@ cfg_if::cfg_if! {
     if #[cfg(test)] {
         extern crate thiserror_std as thiserror;
         extern crate rand_std as rand;
+        extern crate sgx_ucrypto as sgx_tcrypto;
     }
 }
 
 pub mod crypto;
+pub mod enclave;
 pub mod util;
