@@ -50,7 +50,7 @@ pub mod models {
         pub nonce: Vec<u8>,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
     pub struct ResponseBody {
         #[serde(with = "Base64Standard")]
         pub execution_token: Vec<u8>,
