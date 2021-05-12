@@ -285,6 +285,80 @@ fn drop_prefix<T>(prefix_len: usize, mut vec: Vec<T>) -> Vec<T> {
     vec
 }
 
+#[cfg(test)]
+mod test {
+    use std::ops::Deref;
+
+    use super::*;
+
+    fn get_test_keypair(seed: &[u8; 32]) -> (sodalite::BoxPublicKey, sodalite::BoxSecretKey) {
+        let mut pub_key = sodalite::BoxPublicKey::default();
+        let mut secret_key = sodalite::BoxSecretKey::default();
+        sodalite::box_keypair_seed(&mut pub_key, &mut secret_key, seed);
+        (pub_key, secret_key)
+    }
+
+    #[test]
+    fn soda_box_decrypt_works() {
+        let message = [vec![0_u8; CRYPTO_BOX_ZEROBYTES], vec![83_u8; 432]].concat();
+        let (pub_key, secret_key) = get_test_keypair(&[32_u8; 32]);
+        let mut ciphertext = vec![0_u8; message.len()];
+        let nonce = [32_u8; sodalite::BOX_NONCE_LEN];
+
+        let sut = SodaBoxCrypto::new();
+
+        sodalite::box_(
+            &mut ciphertext,
+            &message,
+            &nonce,
+            &sut.get_pubkey(),
+            &secret_key,
+        )
+        .unwrap();
+
+        let result = sut.decrypt_message(&ciphertext[CRYPTO_BOX_BOXZEROBYTES..], &pub_key, &nonce);
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap().expose_secret().deref(),
+            &message[32..],
+            "Messages does not match"
+        )
+    }
+
+    #[test]
+    fn soda_box_encrypt_works() {
+        let message = [vec![83_u8; 432]].concat();
+        let (pub_key, secret_key) = get_test_keypair(&[32_u8; 32]);
+
+        let mut sut = SodaBoxCrypto::new();
+
+        let result = sut
+            .encrypt_message(Secret::new(message.clone().into_boxed_slice()), &pub_key)
+            .unwrap();
+        let mut plaintext = vec![0_u8; result.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
+        let ciphertext = [
+            vec![0_u8; CRYPTO_BOX_BOXZEROBYTES],
+            result.ciphertext.into(),
+        ]
+        .concat();
+
+        sodalite::box_open(
+            &mut plaintext,
+            &ciphertext,
+            &result.nonce,
+            &sut.get_pubkey(),
+            &secret_key,
+        )
+        .unwrap();
+
+        assert_eq!(&plaintext[32..], &message, "Messages does not match")
+    }
+
+    // TODO: test encrypt_sized
+
+    // TODO: Prop test encrypt = encrypt sized
+}
+
 // TODO: Use feature flags to toggle use of different crypto libs
 // NOTE: Keeping this comment as a reference to AEAD using Ring
 // fn generate_client_payload_ring(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
