@@ -127,11 +127,9 @@ impl RtcCrypto for SodaBoxCrypto {
             their_pk,
             self.private_key.expose_secret(),
         ) {
-            Ok(_) => Ok(Secret::new({
-                message.rotate_left(CRYPTO_BOX_ZEROBYTES);
-                message.truncate(message.len() - CRYPTO_BOX_ZEROBYTES);
-                message.into_boxed_slice()
-            })),
+            Ok(_) => Ok(Secret::new(
+                drop_prefix(CRYPTO_BOX_ZEROBYTES, message).into_boxed_slice(),
+            )),
             // TODO: return compound error type
             Err(_) => Err(self::Error::Unknown),
         }
@@ -213,14 +211,10 @@ impl RtcCrypto for SodaBoxCrypto {
             their_pk,
             self.private_key.expose_secret(),
         ) {
-            Ok(_) => {
-                ciphertext.rotate_left(CRYPTO_BOX_BOXZEROBYTES);
-                ciphertext.truncate(ciphertext.len() - CRYPTO_BOX_BOXZEROBYTES);
-                Ok(EncryptedMessage {
-                    ciphertext: ciphertext.into_boxed_slice(),
-                    nonce,
-                })
-            }
+            Ok(_) => Ok(EncryptedMessage {
+                ciphertext: drop_prefix(CRYPTO_BOX_BOXZEROBYTES, ciphertext).into_boxed_slice(),
+                nonce,
+            }),
             Err(_) => Err(self::Error::Unknown),
         }
     }
