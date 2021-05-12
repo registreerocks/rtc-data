@@ -2,11 +2,14 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+#[allow(unused_imports)]
 use data_ocalls;
+#[allow(unused_imports)]
+use sgx_urts;
+
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::*;
 use sgx_types::*;
-use sgx_urts;
 
 pub mod ffi {
     use super::*;

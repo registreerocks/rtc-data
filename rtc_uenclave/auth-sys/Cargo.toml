@@ -10,8 +10,6 @@ edition = "2018"
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["extra_traits"] }
 sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 rtc_types = { path = "../../rtc_types" }
-
-mockall = { version = "0.9.1", features = ["nightly"] }
 rtc-ecalls = { path = "../rtc-ecalls" }
 
 [build-dependencies]

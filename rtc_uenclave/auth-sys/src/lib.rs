@@ -1,7 +1,14 @@
+#[allow(unused_imports)]
+use sgx_urts;
+
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::*;
 use sgx_types::*;
-use sgx_urts;
+
+pub mod ffi {
+    use super::*;
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 #[derive(Default)]
 pub struct AuthSys();
@@ -15,6 +22,6 @@ impl RtcEnclaveEcalls for AuthSys {
         enclave_data: *mut EnclaveHeldData,
         p_report: *mut sgx_report_t,
     ) -> sgx_status_t {
-        todo!();
+        ffi::enclave_create_report(eid, retval, p_qe3_target, enclave_data, p_report)
     }
 }
