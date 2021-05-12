@@ -43,7 +43,8 @@ fn main() {
         .flat_map(|x| vec!["-I", x.as_str()])
         .collect();
 
-    let bindings = bindgen::Builder::default()
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindgen::Builder::default()
         .header("wrapper.h")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
@@ -57,16 +58,6 @@ fn main() {
         .clang_args(&inc_args)
         .generate()
         .expect("Unable to generate bindings")
-        .to_string();
-
-    let mut bindings_string = "use mockall::automock;\n".to_owned();
-
-    bindings_string.push_str("#[automock]\npub mod ffi {\nuse super::*;\n");
-    bindings_string.push_str(&bindings);
-    bindings_string.push_str("}\n");
-
-    // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    std::fs::write(out_path.join("bindings.rs"), bindings_string.as_bytes())
-        .expect("Failed to save bindings");
+        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Failed to wirte bindings to file");
 }

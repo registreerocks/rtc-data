@@ -8,7 +8,10 @@ use rtc_types::*;
 use sgx_types::*;
 use sgx_urts;
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+pub mod ffi {
+    use super::*;
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 #[derive(Default)]
 pub struct DataSys();

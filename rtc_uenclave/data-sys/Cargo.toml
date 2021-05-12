@@ -12,8 +12,6 @@ sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features =
 sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 rtc_types = { path = "../../rtc_types" }
 data-ocalls = { path = "../data-ocalls" }
-# TODO: Move this to a seperate feature?
-mockall = { version = "0.9.1", features = ["nightly"] }
 rtc-ecalls = { path = "../rtc-ecalls" }
 
 [build-dependencies]

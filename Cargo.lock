@@ -628,7 +628,6 @@ dependencies = [
  "bindgen",
  "cc",
  "data-ocalls",
- "mockall",
  "rtc-ecalls",
  "rtc_types",
  "sgx_types",
