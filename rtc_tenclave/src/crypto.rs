@@ -284,6 +284,13 @@ fn pad_msg<const MESSAGE_LEN: usize>(msg: &[u8; MESSAGE_LEN]) -> [u8; MESSAGE_LE
     whole
 }
 
+/// Drop the first `prefix_len` elements of `vec`, keeping the rest.
+fn drop_prefix<T>(prefix_len: usize, mut vec: Vec<T>) -> Vec<T> {
+    vec.rotate_left(prefix_len);
+    vec.truncate(vec.len() - prefix_len);
+    vec
+}
+
 // TODO: Use feature flags to toggle use of different crypto libs
 // NOTE: Keeping this comment as a reference to AEAD using Ring
 // fn generate_client_payload_ring(key_bytes: &[u8]) -> Option<(Box<[u8]>, Uuid)> {
