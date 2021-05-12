@@ -1,7 +1,6 @@
 //! Base library used to interact with an rtc_enclave from a non-sgx environment
 #![cfg_attr(test, allow(unused))]
 #![deny(clippy::mem_forget)]
-#![feature(unsafe_block_in_unsafe_fn)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![feature(toowned_clone_into)]
 #![warn(missing_docs)]

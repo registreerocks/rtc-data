@@ -138,12 +138,6 @@ impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> RtcEnclave<TCfg, TEcalls> 
         self.base_enclave.geteid()
     }
 
-    /// Take ownership of self and drop resources
-    pub fn destroy(self) {
-        println!("Destroying Enclave");
-        // Take ownership of self and drop
-    }
-
     pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
         // TODO: Placeholder response
         Ok(ExecTokenResponse {
