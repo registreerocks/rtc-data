@@ -137,14 +137,6 @@ impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> RtcEnclave<TCfg, TEcalls> 
     pub fn geteid(&self) -> sgx_enclave_id_t {
         self.base_enclave.geteid()
     }
-
-    pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
-        // TODO: Placeholder response
-        Ok(ExecTokenResponse {
-            execution_token: vec![128; 9],
-            nonce: [7; 24],
-        })
-    }
 }
 
 /// Attestation process failed

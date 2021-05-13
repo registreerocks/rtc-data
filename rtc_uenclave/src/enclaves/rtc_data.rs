@@ -47,6 +47,14 @@ where
         ecalls::validate_and_save(self.0.geteid(), payload, metadata)
     }
 
+    pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
+        // TODO: Placeholder response
+        Ok(ExecTokenResponse {
+            execution_token: vec![128; 9],
+            nonce: [7; 24],
+        })
+    }
+
     /// Take ownership of self and drop resources
     pub fn destroy(self) {
         // Take ownership of self and drop
