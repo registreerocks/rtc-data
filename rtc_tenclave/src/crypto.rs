@@ -336,12 +336,12 @@ mod test {
         let result = sut
             .encrypt_message(Secret::new(message.clone().into_boxed_slice()), &pub_key)
             .unwrap();
-        let mut plaintext = vec![0_u8; result.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
         let ciphertext = [
             vec![0_u8; CRYPTO_BOX_BOXZEROBYTES],
             result.ciphertext.into(),
         ]
         .concat();
+        let mut plaintext = vec![0_u8; ciphertext.len()];
 
         sodalite::box_open(
             &mut plaintext,
