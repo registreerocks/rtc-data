@@ -300,16 +300,17 @@ mod test {
 
     #[test]
     fn soda_box_decrypt_works() {
-        let message = [vec![0_u8; CRYPTO_BOX_ZEROBYTES], vec![83_u8; 432]].concat();
+        let message = vec![83_u8; 432];
+        let plaintext = [vec![0_u8; CRYPTO_BOX_ZEROBYTES], message.clone()].concat();
         let (pub_key, secret_key) = get_test_keypair(&[32_u8; 32]);
-        let mut ciphertext = vec![0_u8; message.len()];
+        let mut ciphertext = vec![0_u8; plaintext.len()];
         let nonce = [32_u8; sodalite::BOX_NONCE_LEN];
 
         let sut = SodaBoxCrypto::new();
 
         sodalite::box_(
             &mut ciphertext,
-            &message,
+            &plaintext,
             &nonce,
             &sut.get_pubkey(),
             &secret_key,
@@ -320,8 +321,8 @@ mod test {
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap().expose_secret().deref(),
-            &message[32..],
-            "Messages does not match"
+            &message,
+            "decrypt_message result: got left, expected right"
         )
     }
 
@@ -350,8 +351,12 @@ mod test {
             &secret_key,
         )
         .unwrap();
+        let result_decrypted = &plaintext[CRYPTO_BOX_ZEROBYTES..];
 
-        assert_eq!(&plaintext[32..], &message, "Messages does not match")
+        assert_eq!(
+            &result_decrypted, &message,
+            "encrypt_message result: decrypts to left, expected right"
+        )
     }
 
     #[test]
@@ -379,8 +384,12 @@ mod test {
             &secret_key,
         )
         .unwrap();
+        let result_decrypted = &plaintext[CRYPTO_BOX_ZEROBYTES..];
 
-        assert_eq!(&plaintext[32..], &message, "messages does not match")
+        assert_eq!(
+            &result_decrypted, &message,
+            "encrypt_sized_message result: decrypts to left, expected right"
+        )
     }
 
     // TODO: Prop test encrypt = encrypt sized
