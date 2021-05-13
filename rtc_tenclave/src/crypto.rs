@@ -327,7 +327,7 @@ mod test {
 
     #[test]
     fn soda_box_encrypt_works() {
-        let message = [vec![83_u8; 432]].concat();
+        let message = vec![83_u8; 432];
         let (pub_key, secret_key) = get_test_keypair(&[32_u8; 32]);
 
         let mut sut = SodaBoxCrypto::new();
@@ -354,7 +354,34 @@ mod test {
         assert_eq!(&plaintext[32..], &message, "Messages does not match")
     }
 
-    // TODO: test encrypt_sized
+    #[test]
+    fn soda_box_encrypt_sized_works() {
+        let message = [83_u8; 432];
+        let (pub_key, secret_key) = get_test_keypair(&[32_u8; 32]);
+
+        let mut sut = SodaBoxCrypto::new();
+
+        let result = sut
+            .encrypt_sized_message(message.clone(), &pub_key)
+            .unwrap();
+        let mut plaintext = vec![0_u8; result.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
+        let ciphertext = [
+            vec![0_u8; CRYPTO_BOX_BOXZEROBYTES],
+            result.ciphertext.into(),
+        ]
+        .concat();
+
+        sodalite::box_open(
+            &mut plaintext,
+            &ciphertext,
+            &result.nonce,
+            &sut.get_pubkey(),
+            &secret_key,
+        )
+        .unwrap();
+
+        assert_eq!(&plaintext[32..], &message, "messages does not match")
+    }
 
     // TODO: Prop test encrypt = encrypt sized
 }
