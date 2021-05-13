@@ -393,6 +393,7 @@ mod test {
     }
 
     // TODO: Prop test encrypt = encrypt sized
+    // TODO: Prop test roundtrips: m = decrypt(encrypt(m))
 }
 
 // TODO: Use feature flags to toggle use of different crypto libs
