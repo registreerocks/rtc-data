@@ -83,6 +83,17 @@ $(CODEGEN_PATH):
 
 ####### Enclave Build ########
 $(Out_StaticLib) $(Out_Bindings): $(Crate_Files)
+	# XXX: Make sure cargo build refreshes the output files when this rule executes.
+	#
+	# Currently, it's possible for make to consider the output files out of date,
+	# while cargo considers the build up to date, because cargo resolves with more nuance
+	# than the crude wildcard function in Crate_Files. When this happens, make gets stuck
+	# trying to re-run this rule, without cargo touching the output files.
+	#
+	# To avoid this edge case, remove the two output files before invoking cargo build.
+	# This ensures that cargo build recreates them, with timestamps that satisfy make.
+	#
+	@rm -f $(Out_StaticLib) $(Out_Bindings)
 	cargo build --release
 
 $(Out_CodegenFiles): $(SGX_EDGER8R) ./Enclave.edl $(Out_Bindings) | $(CODEGEN_PATH)
