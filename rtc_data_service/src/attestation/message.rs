@@ -1,6 +1,6 @@
 use crate::data_enclave_actor::DataEnclaveActor;
 use actix::{Handler, Message};
-use rtc_types::{AttestReqMetadata, AttestError, AttestationResponse};
+use rtc_types::{AttestError, AttestReqMetadata, AttestationResponse};
 
 // TODO : Change struct values to resemble request Body (add data access key, uuid, hash, keypair, nonce..)
 pub struct AttestationMessage {
