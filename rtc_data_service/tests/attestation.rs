@@ -7,8 +7,8 @@ use actix_web::web::Bytes;
 use actix_web::App;
 use actix_web::{http, test};
 
-use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::attestation;
+use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 
 #[actix_rt::test]
 async fn data_service_attestation_ok() {
