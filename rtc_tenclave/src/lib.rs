@@ -22,6 +22,8 @@ cfg_if::cfg_if! {
 }
 
 pub mod crypto;
+pub mod dh;
 pub mod enclave;
 pub mod kv_store;
+// pub mod local_attestation;
 pub mod util;
