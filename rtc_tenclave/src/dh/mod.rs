@@ -21,7 +21,6 @@ pub unsafe extern "C" fn test_dh() {
 }
 
 enum AtomicSession {
-    // TODO: Add session closing mechanism
     Closed,
     InProgress(SgxDhResponder),
     Active(Arc<SgxMutex<ProtectedChannel>>),
@@ -51,7 +50,7 @@ impl DhSessions {
         }
     }
 
-    pub fn take_in_progress(&self, id: &u64) -> Option<SgxDhResponder> {
+    fn take_in_progress(&self, id: &u64) -> Option<SgxDhResponder> {
         let mut sessions = self.lock_write();
 
         if matches!(sessions.get(id)?.as_ref(), AtomicSession::InProgress(_)) {
@@ -65,6 +64,11 @@ impl DhSessions {
     }
 
     // TODO: rewrite invariants that will be upheld seperately for responder and initiator
+    pub fn close_session(&self, id: &u64) -> () {
+        let mut sessions = self.lock_write();
+        sessions.insert(*id, Arc::new(AtomicSession::Closed));
+        ()
+    }
 
     fn set_active(&self, id: &u64, key: sgx_key_128bit_t) -> Result<(), sgx_status_t> {
         let result = self.lock_write().insert(
