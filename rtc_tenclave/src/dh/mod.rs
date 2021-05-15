@@ -63,45 +63,44 @@ impl DhSessions {
         }
     }
 
-    // TODO: rewrite invariants that will be upheld seperately for responder and initiator
     pub fn close_session(&self, id: &u64) -> () {
         let mut sessions = self.lock_write();
         sessions.insert(*id, Arc::new(AtomicSession::Closed));
         ()
     }
 
+    /// Creates and sets an active session between this enclave and the enclave with `id` using
+    /// the `key`.
+    ///
+    /// # Valid Operations (It is the responsibility of the caller to ensure these hold)
+    /// None -> Active = Ok
+    /// Closed -> Active = Ok
+    /// InProgress -> Active = Err if it is the same session
+    ///   - In progress value needs to be removed from the map before using it to finalize a session
+    /// Active -> Active = Err
+    ///   - A session should be closed and then recreated to prevent resetting the nonce counter
+    ///     with the same key.
     fn set_active(&self, id: &u64, key: sgx_key_128bit_t) -> Result<(), sgx_status_t> {
-        let result = self.lock_write().insert(
+        self.lock_write().insert(
             *id,
             Arc::new(AtomicSession::Active(Arc::new(SgxMutex::new(
                 ProtectedChannel::init(key),
             )))),
         );
-
-        match result {
-            // None -> Active = Ok
-            None => Ok(()),
-            // Closed -> Active = Ok (new session after closing)
-            Some(x) if matches!(x.as_ref(), AtomicSession::Closed) => Ok(()),
-            // InProgress -> Active = Err
-            // (since the only way to do this is by borrowing the in-progress value as a
-            //  responder, which is not a valid op)
-            // TODO: There is a special case here if we go from
-            //       Responder -> Initiator (the handshake dropped). We should check that
-            Some(_) => Err(sgx_status_t::SGX_ERROR_UNEXPECTED),
-            // Active -> Active = Err (Session should be closed to prevent resetting nonce-counter with same key)
-        }
+        Ok(())
     }
 
+    /// Sets an in_progress session for a responding enclave linked to the provided enclave.
+    ///
+    /// # Valid Operations (It is the responsibility of the caller to ensure these hold)
+    /// InProgress -> InProgress = Ok
+    /// Closed -> InProgress = Ok
+    /// Active -> In Progress = Ok if keying material differs
     fn set_in_progress(&self, id: &u64, responder: SgxDhResponder) -> Result<(), sgx_status_t> {
         let _result = self
             .lock_write()
             .insert(*id, Arc::new(AtomicSession::InProgress(responder)));
 
-        // InProgress -> InProgress = ok (new session started by initiator that is being responded to)
-        // Closed -> InProgress = Ok (new session after closing)
-        // Active -> In Progress = Ok if keying material differs (the caller might need to uphold this)
-        // TODO: ^
         Ok(())
     }
 
