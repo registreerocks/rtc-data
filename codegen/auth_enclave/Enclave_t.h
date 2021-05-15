@@ -7,12 +7,15 @@
 #include "sgx_edger8r.h" /* for sgx_ocall etc. */
 
 #include "sgx_report.h"
+#include "sgx_dh.h"
 #include "bindings.h"
 #include "time.h"
 #include "inc/stat.h"
 #include "sys/uio.h"
 #include "inc/stat.h"
 #include "inc/dirent.h"
+#include "sgx_eid.h"
+#include "sgx_dh.h"
 
 #include <stdlib.h> /* for size_t */
 
@@ -25,6 +28,9 @@ extern "C" {
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
+SessionRequestResult rtc_session_request(sgx_enclave_id_t src_enclave_id);
+ExchangeReportResult rtc_exchange_report(sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2);
+sgx_status_t rtc_end_session(sgx_enclave_id_t src_enclave_id);
 
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);
 sgx_status_t SGX_CDECL u_thread_wait_event_ocall(int* retval, int* error, const void* tcs, const struct timespec* timeout);
@@ -81,6 +87,14 @@ sgx_status_t SGX_CDECL u_readdir64_r_ocall(int* retval, void* dirp, struct diren
 sgx_status_t SGX_CDECL u_closedir_ocall(int* retval, int* error, void* dirp);
 sgx_status_t SGX_CDECL u_dirfd_ocall(int* retval, int* error, void* dirp);
 sgx_status_t SGX_CDECL u_fstatat64_ocall(int* retval, int* error, int dirfd, const char* pathname, struct stat64_t* buf, int flags);
+sgx_status_t SGX_CDECL rtc_session_request_u(SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
+sgx_status_t SGX_CDECL rtc_exchange_report_u(ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id, sgx_dh_msg2_t* dh_msg2);
+sgx_status_t SGX_CDECL rtc_end_session_u(sgx_status_t* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
+sgx_status_t SGX_CDECL sgx_oc_cpuidex(int cpuinfo[4], int leaf, int subleaf);
+sgx_status_t SGX_CDECL sgx_thread_wait_untrusted_event_ocall(int* retval, const void* self);
+sgx_status_t SGX_CDECL sgx_thread_set_untrusted_event_ocall(int* retval, const void* waiter);
+sgx_status_t SGX_CDECL sgx_thread_setwait_untrusted_events_ocall(int* retval, const void* waiter, const void* self);
+sgx_status_t SGX_CDECL sgx_thread_set_multiple_untrusted_events_ocall(int* retval, const void** waiters, size_t total);
 
 #ifdef __cplusplus
 }

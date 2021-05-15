@@ -6,9 +6,11 @@ enclave {
     from "sgx_tprotected_fs.edl" import *;
     from "sgx_fs.edl" import *;
     from "sgx_file.edl" import *;
+    from "rtc_tenclave.edl" import *;
 
     include "sgx_tprotected_fs.h"
     include "sgx_report.h"
+    include "sgx_dh.h"
     include "bindings.h"
 
     trusted {

@@ -98,7 +98,7 @@ $(Out_StaticLib) $(Out_Bindings): $(Crate_Files)
 	cargo build --release
 
 $(Out_CodegenFiles): $(SGX_EDGER8R) ./Enclave.edl $(Out_Bindings) | $(CODEGEN_PATH)
-	$(SGX_EDGER8R) ./Enclave.edl --search-path $(SGX_SDK)/include --search-path $(RUST_EDL_PATH) --trusted-dir $(CODEGEN_PATH) --untrusted-dir $(CODEGEN_PATH)
+	$(SGX_EDGER8R) ./Enclave.edl --search-path $(SGX_SDK)/include --search-path $(RUST_EDL_PATH) --search-path $(RTC_EDL_PATH) --trusted-dir $(CODEGEN_PATH) --untrusted-dir $(CODEGEN_PATH)
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 $(Out_EdgeObject): $(Out_CodegenFiles) | $(CODEGEN_PATH) $(CUSTOM_LIBRARY_PATH)

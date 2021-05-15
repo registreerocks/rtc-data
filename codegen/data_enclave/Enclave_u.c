@@ -21,6 +21,22 @@ typedef struct ms_t_global_init_ecall_t {
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
 
+typedef struct ms_rtc_session_request_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_session_request_t;
+
+typedef struct ms_rtc_exchange_report_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_t;
+
+typedef struct ms_rtc_end_session_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_end_session_t;
+
 typedef struct ms_rtc_save_sealed_blob_u_t {
 	sgx_status_t ms_retval;
 	const uint8_t* ms_blob_ptr;
@@ -516,6 +532,25 @@ typedef struct ms_u_sgxprotectedfs_do_file_recovery_t {
 	const char* ms_recovery_filename;
 	uint32_t ms_node_size;
 } ms_u_sgxprotectedfs_do_file_recovery_t;
+
+typedef struct ms_rtc_session_request_u_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_session_request_u_t;
+
+typedef struct ms_rtc_exchange_report_u_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_u_t;
+
+typedef struct ms_rtc_end_session_u_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_end_session_u_t;
 
 static sgx_status_t SGX_CDECL Enclave_rtc_save_sealed_blob_u(void* pms)
 {
@@ -1085,11 +1120,35 @@ static sgx_status_t SGX_CDECL Enclave_u_sgxprotectedfs_do_file_recovery(void* pm
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL Enclave_rtc_session_request_u(void* pms)
+{
+	ms_rtc_session_request_u_t* ms = SGX_CAST(ms_rtc_session_request_u_t*, pms);
+	ms->ms_retval = rtc_session_request_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_rtc_exchange_report_u(void* pms)
+{
+	ms_rtc_exchange_report_u_t* ms = SGX_CAST(ms_rtc_exchange_report_u_t*, pms);
+	ms->ms_retval = rtc_exchange_report_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id, ms->ms_dh_msg2);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_rtc_end_session_u(void* pms)
+{
+	ms_rtc_end_session_u_t* ms = SGX_CAST(ms_rtc_end_session_u_t*, pms);
+	ms->ms_retval = rtc_end_session_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id);
+
+	return SGX_SUCCESS;
+}
+
 static const struct {
 	size_t nr_ocall;
-	void * table[71];
+	void * table[74];
 } ocall_table_Enclave = {
-	71,
+	74,
 	{
 		(void*)Enclave_rtc_save_sealed_blob_u,
 		(void*)Enclave_u_thread_set_event_ocall,
@@ -1162,6 +1221,9 @@ static const struct {
 		(void*)Enclave_u_sgxprotectedfs_recovery_file_open,
 		(void*)Enclave_u_sgxprotectedfs_fwrite_recovery_node,
 		(void*)Enclave_u_sgxprotectedfs_do_file_recovery,
+		(void*)Enclave_rtc_session_request_u,
+		(void*)Enclave_rtc_exchange_report_u,
+		(void*)Enclave_rtc_end_session_u,
 	}
 };
 sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report)
@@ -1203,6 +1265,37 @@ sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
 	status = sgx_ecall(eid, 3, &ocall_table_Enclave, NULL);
+	return status;
+}
+
+sgx_status_t rtc_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id)
+{
+	sgx_status_t status;
+	ms_rtc_session_request_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	status = sgx_ecall(eid, 4, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
+sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2)
+{
+	sgx_status_t status;
+	ms_rtc_exchange_report_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	ms.ms_dh_msg2 = dh_msg2;
+	status = sgx_ecall(eid, 5, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
+sgx_status_t rtc_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id)
+{
+	sgx_status_t status;
+	ms_rtc_end_session_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	status = sgx_ecall(eid, 6, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
 

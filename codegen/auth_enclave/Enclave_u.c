@@ -14,6 +14,22 @@ typedef struct ms_t_global_init_ecall_t {
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
 
+typedef struct ms_rtc_session_request_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_session_request_t;
+
+typedef struct ms_rtc_exchange_report_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_t;
+
+typedef struct ms_rtc_end_session_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_end_session_t;
+
 typedef struct ms_u_thread_set_event_ocall_t {
 	int ms_retval;
 	int* ms_error;
@@ -411,6 +427,53 @@ typedef struct ms_u_fstatat64_ocall_t {
 	struct stat64_t* ms_buf;
 	int ms_flags;
 } ms_u_fstatat64_ocall_t;
+
+typedef struct ms_rtc_session_request_u_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_session_request_u_t;
+
+typedef struct ms_rtc_exchange_report_u_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_u_t;
+
+typedef struct ms_rtc_end_session_u_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_end_session_u_t;
+
+typedef struct ms_sgx_oc_cpuidex_t {
+	int* ms_cpuinfo;
+	int ms_leaf;
+	int ms_subleaf;
+} ms_sgx_oc_cpuidex_t;
+
+typedef struct ms_sgx_thread_wait_untrusted_event_ocall_t {
+	int ms_retval;
+	const void* ms_self;
+} ms_sgx_thread_wait_untrusted_event_ocall_t;
+
+typedef struct ms_sgx_thread_set_untrusted_event_ocall_t {
+	int ms_retval;
+	const void* ms_waiter;
+} ms_sgx_thread_set_untrusted_event_ocall_t;
+
+typedef struct ms_sgx_thread_setwait_untrusted_events_ocall_t {
+	int ms_retval;
+	const void* ms_waiter;
+	const void* ms_self;
+} ms_sgx_thread_setwait_untrusted_events_ocall_t;
+
+typedef struct ms_sgx_thread_set_multiple_untrusted_events_ocall_t {
+	int ms_retval;
+	const void** ms_waiters;
+	size_t ms_total;
+} ms_sgx_thread_set_multiple_untrusted_events_ocall_t;
 
 static sgx_status_t SGX_CDECL Enclave_u_thread_set_event_ocall(void* pms)
 {
@@ -852,11 +915,75 @@ static sgx_status_t SGX_CDECL Enclave_u_fstatat64_ocall(void* pms)
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL Enclave_rtc_session_request_u(void* pms)
+{
+	ms_rtc_session_request_u_t* ms = SGX_CAST(ms_rtc_session_request_u_t*, pms);
+	ms->ms_retval = rtc_session_request_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_rtc_exchange_report_u(void* pms)
+{
+	ms_rtc_exchange_report_u_t* ms = SGX_CAST(ms_rtc_exchange_report_u_t*, pms);
+	ms->ms_retval = rtc_exchange_report_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id, ms->ms_dh_msg2);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_rtc_end_session_u(void* pms)
+{
+	ms_rtc_end_session_u_t* ms = SGX_CAST(ms_rtc_end_session_u_t*, pms);
+	ms->ms_retval = rtc_end_session_u(ms->ms_src_enclave_id, ms->ms_dest_enclave_id);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_sgx_oc_cpuidex(void* pms)
+{
+	ms_sgx_oc_cpuidex_t* ms = SGX_CAST(ms_sgx_oc_cpuidex_t*, pms);
+	sgx_oc_cpuidex(ms->ms_cpuinfo, ms->ms_leaf, ms->ms_subleaf);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_sgx_thread_wait_untrusted_event_ocall(void* pms)
+{
+	ms_sgx_thread_wait_untrusted_event_ocall_t* ms = SGX_CAST(ms_sgx_thread_wait_untrusted_event_ocall_t*, pms);
+	ms->ms_retval = sgx_thread_wait_untrusted_event_ocall(ms->ms_self);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_sgx_thread_set_untrusted_event_ocall(void* pms)
+{
+	ms_sgx_thread_set_untrusted_event_ocall_t* ms = SGX_CAST(ms_sgx_thread_set_untrusted_event_ocall_t*, pms);
+	ms->ms_retval = sgx_thread_set_untrusted_event_ocall(ms->ms_waiter);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_sgx_thread_setwait_untrusted_events_ocall(void* pms)
+{
+	ms_sgx_thread_setwait_untrusted_events_ocall_t* ms = SGX_CAST(ms_sgx_thread_setwait_untrusted_events_ocall_t*, pms);
+	ms->ms_retval = sgx_thread_setwait_untrusted_events_ocall(ms->ms_waiter, ms->ms_self);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_sgx_thread_set_multiple_untrusted_events_ocall(void* pms)
+{
+	ms_sgx_thread_set_multiple_untrusted_events_ocall_t* ms = SGX_CAST(ms_sgx_thread_set_multiple_untrusted_events_ocall_t*, pms);
+	ms->ms_retval = sgx_thread_set_multiple_untrusted_events_ocall(ms->ms_waiters, ms->ms_total);
+
+	return SGX_SUCCESS;
+}
+
 static const struct {
 	size_t nr_ocall;
-	void * table[55];
+	void * table[63];
 } ocall_table_Enclave = {
-	55,
+	63,
 	{
 		(void*)Enclave_u_thread_set_event_ocall,
 		(void*)Enclave_u_thread_wait_event_ocall,
@@ -913,6 +1040,14 @@ static const struct {
 		(void*)Enclave_u_closedir_ocall,
 		(void*)Enclave_u_dirfd_ocall,
 		(void*)Enclave_u_fstatat64_ocall,
+		(void*)Enclave_rtc_session_request_u,
+		(void*)Enclave_rtc_exchange_report_u,
+		(void*)Enclave_rtc_end_session_u,
+		(void*)Enclave_sgx_oc_cpuidex,
+		(void*)Enclave_sgx_thread_wait_untrusted_event_ocall,
+		(void*)Enclave_sgx_thread_set_untrusted_event_ocall,
+		(void*)Enclave_sgx_thread_setwait_untrusted_events_ocall,
+		(void*)Enclave_sgx_thread_set_multiple_untrusted_events_ocall,
 	}
 };
 sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report)
@@ -942,6 +1077,37 @@ sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
 	status = sgx_ecall(eid, 2, &ocall_table_Enclave, NULL);
+	return status;
+}
+
+sgx_status_t rtc_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id)
+{
+	sgx_status_t status;
+	ms_rtc_session_request_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	status = sgx_ecall(eid, 3, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
+sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2)
+{
+	sgx_status_t status;
+	ms_rtc_exchange_report_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	ms.ms_dh_msg2 = dh_msg2;
+	status = sgx_ecall(eid, 4, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
+sgx_status_t rtc_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id)
+{
+	sgx_status_t status;
+	ms_rtc_end_session_t ms;
+	ms.ms_src_enclave_id = src_enclave_id;
+	status = sgx_ecall(eid, 5, &ocall_table_Enclave, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
 

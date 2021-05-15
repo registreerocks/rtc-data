@@ -47,6 +47,22 @@ typedef struct ms_t_global_init_ecall_t {
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
 
+typedef struct ms_rtc_session_request_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_session_request_t;
+
+typedef struct ms_rtc_exchange_report_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_t;
+
+typedef struct ms_rtc_end_session_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+} ms_rtc_end_session_t;
+
 typedef struct ms_rtc_save_sealed_blob_u_t {
 	sgx_status_t ms_retval;
 	const uint8_t* ms_blob_ptr;
@@ -543,6 +559,25 @@ typedef struct ms_u_sgxprotectedfs_do_file_recovery_t {
 	uint32_t ms_node_size;
 } ms_u_sgxprotectedfs_do_file_recovery_t;
 
+typedef struct ms_rtc_session_request_u_t {
+	SessionRequestResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_session_request_u_t;
+
+typedef struct ms_rtc_exchange_report_u_t {
+	ExchangeReportResult ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+	sgx_dh_msg2_t* ms_dh_msg2;
+} ms_rtc_exchange_report_u_t;
+
+typedef struct ms_rtc_end_session_u_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_src_enclave_id;
+	sgx_enclave_id_t ms_dest_enclave_id;
+} ms_rtc_end_session_u_t;
+
 static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 {
 	CHECK_REF_POINTER(pms, sizeof(ms_enclave_create_report_t));
@@ -729,96 +764,179 @@ static sgx_status_t SGX_CDECL sgx_t_global_exit_ecall(void* pms)
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_rtc_session_request(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_rtc_session_request_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_rtc_session_request_t* ms = SGX_CAST(ms_rtc_session_request_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+
+
+
+	ms->ms_retval = rtc_session_request(ms->ms_src_enclave_id);
+
+
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_rtc_exchange_report_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_rtc_exchange_report_t* ms = SGX_CAST(ms_rtc_exchange_report_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+	sgx_dh_msg2_t* _tmp_dh_msg2 = ms->ms_dh_msg2;
+	size_t _len_dh_msg2 = sizeof(sgx_dh_msg2_t);
+	sgx_dh_msg2_t* _in_dh_msg2 = NULL;
+
+	CHECK_UNIQUE_POINTER(_tmp_dh_msg2, _len_dh_msg2);
+
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+
+	if (_tmp_dh_msg2 != NULL && _len_dh_msg2 != 0) {
+		_in_dh_msg2 = (sgx_dh_msg2_t*)malloc(_len_dh_msg2);
+		if (_in_dh_msg2 == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_dh_msg2, _len_dh_msg2, _tmp_dh_msg2, _len_dh_msg2)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+
+	ms->ms_retval = rtc_exchange_report(ms->ms_src_enclave_id, _in_dh_msg2);
+
+err:
+	if (_in_dh_msg2) free(_in_dh_msg2);
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_rtc_end_session(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_rtc_end_session_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_rtc_end_session_t* ms = SGX_CAST(ms_rtc_end_session_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+
+
+
+	ms->ms_retval = rtc_end_session(ms->ms_src_enclave_id);
+
+
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[4];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
 } g_ecall_table = {
-	4,
+	7,
 	{
 		{(void*)(uintptr_t)sgx_enclave_create_report, 0, 0},
 		{(void*)(uintptr_t)sgx_rtc_validate_and_save, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_init_ecall, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_exit_ecall, 0, 0},
+		{(void*)(uintptr_t)sgx_rtc_session_request, 0, 0},
+		{(void*)(uintptr_t)sgx_rtc_exchange_report, 0, 0},
+		{(void*)(uintptr_t)sgx_rtc_end_session, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[71][4];
+	uint8_t entry_table[74][7];
 } g_dyn_entry_table = {
-	71,
+	74,
 	{
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 
@@ -5436,6 +5554,111 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_do_file_recovery(int32_t* retval, const 
 	
 	ms->ms_node_size = node_size;
 	status = sgx_ocall(70, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL rtc_session_request_u(SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_rtc_session_request_u_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_rtc_session_request_u_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_rtc_session_request_u_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_rtc_session_request_u_t));
+	ocalloc_size -= sizeof(ms_rtc_session_request_u_t);
+
+	ms->ms_src_enclave_id = src_enclave_id;
+	ms->ms_dest_enclave_id = dest_enclave_id;
+	status = sgx_ocall(71, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL rtc_exchange_report_u(ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id, sgx_dh_msg2_t* dh_msg2)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_dh_msg2 = sizeof(sgx_dh_msg2_t);
+
+	ms_rtc_exchange_report_u_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_rtc_exchange_report_u_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(dh_msg2, _len_dh_msg2);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (dh_msg2 != NULL) ? _len_dh_msg2 : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_rtc_exchange_report_u_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_rtc_exchange_report_u_t));
+	ocalloc_size -= sizeof(ms_rtc_exchange_report_u_t);
+
+	ms->ms_src_enclave_id = src_enclave_id;
+	ms->ms_dest_enclave_id = dest_enclave_id;
+	if (dh_msg2 != NULL) {
+		ms->ms_dh_msg2 = (sgx_dh_msg2_t*)__tmp;
+		if (memcpy_s(__tmp, ocalloc_size, dh_msg2, _len_dh_msg2)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_dh_msg2);
+		ocalloc_size -= _len_dh_msg2;
+	} else {
+		ms->ms_dh_msg2 = NULL;
+	}
+	
+	status = sgx_ocall(72, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL rtc_end_session_u(sgx_status_t* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_rtc_end_session_u_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_rtc_end_session_u_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_rtc_end_session_u_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_rtc_end_session_u_t));
+	ocalloc_size -= sizeof(ms_rtc_end_session_u_t);
+
+	ms->ms_src_enclave_id = src_enclave_id;
+	ms->ms_dest_enclave_id = dest_enclave_id;
+	status = sgx_ocall(73, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;

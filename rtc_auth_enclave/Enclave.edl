@@ -1,8 +1,10 @@
 enclave {
     from "sgx_tstd.edl" import *;
     from "sgx_backtrace.edl" import *;
+    from "rtc_tenclave.edl" import *;
 
     include "sgx_report.h"
+    include "sgx_dh.h"
     include "bindings.h"
 
     trusted {

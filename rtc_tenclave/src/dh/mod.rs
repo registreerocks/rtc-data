@@ -256,6 +256,13 @@ pub extern "C" fn rtc_session_request(src_enclave_id: sgx_enclave_id_t) -> Sessi
 }
 
 #[no_mangle]
+pub extern "C" fn rtc_end_session(src_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
+    // TODO: Ensure sessions close on both ends?
+    dh_sessions().close_session(&src_enclave_id);
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn rtc_exchange_report(
     src_enclave_id: sgx_enclave_id_t,
     dh_msg2_ptr: *const sgx_dh_msg2_t,
