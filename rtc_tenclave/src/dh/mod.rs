@@ -80,14 +80,15 @@ impl DhSessions {
     /// Active -> Active = Err
     ///   - A session should be closed and then recreated to prevent resetting the nonce counter
     ///     with the same key.
-    fn set_active(&self, id: &u64, key: sgx_key_128bit_t) -> Result<(), sgx_status_t> {
-        self.lock_write().insert(
-            *id,
-            Arc::new(AtomicSession::Active(Arc::new(SgxMutex::new(
-                ProtectedChannel::init(key),
-            )))),
-        );
-        Ok(())
+    fn set_active(
+        &self,
+        id: &u64,
+        key: sgx_key_128bit_t,
+    ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
+        let channel = Arc::new(SgxMutex::new(ProtectedChannel::init(key)));
+        self.lock_write()
+            .insert(*id, Arc::new(AtomicSession::Active(channel.clone())));
+        Ok(channel)
     }
 
     /// Sets an in_progress session for a responding enclave linked to the provided enclave.
@@ -104,7 +105,10 @@ impl DhSessions {
         Ok(())
     }
 
-    pub fn establish_new(&self, dest_enclave_id: &sgx_enclave_id_t) -> Result<(), sgx_status_t> {
+    pub fn establish_new(
+        &self,
+        dest_enclave_id: &sgx_enclave_id_t,
+    ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
         let this_enclave_id = enclave::get_enclave_id();
         let mut initiator: SgxDhInitiator = SgxDhInitiator::init_session();
 
@@ -166,6 +170,17 @@ impl DhSessions {
         self.set_active(src_enclave_id, aek.key)?;
 
         Ok(msg3)
+    }
+
+    pub fn get_or_create_session(
+        &self,
+        dest_enclave_id: &u64,
+    ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
+        if let Some(channel) = self.get_active(dest_enclave_id) {
+            Ok(channel)
+        } else {
+            self.establish_new(dest_enclave_id)
+        }
     }
 }
 
