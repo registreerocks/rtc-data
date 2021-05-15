@@ -68,6 +68,8 @@ sgx_ucrypto = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 serde_std = { package = "serde", version = "1.0.0" }
 serde_json_std = { package = "serde_json", version = "1.0.0" }
 
+proptest = "1.0.0"
+
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
