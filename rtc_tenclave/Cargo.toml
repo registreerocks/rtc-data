@@ -22,7 +22,32 @@ sgx_tse = { git = "https://github.com/apache/teaclave-sgx-sdk.git" , rev = "v1.1
 rand = { git = "https://github.com/mesalock-linux/rand-sgx", tag = "v0.7.3_sgx1.1.3", optional = true }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git", optional = true }
 sgx_tcrypto = { git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
-serde = { git = "https://github.com/mesalock-linux/serde-sgx", tag = "sgx_1.1.3", optional = true }
+
+# XXX: Work around serde-json-sgx / Cargo version handling issue
+#
+# We want to specify tag = "sgx_1.1.3" for the serde dependency here,
+# but this makes Cargo resolve the dependency to a different crate
+# version identity than what serde-json-sgx's dependency resolves to,
+# even though both "master" and "sgx_1.1.3" point to same git revision.
+#
+# This causes build failures due to serde_json referring to a different
+# versions of the Serialize / Deserialize traits than this project's code.
+#
+# We cannot use [patch] to override serde-json-sgx's dependency to use
+# the same tag for serde-sgx as here, because of this Cargo limitation:
+#
+# * "Cannot patch underspecified git dependency"
+#   https://github.com/rust-lang/cargo/issues/7670
+#
+#   Comment: https://github.com/rust-lang/cargo/issues/7670#issuecomment-841722488
+#
+# To work around this problem, the git reference here must match
+# the upstream dependency line exactly:
+#
+# * https://github.com/mesalock-linux/serde-json-sgx/blob/sgx_1.1.3/Cargo.toml#L17
+#
+serde = { git = "https://github.com/mesalock-linux/serde-sgx", optional = true }
+
 serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx", tag = "sgx_1.1.3", optional = true }
 
 rtc_types = { path = "../rtc_types" }
