@@ -23,4 +23,5 @@ cfg_if::cfg_if! {
 
 pub mod crypto;
 pub mod enclave;
+pub mod kv_store;
 pub mod util;
