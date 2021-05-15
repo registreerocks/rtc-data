@@ -197,6 +197,29 @@ fn exchange_report_ocall(
     // TODO: this should call the ocall to the peer enclave.
 }
 
+// TODO: Integrate using function reference with similar signature or a config obj
+fn verify_peer_enclave_trust(peer_identity: &sgx_dh_session_enclave_identity_t) -> Result<(), ()> {
+    let required_flags = SGX_FLAGS_INITTED;
+    let denied_flags = SGX_FLAGS_DEBUG;
+    let expected_mrenclave = [0_u8; SGX_HASH_SIZE];
+    let expected_mrsigner = [0_u8; SGX_HASH_SIZE];
+
+    if peer_identity.attributes.flags & required_flags == required_flags {
+        return Err(());
+    }
+    if peer_identity.attributes.flags & denied_flags != 0 {
+        return Err(());
+    }
+    if peer_identity.mr_enclave.m != expected_mrenclave {
+        return Err(());
+    }
+    if peer_identity.mr_signer.m != expected_mrsigner {
+        return Err(());
+    }
+
+    return Ok(());
+}
+
 pub fn dh_sessions() -> &'static DhSessions {
     // NOTE: Something similar can be done in the OCALL library
     // (by storing pointers to data inside the enclave, outside of the enclave)
