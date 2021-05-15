@@ -11,7 +11,7 @@ doctest = false
 crate-type = ["lib"]
 
 [features]
-default = ["sgx_tstd", "sgx_tse", "rtc_types/teaclave_sgx", "rand", "thiserror", "sgx_tcrypto"]
+default = ["sgx_tstd", "sgx_tse", "rtc_types/teaclave_sgx", "rand", "thiserror", "sgx_tcrypto", "serde", "serde_json"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,6 +22,8 @@ sgx_tse = { git = "https://github.com/apache/teaclave-sgx-sdk.git" , rev = "v1.1
 rand = { git = "https://github.com/mesalock-linux/rand-sgx", tag = "v0.7.3_sgx1.1.3", optional = true }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git", optional = true }
 sgx_tcrypto = { git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+serde = { git = "https://github.com/mesalock-linux/serde-sgx", tag = "sgx_1.1.3", optional = true }
+serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx", tag = "sgx_1.1.3", optional = true }
 
 rtc_types = { path = "../rtc_types" }
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["extra_traits"]}
@@ -38,6 +40,8 @@ cfg-if = "1.0.0"
 thiserror_std = { package = "thiserror", version = "1.0.9" }
 rand_std = { package = "rand", version = "0.7.3" }
 sgx_ucrypto = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+serde_std = { package = "serde", version = "1.0.0" }
+serde_json_std = { package = "serde_json", version = "1.0.0" }
 
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
