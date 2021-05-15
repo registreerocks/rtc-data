@@ -1,6 +1,7 @@
 mod protected_channel;
 
 use once_cell::sync::OnceCell;
+use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
 use sgx_tdh::{SgxDhInitiator, SgxDhMsg1, SgxDhMsg2, SgxDhMsg3, SgxDhResponder};
 
 use sgx_tstd::{
@@ -9,14 +10,33 @@ use sgx_tstd::{
     sync::{Arc, SgxMutex, SgxRwLock, SgxRwLockWriteGuard},
 };
 use sgx_types::*;
-use std::ops::Deref;
+use std::{mem, ops::Deref};
 
 use protected_channel::ProtectedChannel;
+
+extern "C" {
+    pub fn rtc_session_request_u(
+        ret: *mut SessionRequestResult,
+        src_enclave_id: sgx_enclave_id_t,
+        dest_enclave_id: sgx_enclave_id_t,
+    ) -> sgx_status_t;
+    pub fn rtc_exchange_report_u(
+        ret: *mut ExchangeReportResult,
+        src_enclave_id: sgx_enclave_id_t,
+        dest_enclave_id: sgx_enclave_id_t,
+        dh_msg2: *const sgx_dh_msg2_t,
+    ) -> sgx_status_t;
+    pub fn rtc_end_session_u(
+        ret: *mut sgx_status_t,
+        src_enclave_id: sgx_enclave_id_t,
+        dest_enclave_id: sgx_enclave_id_t,
+    ) -> sgx_status_t;
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn test_dh() {
     dh_sessions()
-        .establish_new(&enclave::get_enclave_id())
+        .establish_new(enclave::get_enclave_id())
         .expect("test failed");
 }
 
@@ -82,12 +102,12 @@ impl DhSessions {
     ///     with the same key.
     fn set_active(
         &self,
-        id: &u64,
+        id: u64,
         key: sgx_key_128bit_t,
     ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
         let channel = Arc::new(SgxMutex::new(ProtectedChannel::init(key)));
         self.lock_write()
-            .insert(*id, Arc::new(AtomicSession::Active(channel.clone())));
+            .insert(id, Arc::new(AtomicSession::Active(channel.clone())));
         Ok(channel)
     }
 
@@ -107,16 +127,16 @@ impl DhSessions {
 
     pub fn establish_new(
         &self,
-        dest_enclave_id: &sgx_enclave_id_t,
+        dest_enclave_id: sgx_enclave_id_t,
     ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
         let this_enclave_id = enclave::get_enclave_id();
         let mut initiator: SgxDhInitiator = SgxDhInitiator::init_session();
 
-        let dh_msg1 = init_responder_ocall(&this_enclave_id)?;
+        let dh_msg1 = init_responder_ocall(this_enclave_id, dest_enclave_id)?;
 
         let mut dh_msg2 = SgxDhMsg2::default();
         initiator.proc_msg1(&dh_msg1, &mut dh_msg2)?;
-        let dh_msg3 = exchange_report_ocall(&this_enclave_id, &dh_msg2)?;
+        let dh_msg3 = exchange_report_ocall(this_enclave_id, dest_enclave_id, &dh_msg2)?;
 
         let mut aek = sgx_align_key_128bit_t::default(); // Session Key
         let mut responder_identity = sgx_dh_session_enclave_identity_t::default();
@@ -148,7 +168,7 @@ impl DhSessions {
 
     pub fn exchange_report(
         &self,
-        src_enclave_id: &sgx_enclave_id_t,
+        src_enclave_id: sgx_enclave_id_t,
         dh_msg2: &sgx_dh_msg2_t,
     ) -> Result<SgxDhMsg3, sgx_status_t> {
         let mut responder = self
@@ -174,9 +194,9 @@ impl DhSessions {
 
     pub fn get_or_create_session(
         &self,
-        dest_enclave_id: &u64,
+        dest_enclave_id: u64,
     ) -> Result<Arc<SgxMutex<ProtectedChannel>>, sgx_status_t> {
-        if let Some(channel) = self.get_active(dest_enclave_id) {
+        if let Some(channel) = self.get_active(&dest_enclave_id) {
             Ok(channel)
         } else {
             self.establish_new(dest_enclave_id)
@@ -184,17 +204,73 @@ impl DhSessions {
     }
 }
 
-fn init_responder_ocall(this_enclave_id: &u64) -> Result<sgx_dh_msg1_t, sgx_status_t> {
-    dh_sessions().initiate_response(this_enclave_id)
-    // TODO: this should call the ocall to the peer enclave.
+fn init_responder_ocall(
+    this_enclave_id: u64,
+    dest_enclave_id: u64,
+) -> Result<sgx_dh_msg1_t, sgx_status_t> {
+    let mut ret = SessionRequestResult::default();
+
+    // TODO: Safety
+    let ocall_res = unsafe { rtc_session_request_u(&mut ret, this_enclave_id, dest_enclave_id) };
+
+    match ocall_res {
+        sgx_status_t::SGX_SUCCESS => ret.into(),
+        err => Err(err),
+    }
+
+    // dh_sessions().initiate_response(this_enclave_id)
 }
 
 fn exchange_report_ocall(
-    this_enclave_id: &u64,
+    this_enclave_id: u64,
+    dest_enclave_id: u64,
     dh_msg2: &sgx_dh_msg2_t,
 ) -> Result<SgxDhMsg3, sgx_status_t> {
-    dh_sessions().exchange_report(this_enclave_id, dh_msg2)
-    // TODO: this should call the ocall to the peer enclave.
+    let mut ret = ExchangeReportResult::default();
+
+    // TODO: Safety
+    let ocall_res =
+        unsafe { rtc_exchange_report_u(&mut ret, this_enclave_id, dest_enclave_id, dh_msg2) };
+
+    match ocall_res {
+        sgx_status_t::SGX_SUCCESS => {
+            let res: Result<sgx_dh_msg3_t, sgx_status_t> = ret.into();
+            let mut msg3_raw = res?;
+
+            let raw_len =
+                mem::size_of::<sgx_dh_msg3_t>() as u32 + msg3_raw.msg3_body.additional_prop_length;
+
+            // TODO: Safety
+            unsafe { SgxDhMsg3::from_raw_dh_msg3_t(&mut msg3_raw, raw_len) }
+                .ok_or(sgx_status_t::SGX_ERROR_UNEXPECTED)
+        }
+        err => Err(err),
+    }
+
+    // dh_sessions().exchange_report(this_enclave_id, dh_msg2)
+}
+
+#[no_mangle]
+pub extern "C" fn rtc_session_request(src_enclave_id: sgx_enclave_id_t) -> SessionRequestResult {
+    dh_sessions().initiate_response(&src_enclave_id).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rtc_exchange_report(
+    src_enclave_id: sgx_enclave_id_t,
+    dh_msg2_ptr: *const sgx_dh_msg2_t,
+) -> ExchangeReportResult {
+    // TODO: Safety
+    let dh_msg2 = unsafe { &*dh_msg2_ptr };
+
+    dh_sessions()
+        .exchange_report(src_enclave_id, dh_msg2)
+        .map(|msg3| {
+            let mut msg3_raw = sgx_dh_msg3_t::default();
+            unsafe { msg3.to_raw_dh_msg3_t(&mut msg3_raw, msg3.calc_raw_sealed_data_size()) };
+            msg3_raw
+        })
+        .into()
 }
 
 // TODO: Integrate using function reference with similar signature or a config obj
