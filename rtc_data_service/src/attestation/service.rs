@@ -61,7 +61,7 @@ pub mod models {
     impl From<AttestationResponse> for ResponseBody {
         fn from(resp: AttestationResponse) -> Self {
             ResponseBody {
-                attestation_jwt: resp.attestation_jwt.to_vec(),
+                attestation_jwt: resp.attestation_jwt.as_bytes().to_vec(),
                 nonce: resp.nonce.to_vec(),
             }
         }

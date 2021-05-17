@@ -11,7 +11,7 @@ pub struct AttestReqMetadata {
 #[repr(C)]
 #[derive(Debug)]
 pub struct AttestationResponse {
-    pub attestation_jwt: Vec<u8>,
+    pub attestation_jwt: String,
     pub nonce: [u8; 24],
 }
 
