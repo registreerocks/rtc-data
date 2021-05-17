@@ -59,6 +59,7 @@ secrecy = { version = "0.7.0", default-features = false }
 ring = { version = "0.17.0-alpha.8", default-features = false }
 sodalite = { version = "0.4.0", default-features = false }
 cfg-if = "1.0.0"
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
 
 [dev-dependencies]
