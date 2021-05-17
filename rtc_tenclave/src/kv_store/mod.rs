@@ -27,11 +27,11 @@ pub trait KvStore<V> {
     // TODO: add update()
 }
 
-#[cfg(test)]
+mod fs;
 mod in_memory;
-
-#[cfg(test)]
 mod inspect;
+#[cfg(not(test))]
+mod sgxfs;
 
 #[cfg(test)]
 mod tests;

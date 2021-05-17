@@ -6,6 +6,7 @@
 #![feature(const_evaluatable_checked)]
 #![deny(clippy::mem_forget)]
 #![cfg_attr(not(test), no_std)]
+#![feature(impl_trait_in_bindings)]
 
 #[cfg(not(test))]
 #[macro_use]
