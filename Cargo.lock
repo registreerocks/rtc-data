@@ -319,6 +319,7 @@ dependencies = [
  "cc",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "sgx_types",
  "sgx_urts",
 ]
@@ -629,6 +630,7 @@ dependencies = [
  "data-ocalls",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "sgx_types",
  "sgx_urts",
 ]
@@ -1674,6 +1676,16 @@ dependencies = [
  "sgx_types",
  "thiserror 1.0.24",
  "thiserror 1.0.9",
+]
+
+[[package]]
+name = "rtc_udh"
+version = "0.1.0"
+dependencies = [
+ "mockall",
+ "once_cell",
+ "rtc_types",
+ "sgx_types",
 ]
 
 [[package]]

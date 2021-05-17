@@ -15,6 +15,7 @@ sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", r
 rtc_types = { path = "../../rtc_types" }
 data-ocalls = { path = "../data-ocalls" }
 rtc-ecalls = { path = "../rtc-ecalls" }
+rtc_udh = { path = "../../rtc_udh" }
 
 [build-dependencies]
 cc = "1.0.67"

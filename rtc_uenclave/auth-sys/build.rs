@@ -54,6 +54,9 @@ fn main() {
         .array_pointers_in_arguments(true)
         // TODO: see if there is a way to include functions using globbing
         .allowlist_function("enclave_create_report")
+        .allowlist_function("rtc_session_request")
+        .allowlist_function("rtc_exchange_report")
+        .allowlist_function("rtc_end_session")
         .clang_args(&inc_args)
         .generate()
         .expect("Unable to generate bindings")
