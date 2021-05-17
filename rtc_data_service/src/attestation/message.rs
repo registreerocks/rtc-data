@@ -16,6 +16,10 @@ impl Handler<AttestationMessage> for DataEnclaveActor {
     type Result = <AttestationMessage as Message>::Result;
 
     fn handle(&mut self, _msg: AttestationMessage, _ctx: &mut Self::Context) -> Self::Result {
-        self.get_enclave().get_attestaion_token()
+        let jwt = self.get_enclave().dcap_attestation_azure();
+        Ok(AttestationResponse {
+            attestation_jwt: "Placeholder for JWT returned by enclave".to_string(),
+            nonce: [7; 24],
+        })
     }
 }

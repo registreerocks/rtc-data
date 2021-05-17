@@ -60,7 +60,9 @@ async fn data_service_attestation_ok() {
 
     // TODO: Placeholder value matching rtc_uenclave::rtc_enclave
     let expected = attestation::models::ResponseBody {
-        attestation_jwt: vec![128; 6],
+        attestation_jwt: "Placeholder for JWT returned by enclave"
+            .as_bytes()
+            .to_vec(),
         nonce: vec![7; 24],
     };
     assert_eq!(expected, actual)
