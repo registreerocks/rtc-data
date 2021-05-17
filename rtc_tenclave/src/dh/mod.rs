@@ -251,19 +251,19 @@ fn exchange_report_ocall(
 }
 
 #[no_mangle]
-pub extern "C" fn rtc_session_request(src_enclave_id: sgx_enclave_id_t) -> SessionRequestResult {
+pub extern "C" fn session_request(src_enclave_id: sgx_enclave_id_t) -> SessionRequestResult {
     dh_sessions().initiate_response(&src_enclave_id).into()
 }
 
 #[no_mangle]
-pub extern "C" fn rtc_end_session(src_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
+pub extern "C" fn end_session(src_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
     // TODO: Ensure sessions close on both ends?
     dh_sessions().close_session(&src_enclave_id);
     sgx_status_t::SGX_SUCCESS
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rtc_exchange_report(
+pub unsafe extern "C" fn exchange_report(
     src_enclave_id: sgx_enclave_id_t,
     dh_msg2_ptr: *const sgx_dh_msg2_t,
 ) -> ExchangeReportResult {

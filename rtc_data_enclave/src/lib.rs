@@ -37,7 +37,7 @@ use rtc_tenclave::enclave::*;
 /// The caller (SGX) should ensure that `payload_ptr` is valid for a slice of
 /// length `payload_len`
 #[no_mangle]
-pub unsafe extern "C" fn rtc_validate_and_save(
+pub unsafe extern "C" fn validate_and_save(
     payload_ptr: *const u8,
     payload_len: usize,
     metadata: UploadMetadata,
@@ -53,5 +53,16 @@ pub unsafe extern "C" fn rtc_validate_and_save(
     match ocalls::save_sealed_blob_u(sealed.sealed_data, sealed.uuid) {
         (sgx_status_t::SGX_SUCCESS) => EcallResult::Ok(sealed.client_payload.into()),
         (err) => EcallResult::Err(DataUploadError::Sealing(err)),
+    }
+}
+
+/// Tries to perform local attestation to an enclave at dest_enclave_id. The enclave needs to be
+/// initialized as a `ResponderSys` in rtc_udh'
+#[no_mangle]
+pub unsafe extern "C" fn local_attestation(dest_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
+    let res = rtc_tenclave::dh::dh_sessions().establish_new(dest_enclave_id);
+    match res {
+        Ok(_) => sgx_status_t::SGX_SUCCESS,
+        Err(err) => err,
     }
 }

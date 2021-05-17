@@ -79,7 +79,13 @@ pub mod ecalls {
         let mut retval = DataUploadResult::default();
         // TODO: Safety
         let res = unsafe {
-            ffi::rtc_validate_and_save(eid, &mut retval, payload.as_ptr(), payload.len(), metadata)
+            ffi::rtc_data_validate_and_save(
+                eid,
+                &mut retval,
+                payload.as_ptr(),
+                payload.len(),
+                metadata,
+            )
         };
         retval.to_ecall_err(res).into()
     }

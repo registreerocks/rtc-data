@@ -1,4 +1,4 @@
-#include "Enclave_t.h"
+#include "rtc_auth_t.h"
 
 #include "sgx_trts.h" /* for sgx_ocalloc, sgx_is_outside_enclave */
 #include "sgx_lfence.h" /* for sgx_lfence */
@@ -40,21 +40,21 @@ typedef struct ms_t_global_init_ecall_t {
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
 
-typedef struct ms_rtc_session_request_t {
+typedef struct ms_session_request_t {
 	SessionRequestResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-} ms_rtc_session_request_t;
+} ms_session_request_t;
 
-typedef struct ms_rtc_exchange_report_t {
+typedef struct ms_exchange_report_t {
 	ExchangeReportResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
 	const sgx_dh_msg2_t* ms_dh_msg2;
-} ms_rtc_exchange_report_t;
+} ms_exchange_report_t;
 
-typedef struct ms_rtc_end_session_t {
+typedef struct ms_end_session_t {
 	sgx_status_t ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-} ms_rtc_end_session_t;
+} ms_end_session_t;
 
 typedef struct ms_u_thread_set_event_ocall_t {
 	int ms_retval;
@@ -635,32 +635,32 @@ static sgx_status_t SGX_CDECL sgx_t_global_exit_ecall(void* pms)
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_session_request(void* pms)
+static sgx_status_t SGX_CDECL sgx_session_request(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_session_request_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_session_request_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_session_request_t* ms = SGX_CAST(ms_rtc_session_request_t*, pms);
+	ms_session_request_t* ms = SGX_CAST(ms_session_request_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 
 
 
-	ms->ms_retval = rtc_session_request(ms->ms_src_enclave_id);
+	ms->ms_retval = session_request(ms->ms_src_enclave_id);
 
 
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
+static sgx_status_t SGX_CDECL sgx_exchange_report(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_exchange_report_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_exchange_report_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_exchange_report_t* ms = SGX_CAST(ms_rtc_exchange_report_t*, pms);
+	ms_exchange_report_t* ms = SGX_CAST(ms_exchange_report_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	const sgx_dh_msg2_t* _tmp_dh_msg2 = ms->ms_dh_msg2;
 	size_t _len_dh_msg2 = sizeof(sgx_dh_msg2_t);
@@ -687,26 +687,26 @@ static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
 
 	}
 
-	ms->ms_retval = rtc_exchange_report(ms->ms_src_enclave_id, (const sgx_dh_msg2_t*)_in_dh_msg2);
+	ms->ms_retval = exchange_report(ms->ms_src_enclave_id, (const sgx_dh_msg2_t*)_in_dh_msg2);
 
 err:
 	if (_in_dh_msg2) free(_in_dh_msg2);
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_end_session(void* pms)
+static sgx_status_t SGX_CDECL sgx_end_session(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_end_session_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_end_session_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_end_session_t* ms = SGX_CAST(ms_rtc_end_session_t*, pms);
+	ms_end_session_t* ms = SGX_CAST(ms_end_session_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 
 
 
-	ms->ms_retval = rtc_end_session(ms->ms_src_enclave_id);
+	ms->ms_retval = end_session(ms->ms_src_enclave_id);
 
 
 	return status;
@@ -721,9 +721,9 @@ SGX_EXTERNC const struct {
 		{(void*)(uintptr_t)sgx_enclave_create_report, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_init_ecall, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_exit_ecall, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_session_request, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_exchange_report, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_end_session, 0, 0},
+		{(void*)(uintptr_t)sgx_session_request, 0, 0},
+		{(void*)(uintptr_t)sgx_exchange_report, 0, 0},
+		{(void*)(uintptr_t)sgx_end_session, 0, 0},
 	}
 };
 

@@ -1,5 +1,5 @@
-#ifndef ENCLAVE_T_H__
-#define ENCLAVE_T_H__
+#ifndef RTC_AUTH_T_H__
+#define RTC_AUTH_T_H__
 
 #include <stdint.h>
 #include <wchar.h>
@@ -28,9 +28,9 @@ extern "C" {
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
-SessionRequestResult rtc_session_request(sgx_enclave_id_t src_enclave_id);
-ExchangeReportResult rtc_exchange_report(sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
-sgx_status_t rtc_end_session(sgx_enclave_id_t src_enclave_id);
+SessionRequestResult session_request(sgx_enclave_id_t src_enclave_id);
+ExchangeReportResult exchange_report(sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
+sgx_status_t end_session(sgx_enclave_id_t src_enclave_id);
 
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);
 sgx_status_t SGX_CDECL u_thread_wait_event_ocall(int* retval, int* error, const void* tcs, const struct timespec* timeout);

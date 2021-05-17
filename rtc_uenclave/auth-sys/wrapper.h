@@ -1,1 +1,1 @@
-#include "../../codegen/auth_enclave/Enclave_u.h"
+#include "../../codegen/auth_enclave/rtc_auth_u.h"

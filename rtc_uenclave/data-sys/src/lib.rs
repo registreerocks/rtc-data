@@ -30,7 +30,7 @@ impl RtcEnclaveEcalls for DataSys {
         enclave_data: *mut EnclaveHeldData,
         p_report: *mut sgx_report_t,
     ) -> sgx_status_t {
-        ffi::enclave_create_report(eid, retval, p_qe3_target, enclave_data, p_report)
+        ffi::rtc_data_enclave_create_report(eid, retval, p_qe3_target, enclave_data, p_report)
     }
 }
 
@@ -41,7 +41,7 @@ impl rtc_udh::ResponderSys for DataSys {
         retval: *mut SessionRequestResult,
         src_enclave_id: sgx_enclave_id_t,
     ) -> sgx_status_t {
-        ffi::rtc_session_request(eid, retval, src_enclave_id)
+        ffi::rtc_data_session_request(eid, retval, src_enclave_id)
     }
 
     unsafe fn rtc_exchange_report(
@@ -51,7 +51,7 @@ impl rtc_udh::ResponderSys for DataSys {
         src_enclave_id: sgx_enclave_id_t,
         dh_msg2_ptr: *const sgx_dh_msg2_t,
     ) -> sgx_status_t {
-        ffi::rtc_exchange_report(eid, retval, src_enclave_id, dh_msg2_ptr)
+        ffi::rtc_data_exchange_report(eid, retval, src_enclave_id, dh_msg2_ptr)
     }
 
     unsafe fn rtc_end_session(
@@ -60,6 +60,6 @@ impl rtc_udh::ResponderSys for DataSys {
         retval: *mut sgx_status_t,
         src_enclave_id: sgx_enclave_id_t,
     ) -> sgx_status_t {
-        ffi::rtc_end_session(eid, retval, src_enclave_id)
+        ffi::rtc_data_end_session(eid, retval, src_enclave_id)
     }
 }

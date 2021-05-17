@@ -1,5 +1,5 @@
-#ifndef ENCLAVE_U_H__
-#define ENCLAVE_U_H__
+#ifndef RTC_DATA_U_H__
+#define RTC_DATA_U_H__
 
 #include <stdint.h>
 #include <wchar.h>
@@ -324,13 +324,14 @@ ExchangeReportResult SGX_UBRIDGE(SGX_NOCONVENTION, rtc_exchange_report_u, (sgx_e
 sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_end_session_u, (sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id));
 #endif
 
-sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
-sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
-sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
-sgx_status_t rtc_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);
-sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
-sgx_status_t rtc_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id);
+sgx_status_t rtc_data_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_data_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+sgx_status_t rtc_data_local_attestation(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t rtc_local_attestation);
+sgx_status_t rtc_data_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
+sgx_status_t rtc_data_t_global_exit_ecall(sgx_enclave_id_t eid);
+sgx_status_t rtc_data_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);
+sgx_status_t rtc_data_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
+sgx_status_t rtc_data_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id);
 
 #ifdef __cplusplus
 }

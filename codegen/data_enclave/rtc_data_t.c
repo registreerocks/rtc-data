@@ -1,4 +1,4 @@
-#include "Enclave_t.h"
+#include "rtc_data_t.h"
 
 #include "sgx_trts.h" /* for sgx_ocalloc, sgx_is_outside_enclave */
 #include "sgx_lfence.h" /* for sgx_lfence */
@@ -34,12 +34,17 @@ typedef struct ms_enclave_create_report_t {
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
-typedef struct ms_rtc_validate_and_save_t {
+typedef struct ms_validate_and_save_t {
 	DataUploadResult ms_retval;
 	const uint8_t* ms_payload_ptr;
 	size_t ms_payload_len;
 	UploadMetadata ms_metadata;
-} ms_rtc_validate_and_save_t;
+} ms_validate_and_save_t;
+
+typedef struct ms_local_attestation_t {
+	sgx_status_t ms_retval;
+	sgx_enclave_id_t ms_rtc_local_attestation;
+} ms_local_attestation_t;
 
 typedef struct ms_t_global_init_ecall_t {
 	uint64_t ms_id;
@@ -47,21 +52,21 @@ typedef struct ms_t_global_init_ecall_t {
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
 
-typedef struct ms_rtc_session_request_t {
+typedef struct ms_session_request_t {
 	SessionRequestResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-} ms_rtc_session_request_t;
+} ms_session_request_t;
 
-typedef struct ms_rtc_exchange_report_t {
+typedef struct ms_exchange_report_t {
 	ExchangeReportResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
 	const sgx_dh_msg2_t* ms_dh_msg2;
-} ms_rtc_exchange_report_t;
+} ms_exchange_report_t;
 
-typedef struct ms_rtc_end_session_t {
+typedef struct ms_end_session_t {
 	sgx_status_t ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-} ms_rtc_end_session_t;
+} ms_end_session_t;
 
 typedef struct ms_rtc_save_sealed_blob_u_t {
 	sgx_status_t ms_retval;
@@ -657,14 +662,14 @@ err:
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_validate_and_save(void* pms)
+static sgx_status_t SGX_CDECL sgx_validate_and_save(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_validate_and_save_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_validate_and_save_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_validate_and_save_t* ms = SGX_CAST(ms_rtc_validate_and_save_t*, pms);
+	ms_validate_and_save_t* ms = SGX_CAST(ms_validate_and_save_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	const uint8_t* _tmp_payload_ptr = ms->ms_payload_ptr;
 	size_t _tmp_payload_len = ms->ms_payload_len;
@@ -702,10 +707,28 @@ static sgx_status_t SGX_CDECL sgx_rtc_validate_and_save(void* pms)
 
 	}
 
-	ms->ms_retval = rtc_validate_and_save((const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
+	ms->ms_retval = validate_and_save((const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
 
 err:
 	if (_in_payload_ptr) free(_in_payload_ptr);
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_local_attestation(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_local_attestation_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_local_attestation_t* ms = SGX_CAST(ms_local_attestation_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+
+
+
+	ms->ms_retval = local_attestation(ms->ms_rtc_local_attestation);
+
+
 	return status;
 }
 
@@ -764,32 +787,32 @@ static sgx_status_t SGX_CDECL sgx_t_global_exit_ecall(void* pms)
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_session_request(void* pms)
+static sgx_status_t SGX_CDECL sgx_session_request(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_session_request_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_session_request_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_session_request_t* ms = SGX_CAST(ms_rtc_session_request_t*, pms);
+	ms_session_request_t* ms = SGX_CAST(ms_session_request_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 
 
 
-	ms->ms_retval = rtc_session_request(ms->ms_src_enclave_id);
+	ms->ms_retval = session_request(ms->ms_src_enclave_id);
 
 
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
+static sgx_status_t SGX_CDECL sgx_exchange_report(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_exchange_report_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_exchange_report_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_exchange_report_t* ms = SGX_CAST(ms_rtc_exchange_report_t*, pms);
+	ms_exchange_report_t* ms = SGX_CAST(ms_exchange_report_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	const sgx_dh_msg2_t* _tmp_dh_msg2 = ms->ms_dh_msg2;
 	size_t _len_dh_msg2 = sizeof(sgx_dh_msg2_t);
@@ -816,26 +839,26 @@ static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
 
 	}
 
-	ms->ms_retval = rtc_exchange_report(ms->ms_src_enclave_id, (const sgx_dh_msg2_t*)_in_dh_msg2);
+	ms->ms_retval = exchange_report(ms->ms_src_enclave_id, (const sgx_dh_msg2_t*)_in_dh_msg2);
 
 err:
 	if (_in_dh_msg2) free(_in_dh_msg2);
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_rtc_end_session(void* pms)
+static sgx_status_t SGX_CDECL sgx_end_session(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_rtc_end_session_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_end_session_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_rtc_end_session_t* ms = SGX_CAST(ms_rtc_end_session_t*, pms);
+	ms_end_session_t* ms = SGX_CAST(ms_end_session_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 
 
 
-	ms->ms_retval = rtc_end_session(ms->ms_src_enclave_id);
+	ms->ms_retval = end_session(ms->ms_src_enclave_id);
 
 
 	return status;
@@ -843,100 +866,101 @@ static sgx_status_t SGX_CDECL sgx_rtc_end_session(void* pms)
 
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[8];
 } g_ecall_table = {
-	7,
+	8,
 	{
 		{(void*)(uintptr_t)sgx_enclave_create_report, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_validate_and_save, 0, 0},
+		{(void*)(uintptr_t)sgx_validate_and_save, 0, 0},
+		{(void*)(uintptr_t)sgx_local_attestation, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_init_ecall, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_exit_ecall, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_session_request, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_exchange_report, 0, 0},
-		{(void*)(uintptr_t)sgx_rtc_end_session, 0, 0},
+		{(void*)(uintptr_t)sgx_session_request, 0, 0},
+		{(void*)(uintptr_t)sgx_exchange_report, 0, 0},
+		{(void*)(uintptr_t)sgx_end_session, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[74][7];
+	uint8_t entry_table[74][8];
 } g_dyn_entry_table = {
 	74,
 	{
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 
