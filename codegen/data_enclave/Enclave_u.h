@@ -329,7 +329,7 @@ sgx_status_t rtc_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retva
 sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
 sgx_status_t rtc_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);
-sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2);
+sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
 sgx_status_t rtc_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id);
 
 #ifdef __cplusplus

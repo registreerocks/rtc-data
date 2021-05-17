@@ -22,7 +22,7 @@ typedef struct ms_rtc_session_request_t {
 typedef struct ms_rtc_exchange_report_t {
 	ExchangeReportResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-	sgx_dh_msg2_t* ms_dh_msg2;
+	const sgx_dh_msg2_t* ms_dh_msg2;
 } ms_rtc_exchange_report_t;
 
 typedef struct ms_rtc_end_session_t {
@@ -1090,7 +1090,7 @@ sgx_status_t rtc_session_request(sgx_enclave_id_t eid, SessionRequestResult* ret
 	return status;
 }
 
-sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2)
+sgx_status_t rtc_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2)
 {
 	sgx_status_t status;
 	ms_rtc_exchange_report_t ms;

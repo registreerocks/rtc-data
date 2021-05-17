@@ -29,7 +29,7 @@ CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, 
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
 SessionRequestResult rtc_session_request(sgx_enclave_id_t src_enclave_id);
-ExchangeReportResult rtc_exchange_report(sgx_enclave_id_t src_enclave_id, sgx_dh_msg2_t* dh_msg2);
+ExchangeReportResult rtc_exchange_report(sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
 sgx_status_t rtc_end_session(sgx_enclave_id_t src_enclave_id);
 
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);

@@ -55,7 +55,7 @@ typedef struct ms_rtc_session_request_t {
 typedef struct ms_rtc_exchange_report_t {
 	ExchangeReportResult ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
-	sgx_dh_msg2_t* ms_dh_msg2;
+	const sgx_dh_msg2_t* ms_dh_msg2;
 } ms_rtc_exchange_report_t;
 
 typedef struct ms_rtc_end_session_t {
@@ -791,7 +791,7 @@ static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
 	sgx_lfence();
 	ms_rtc_exchange_report_t* ms = SGX_CAST(ms_rtc_exchange_report_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
-	sgx_dh_msg2_t* _tmp_dh_msg2 = ms->ms_dh_msg2;
+	const sgx_dh_msg2_t* _tmp_dh_msg2 = ms->ms_dh_msg2;
 	size_t _len_dh_msg2 = sizeof(sgx_dh_msg2_t);
 	sgx_dh_msg2_t* _in_dh_msg2 = NULL;
 
@@ -816,7 +816,7 @@ static sgx_status_t SGX_CDECL sgx_rtc_exchange_report(void* pms)
 
 	}
 
-	ms->ms_retval = rtc_exchange_report(ms->ms_src_enclave_id, _in_dh_msg2);
+	ms->ms_retval = rtc_exchange_report(ms->ms_src_enclave_id, (const sgx_dh_msg2_t*)_in_dh_msg2);
 
 err:
 	if (_in_dh_msg2) free(_in_dh_msg2);
