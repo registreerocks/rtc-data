@@ -18,11 +18,10 @@ cfg_if::cfg_if! {
         extern crate sgx_ucrypto as sgx_tcrypto;
         extern crate serde_std as serde;
         extern crate serde_json_std as serde_json;
+        extern crate once_cell_std as once_cell;
     }
 }
 
-// TODO: Refactor dh module to allow us to test with it enabled
-#[cfg(not(test))]
 pub mod dh;
 
 pub mod crypto;

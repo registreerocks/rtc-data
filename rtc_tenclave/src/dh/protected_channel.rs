@@ -1,23 +1,26 @@
 use secrecy::{ExposeSecret, Secret};
 use sgx_tcrypto::{rsgx_rijndael128GCM_decrypt, rsgx_rijndael128GCM_encrypt};
-use sgx_tstd::enclave;
 use sgx_types::*;
 use std::{convert::TryInto, u32};
+
+use super::types::AlignedKey;
+
+#[cfg(test)]
+use super::enclave;
+#[cfg(not(test))]
+use sgx_tstd::enclave;
 
 // NIST AES-GCM recommended IV size
 type GcmNonce = [u8; 12];
 
 pub struct ProtectedChannel {
     counter: u32,
-    key: Secret<sgx_key_128bit_t>,
+    key: Secret<AlignedKey>,
 }
 
 impl ProtectedChannel {
-    pub fn init(key: sgx_key_128bit_t) -> Self {
-        Self {
-            counter: 1,
-            key: Secret::new(key),
-        }
+    pub fn init(key: Secret<AlignedKey>) -> Self {
+        Self { counter: 1, key }
     }
 
     pub fn encrypt_message<const MESSAGE_SIZE: usize, const AAD_SIZE: usize>(
@@ -29,7 +32,7 @@ impl ProtectedChannel {
         let mut dst = [0_u8; MESSAGE_SIZE];
         let mut mac = sgx_aes_gcm_128bit_tag_t::default();
         rsgx_rijndael128GCM_encrypt(
-            self.key.expose_secret(),
+            self.key.expose_secret().key(),
             &plaintext,
             &nonce,
             &aad,
@@ -51,7 +54,7 @@ impl ProtectedChannel {
     ) -> Result<[u8; MESSAGE_SIZE], sgx_status_t> {
         let mut dst = [0_u8; MESSAGE_SIZE];
         rsgx_rijndael128GCM_decrypt(
-            self.key.expose_secret(),
+            self.key.expose_secret().key(),
             &message.ciphertext,
             &message.nonce,
             &message.aad,
