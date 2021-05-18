@@ -31,7 +31,8 @@ CUSTOM_BUILD_PATH := build
 CUSTOM_LIBRARY_PATH := $(CUSTOM_BUILD_PATH)/lib
 CUSTOM_BIN_PATH := $(CUSTOM_BUILD_PATH)/bin
 
-Crate_Files := $(wildcard src/*.rs)
+# XXX: Is there a better way to express this source dependency on rtc_tenclave?
+Crate_Files := $(wildcard src/*.rs ../rtc_tenclave/src/*.rs)
 Out_StaticLib := $(CRATE_BUILD_PATH)/lib$(CRATE_LIB_NAME).a
 Out_Bindings := $(CODEGEN_PATH)/bindings.h
 
