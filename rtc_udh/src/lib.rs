@@ -2,7 +2,6 @@ mod responder;
 
 use std::{
     collections::HashMap,
-    marker::PhantomData,
     sync::{Arc, Mutex, RwLock},
 };
 

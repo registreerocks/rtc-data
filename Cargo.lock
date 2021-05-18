@@ -1704,6 +1704,7 @@ dependencies = [
  "rsa",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "serde 1.0.125",
  "serde_json",
  "sgx_types",

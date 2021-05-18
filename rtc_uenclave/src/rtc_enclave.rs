@@ -9,7 +9,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
-use rtc_types::{ExecTokenError, ExecTokenResponse};
+use rtc_udh::{self, ResponderSys};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -52,7 +52,10 @@ pub struct EnclaveConfig {
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
 #[cfg_attr(not(test), derive(Debug))]
-pub(crate) struct RtcEnclave<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> {
+pub(crate) struct RtcEnclave<
+    TCfg: Borrow<EnclaveConfig>,
+    TEcalls: RtcEcalls + ResponderSys + 'static,
+> {
     pub(crate) base_enclave: SgxEnclave,
     pub(crate) quoting_enclave: QuotingEnclave,
     pub(crate) attestation_client: AzureAttestationClient<ureq::Agent>,
@@ -60,13 +63,19 @@ pub(crate) struct RtcEnclave<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> {
     ecalls: TEcalls,
 }
 
-impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> RtcEnclave<TCfg, TEcalls> {
+impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls + ResponderSys + 'static>
+    RtcEnclave<TCfg, TEcalls>
+{
     /// Creates a new enclave instance with the provided configuration
     pub fn init(cfg: TCfg) -> Result<Self, sgx_status_t> {
+        let base_enclave = Self::init_base_enclave(cfg.borrow())?;
+        rtc_udh::set_responder(base_enclave.geteid(), Box::new(TEcalls::default()))
+            .expect("Failed to register enclave as dh responder");
+
         Ok(RtcEnclave {
             attestation_client: Self::init_attestation_client(),
             quoting_enclave: Self::init_quoting_enclave(),
-            base_enclave: Self::init_base_enclave(cfg.borrow())?,
+            base_enclave,
             config: cfg,
             ecalls: TEcalls::default(),
         })
