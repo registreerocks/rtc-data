@@ -144,9 +144,6 @@ impl DhSessions {
         // TODO: Verify identity
         initiator.proc_msg3(&dh_msg3, &mut aek.key, &mut responder_identity)?;
 
-        // TODO: REMOVE
-        println!("{:?}", aek);
-
         self.set_active(dest_enclave_id, aek.key)
     }
 
@@ -162,7 +159,6 @@ impl DhSessions {
 
         self.set_in_progress(src_enclave_id, responder)?;
 
-        println!("msg1 {:?}", dh_msg1);
         Ok(dh_msg1)
     }
 
@@ -183,9 +179,6 @@ impl DhSessions {
         responder.proc_msg2(dh_msg2, &mut msg3, &mut aek.key, &mut initiator_identity)?;
 
         // TODO: Verify initiator_identity
-
-        // TODO: REMOVE
-        println!("{:?}", aek);
 
         self.set_active(src_enclave_id, aek.key)?;
 
