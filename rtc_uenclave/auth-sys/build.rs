@@ -6,7 +6,7 @@ use std::{env, path::Path};
 fn main() {
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
     let profile = env::var("PROFILE").unwrap();
-    let enclave_gen = Path::new("../../codegen/data_enclave");
+    let enclave_gen = Path::new("../../codegen/auth_enclave");
 
     let includes = vec![
         format!("{}/include", sdk_dir),
@@ -54,10 +54,9 @@ fn main() {
         .array_pointers_in_arguments(true)
         // TODO: see if there is a way to include functions using globbing
         .allowlist_function("enclave_create_report")
-        .allowlist_function("rtc_validate_and_save")
         .clang_args(&inc_args)
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(out_path.join("bindings.rs"))
-        .expect("Failed to wirte bindings to file");
+        .expect("Failed to write bindings to file");
 }

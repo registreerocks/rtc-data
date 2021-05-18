@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use rtc_uenclave::{AttestationError, EnclaveConfig, RtcEnclave};
+use rtc_uenclave::{AttestationError, EnclaveConfig, RtcDataEnclave};
 use std::sync::Arc;
 
 #[derive(Default)]
@@ -12,7 +12,7 @@ impl Message for RequestAttestation {
 }
 
 pub struct DataEnclaveActor {
-    enclave: Option<RtcEnclave<Arc<EnclaveConfig>>>,
+    enclave: Option<RtcDataEnclave<Arc<EnclaveConfig>>>,
     config: Arc<EnclaveConfig>,
 }
 
@@ -29,7 +29,7 @@ impl DataEnclaveActor {
     /// # Panics
     ///
     /// Panics if the enclave was not initialised.
-    pub(crate) fn get_enclave(&self) -> &RtcEnclave<Arc<EnclaveConfig>> {
+    pub(crate) fn get_enclave(&self) -> &RtcDataEnclave<Arc<EnclaveConfig>> {
         self.enclave
             .as_ref()
             .expect("DataEnclaveActor: tried to access enclave while not initialised")
@@ -51,7 +51,7 @@ impl Actor for DataEnclaveActor {
 
     fn started(&mut self, _ctx: &mut Self::Context) {
         self.enclave
-            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to initialize"));
+            .replace(RtcDataEnclave::init(self.config.clone()).expect("enclave to initialize"));
     }
 }
 
@@ -67,7 +67,7 @@ impl Handler<RequestAttestation> for DataEnclaveActor {
 impl actix::Supervised for DataEnclaveActor {
     fn restarting(&mut self, _ctx: &mut Context<DataEnclaveActor>) {
         self.enclave
-            .replace(RtcEnclave::init(self.config.clone()).expect("enclave to be initialized"))
+            .replace(RtcDataEnclave::init(self.config.clone()).expect("enclave to be initialized"))
             .map(|enc| enc.destroy());
     }
 }

@@ -312,6 +312,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "auth-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "rtc-ecalls",
+ "rtc_types",
+ "sgx_types",
+ "sgx_urts",
+]
+
+[[package]]
 name = "autocfg"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -615,7 +627,7 @@ dependencies = [
  "bindgen",
  "cc",
  "data-ocalls",
- "mockall",
+ "rtc-ecalls",
  "rtc_types",
  "sgx_types",
  "sgx_urts",
@@ -1614,6 +1626,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rtc-ecalls"
+version = "0.1.0"
+dependencies = [
+ "mockall",
+ "rtc_types",
+ "sgx_types",
+]
+
+[[package]]
 name = "rtc_data_service"
 version = "0.0.1"
 dependencies = [
@@ -1659,6 +1680,7 @@ dependencies = [
 name = "rtc_uenclave"
 version = "0.1.0"
 dependencies = [
+ "auth-sys",
  "base64",
  "data-sys",
  "mockall",
@@ -1668,6 +1690,7 @@ dependencies = [
  "proptest",
  "rand 0.7.3",
  "rsa",
+ "rtc-ecalls",
  "rtc_types",
  "serde 1.0.125",
  "serde_json",

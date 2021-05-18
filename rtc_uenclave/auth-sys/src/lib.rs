@@ -1,9 +1,3 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
-#[allow(unused_imports)]
-use data_ocalls;
 #[allow(unused_imports)]
 use sgx_urts;
 
@@ -17,9 +11,9 @@ pub mod ffi {
 }
 
 #[derive(Default)]
-pub struct DataSys();
+pub struct AuthSys();
 
-impl RtcEnclaveEcalls for DataSys {
+impl RtcEnclaveEcalls for AuthSys {
     unsafe fn enclave_create_report(
         &self,
         eid: sgx_enclave_id_t,
