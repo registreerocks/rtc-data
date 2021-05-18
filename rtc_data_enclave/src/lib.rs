@@ -29,65 +29,7 @@ use std::prelude::v1::*;
 use sgx_tcrypto::rsgx_sha256_slice;
 use zeroize::Zeroize;
 
-fn create_report_impl(
-    qe_target_info: &sgx_target_info_t,
-) -> Result<([u8; ENCLAVE_HELD_PUB_KEY_SIZE], sgx_report_t), CreateReportResult> {
-    let crypto = SodaBoxCrypto::new();
-    let pubkey = crypto.get_pubkey();
-
-    let pubkey_hash = match rsgx_sha256_slice(&pubkey) {
-        Ok(hash) => hash,
-        Err(err) => return Err(err.into()),
-    };
-
-    let mut p_data = sgx_report_data_t::default();
-    p_data.d[0..32].copy_from_slice(&pubkey_hash);
-
-    // AFAIK any SGX function with out-variables provide no guarantees on what
-    // data will be written to those variables in the case of failure. It is
-    // our responsibility to ensure data does not get leaked in the case
-    // of function failure.
-    match rsgx_create_report(qe_target_info, &p_data) {
-        Ok(report) => Ok((pubkey, report)),
-        Err(err) => Err(CreateReportResult::Sgx(err)),
-    }
-}
-
-/// Creates and returns a report for the enclave alongside a public key used to encrypt
-/// data sent to the enclave.
-///
-/// # Safety
-/// The pointers from SGX is expected to be valid, not-null, correctly aligned and of the
-/// correct type. Sanity checks are done for null-pointers, but none of the other conditions.
-#[no_mangle]
-pub unsafe extern "C" fn enclave_create_report(
-    p_qe3_target: *const sgx_target_info_t,
-    enclave_pubkey: *mut EnclaveHeldData,
-    p_report: *mut sgx_report_t,
-) -> CreateReportResult {
-    if p_qe3_target.is_null() || enclave_pubkey.is_null() || p_report.is_null() {
-        return sgx_status_t::SGX_ERROR_INVALID_PARAMETER.into();
-    }
-    let qe_target_info = unsafe { &*p_qe3_target };
-    let (key, report) = match create_report_impl(qe_target_info) {
-        Ok(res) => res,
-        Err(x) => {
-            unsafe {
-                // TODO: Use secrecy crate instead? This will allow for more
-                // guarantees and might make the code easier to audit
-                (*enclave_pubkey).zeroize();
-            }
-            return x.into();
-        }
-    };
-
-    unsafe {
-        *p_report = report;
-        (*enclave_pubkey).copy_from_slice(&key);
-    }
-
-    CreateReportResult::Success
-}
+use rtc_tenclave::enclave::*;
 
 /// Validates and save a payload encrypted for the enclave
 ///

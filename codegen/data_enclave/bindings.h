@@ -12,24 +12,6 @@
  */
 #define DATA_UPLOAD_RESPONSE_LEN (16 + (24 + 16))
 
-typedef enum CreateReportResult_Tag {
-  Success,
-  Sgx,
-  FailedToGetPublicKey,
-  FailedEncodePublicKey,
-} CreateReportResult_Tag;
-
-typedef struct CreateReportResult {
-  CreateReportResult_Tag tag;
-  union {
-    struct {
-      sgx_status_t sgx;
-    };
-  };
-} CreateReportResult;
-
-typedef uint8_t EnclaveHeldData[ENCLAVE_HELD_DATA_SIZE];
-
 typedef struct DataUploadResponse {
   uint8_t ciphertext[DATA_UPLOAD_RESPONSE_LEN];
   uint8_t nonce[24];
@@ -93,3 +75,21 @@ typedef struct UploadMetadata {
   uint8_t uploader_pub_key[32];
   uint8_t nonce[24];
 } UploadMetadata;
+
+typedef enum CreateReportResult_Tag {
+  Success,
+  Sgx,
+  FailedToGetPublicKey,
+  FailedEncodePublicKey,
+} CreateReportResult_Tag;
+
+typedef struct CreateReportResult {
+  CreateReportResult_Tag tag;
+  union {
+    struct {
+      sgx_status_t sgx;
+    };
+  };
+} CreateReportResult;
+
+typedef uint8_t EnclaveHeldData[ENCLAVE_HELD_DATA_SIZE];

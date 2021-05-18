@@ -449,6 +449,7 @@ dependencies = [
  "ring",
  "rtc_types",
  "secrecy",
+ "sgx_tcrypto",
  "sgx_tse",
  "sgx_tstd",
  "sgx_types",
