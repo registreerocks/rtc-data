@@ -21,8 +21,11 @@ cfg_if::cfg_if! {
     }
 }
 
-pub mod crypto;
+// TODO: Refactor dh module to allow us to test with it enabled
+#[cfg(not(test))]
 pub mod dh;
+
+pub mod crypto;
 pub mod enclave;
 pub mod kv_store;
 pub mod util;
