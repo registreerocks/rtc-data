@@ -47,13 +47,18 @@ fn prop_store_ops_match_model() {
 
         // Init the store under test
         let path = Path::new("store_test");
-        clear_dir(path);  // Clear before each test
+        clear_dir(path); // Clear before each test
         create_dir_all(path).expect("create_dir_all failed");
-        let mut store_fs: FsStore<StdFiler> = FsStore::new(path, StdFiler).expect("FsStore::new failed");
+        let mut store_fs: FsStore<StdFiler> =
+            FsStore::new(path, StdFiler).expect("FsStore::new failed");
 
         for (k, v) in store_ops_vec {
-            store_model.save(&k, v.clone()).expect("InMemoryStore save failed!");
-            store_model_json.save(&k, v.clone()).expect("InMemoryJsonStore save failed!");
+            store_model
+                .save(&k, v.clone())
+                .expect("InMemoryStore save failed!");
+            store_model_json
+                .save(&k, v.clone())
+                .expect("InMemoryJsonStore save failed!");
             store_fs.save(&k, v.clone()).expect("FsStore save failed!");
 
             // Models match each other
@@ -61,10 +66,13 @@ fn prop_store_ops_match_model() {
             // Models match store_fs
             prop_assert_eq!(store_model.as_map(), store_fs.as_map());
             // FIXME: explicit coercion for as_map()
-            prop_assert_eq!(store_model_json.as_map() as HashMap<String, V>, store_fs.as_map());
+            prop_assert_eq!(
+                store_model_json.as_map() as HashMap<String, V>,
+                store_fs.as_map()
+            );
         }
 
-        clear_dir(path);  // Clear after successful tests, just to keep the workdir clean
+        clear_dir(path); // Clear after successful tests, just to keep the workdir clean
     });
 }
 
