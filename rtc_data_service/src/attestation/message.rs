@@ -1,6 +1,8 @@
 use crate::data_enclave_actor::DataEnclaveActor;
 use actix::{Handler, Message};
+use actix_web::error::ErrorInternalServerError;
 use rtc_types::{AttestError, AttestReqMetadata, AttestationResponse};
+use rtc_uenclave::AttestationError;
 
 // TODO : Change struct values to resemble request Body (add data access key, uuid, hash, keypair, nonce..)
 pub struct AttestationMessage {
@@ -9,7 +11,7 @@ pub struct AttestationMessage {
 }
 
 impl Message for AttestationMessage {
-    type Result = Result<AttestationResponse, AttestError>;
+    type Result = Result<AttestationResponse, AttestationError>;
 }
 
 impl Handler<AttestationMessage> for DataEnclaveActor {
@@ -17,9 +19,12 @@ impl Handler<AttestationMessage> for DataEnclaveActor {
 
     fn handle(&mut self, _msg: AttestationMessage, _ctx: &mut Self::Context) -> Self::Result {
         let jwt = self.get_enclave().dcap_attestation_azure();
-        Ok(AttestationResponse {
-            attestation_jwt: "Placeholder for JWT returned by enclave".to_string(),
-            nonce: [7; 24],
-        })
+        match jwt {
+            Ok(result) => Ok(AttestationResponse{
+                attestation_jwt: result,
+                nonce: [7; 24]
+            }),
+            Err(err) => Err(err)
+        }
     }
 }
