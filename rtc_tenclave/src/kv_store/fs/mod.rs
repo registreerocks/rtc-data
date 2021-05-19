@@ -44,6 +44,7 @@ where
     F: Filer,
 {
     /// Validate that `root_dir` exists as a directory.
+    #[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
     pub fn new(root: impl AsRef<Path>, filer: F) -> StoreResult<Self> {
         let root_dir = root.as_ref().to_path_buf();
         Ok(FsStore { root_dir, filer })
@@ -62,7 +63,7 @@ where
         format!("x{}", encoded)
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
     pub(crate) fn decode_key(file_name: &str) -> StoreResult<String> {
         let encoded: &str = file_name
             .strip_prefix("x")
