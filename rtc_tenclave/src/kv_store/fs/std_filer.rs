@@ -18,8 +18,8 @@ use super::Filer;
 pub struct StdFiler;
 
 impl Filer for StdFiler {
-    fn get(&self, path: impl AsRef<Path>) -> Result<Vec<u8>> {
-        fs::read(path)
+    fn get(&self, path: impl AsRef<Path>) -> Result<Option<Vec<u8>>> {
+        fs::read(path).map(Some)
     }
 
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
@@ -46,7 +46,7 @@ mod tests {
     fn get_empty() {
         with_temp_path(|path: &Path| {
             File::create(path).unwrap();
-            assert_eq!(StdFiler.get(path).unwrap(), "".as_bytes());
+            assert_eq!(StdFiler.get(path).unwrap().unwrap(), "".as_bytes());
         })
     }
 
@@ -54,7 +54,7 @@ mod tests {
     fn put_get() {
         with_temp_path(|path| {
             StdFiler.put(path, "spam").unwrap();
-            assert_eq!(StdFiler.get(path).unwrap(), "spam".as_bytes())
+            assert_eq!(StdFiler.get(path).unwrap().unwrap(), "spam".as_bytes())
         })
     }
 
@@ -63,7 +63,7 @@ mod tests {
         with_temp_path(|path| {
             StdFiler.put(path, "spam").unwrap();
             StdFiler.put(path, "ham").unwrap();
-            assert_eq!(StdFiler.get(path).unwrap(), "ham".as_bytes())
+            assert_eq!(StdFiler.get(path).unwrap().unwrap(), "ham".as_bytes())
         })
     }
 }

@@ -20,10 +20,10 @@ pub struct SgxFiler;
 //   https://github.com/intel/linux-sgx/blob/sgx_2.13.3/sdk/protected_fs/sgx_tprotected_fs/file_crypto.cpp#L197
 //
 impl Filer for SgxFiler {
-    fn get(&self, path: impl AsRef<Path>) -> Result<Vec<u8>> {
+    fn get(&self, path: impl AsRef<Path>) -> Result<Option<Vec<u8>>> {
         // TODO: open_ex with key
         let value_file = SgxFile::open(path)?;
-        read_all(value_file)
+        read_all(value_file).map(Some)
     }
 
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {

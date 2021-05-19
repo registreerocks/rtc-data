@@ -23,8 +23,11 @@ use super::{KvStore, StoreResult};
 
 /// Simplified interface for reading and writing files.
 pub trait Filer {
-    /// Read content of `path`.
-    fn get(&self, path: impl AsRef<Path>) -> io::Result<Vec<u8>>;
+    /// Read content of `path`, if any.
+    ///
+    /// Return [`None`] if `path` doesn't exist.
+    ///
+    fn get(&self, path: impl AsRef<Path>) -> io::Result<Option<Vec<u8>>>;
 
     /// Write `content` to `path`. Discard any existing content.
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> io::Result<()>;
@@ -81,14 +84,14 @@ where
         // Note: Read all the data into memory first, then deserialize, for efficiency.
         // See the docs for [`serde_json::de::from_reader`],
         // and https://github.com/serde-rs/json/issues/160
-        let serialised: Vec<u8> = self
+        let loaded: Option<Vec<u8>> = self
             .filer
             .get(&value_file_name)
-            // TODO: Handle NotFound
             .map_err(|err| format!("FsStore: read from {:?} failed: {}", value_file_name, err))?;
-
-        let value: V = serde_json::from_slice(serialised.as_slice())?;
-        Ok(Some(value))
+        let value: Option<V> = loaded
+            .map(|serialised: Vec<u8>| serde_json::from_slice(serialised.as_slice()))
+            .transpose()?;
+        Ok(value)
     }
 
     fn save(&mut self, key: &str, value: V) -> StoreResult<()> {
