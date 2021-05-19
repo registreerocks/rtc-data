@@ -2,6 +2,7 @@
 
 use std::prelude::v1::Vec;
 
+use std::io::ErrorKind::NotFound;
 use std::io::Result;
 use std::io::Write;
 
@@ -19,7 +20,11 @@ pub struct StdFiler;
 
 impl Filer for StdFiler {
     fn get(&self, path: impl AsRef<Path>) -> Result<Option<Vec<u8>>> {
-        fs::read(path).map(Some)
+        match fs::read(path) {
+            Ok(contents) => Ok(Some(contents)),
+            Err(error) if error.kind() == NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
     }
 
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
@@ -40,6 +45,14 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         f(&temp_dir.path().join("foo"));
         temp_dir.close().unwrap()
+    }
+
+    #[test]
+    fn get_not_found() {
+        with_temp_path(|path: &Path| {
+            assert!(!path.exists());
+            assert_eq!(StdFiler.get(path).unwrap(), None);
+        })
     }
 
     #[test]

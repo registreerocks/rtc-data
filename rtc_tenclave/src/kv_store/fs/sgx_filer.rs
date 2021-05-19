@@ -2,6 +2,7 @@
 
 use std::prelude::v1::Vec;
 
+use std::io::ErrorKind::NotFound;
 use std::io::Read;
 use std::io::Result;
 use std::io::Write;
@@ -23,7 +24,11 @@ impl Filer for SgxFiler {
     fn get(&self, path: impl AsRef<Path>) -> Result<Option<Vec<u8>>> {
         // TODO: open_ex with key
         let value_file = SgxFile::open(path)?;
-        read_all(value_file).map(Some)
+        match read_all(value_file) {
+            Ok(contents) => Ok(Some(contents)),
+            Err(error) if error.kind() == NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
     }
 
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
