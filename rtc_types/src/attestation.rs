@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use thiserror::Error;
+use std::string::String;
 
 #[repr(C)]
 #[derive(Debug)]

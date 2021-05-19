@@ -4,6 +4,7 @@ use actix::{Addr, MailboxError};
 use actix_web::{error::ErrorInternalServerError, post, web, HttpRequest};
 use models::*;
 use rtc_types::{AttestError, AttestationResponse};
+use rtc_uenclave::AttestationError;
 
 use crate::data_enclave_actor::DataEnclaveActor;
 use crate::merge_error::*;
@@ -18,7 +19,7 @@ pub async fn req_attestation_jwt(
 ) -> actix_web::Result<web::Json<ResponseBody>> {
     let message: AttestationMessage = req_body.0.try_into()?;
 
-    let result: Result<AttestationResponse, MergedError<AttestError, MailboxError>> =
+    let result: Result<AttestationResponse, MergedError<AttestationError, MailboxError>> =
         enclave.send(message).await.merge_err();
     match result {
         Ok(resp) => Ok(web::Json(resp.into())),
