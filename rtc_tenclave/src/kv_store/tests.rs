@@ -44,12 +44,12 @@ fn prop_store_ops_match_model() {
 
         for (k, v) in store_ops_vec {
             store_model
-                .save(&k, v.clone())
+                .save(&k, &v)
                 .expect("InMemoryStore save failed!");
             store_model_json
-                .save(&k, v.clone())
+                .save(&k, &v)
                 .expect("InMemoryJsonStore save failed!");
-            store_fs.save(&k, v.clone()).expect("FsStore save failed!");
+            store_fs.save(&k, &v).expect("FsStore save failed!");
 
             // Models match each other
             prop_assert_eq!(store_model.as_map(), store_model_json.as_map());

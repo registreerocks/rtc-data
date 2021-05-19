@@ -95,7 +95,7 @@ where
         Ok(value)
     }
 
-    fn save(&mut self, key: &str, value: V) -> StoreResult<()> {
+    fn save(&mut self, key: &str, value: &V) -> StoreResult<()> {
         let value_file_name = self.value_path(key);
         let serialized: Vec<u8> = serde_json::to_vec(&value)?;
         self.filer

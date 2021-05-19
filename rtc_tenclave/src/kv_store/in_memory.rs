@@ -21,8 +21,8 @@ where
         Ok(self.map.get(key).cloned())
     }
 
-    fn save(&mut self, key: &str, value: V) -> StoreResult<()> {
-        self.map.insert(key.to_string(), value);
+    fn save(&mut self, key: &str, value: &V) -> StoreResult<()> {
+        self.map.insert(key.to_string(), value.clone());
         Ok(())
     }
 }
@@ -43,7 +43,7 @@ where
         Ok(deserialized)
     }
 
-    fn save(&mut self, key: &str, value: V) -> StoreResult<()> {
+    fn save(&mut self, key: &str, value: &V) -> StoreResult<()> {
         let serialized = serde_json::to_vec(&value)?;
         self.map.insert(key.to_string(), serialized);
         Ok(())

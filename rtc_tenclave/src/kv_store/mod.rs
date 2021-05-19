@@ -7,7 +7,8 @@ type StoreResult<T> = Result<T, Box<dyn Error>>;
 
 /// A key-value store.
 ///
-/// These methods borrow key references, and
+/// These methods borrow key and value references,
+/// to suit cloning / serialising implementations.
 ///
 pub trait KvStore<V> {
     // TODO: Use associated type for V?
@@ -22,7 +23,7 @@ pub trait KvStore<V> {
     ///
     /// This will replace any existing value.
     ///
-    fn save(&mut self, key: &str, value: V) -> StoreResult<()>;
+    fn save(&mut self, key: &str, value: &V) -> StoreResult<()>;
 
     // TODO: add update()
 }
