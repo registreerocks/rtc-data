@@ -28,3 +28,42 @@ impl Filer for StdFiler {
         value_file.write_all(contents)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tempfile::TempDir;
+
+    use super::*;
+
+    // Helper: Run `f` with a non-existent file path inside a temporary directory.
+    fn with_temp_path(f: impl FnOnce(&Path)) {
+        let temp_dir = TempDir::new().unwrap();
+        f(&temp_dir.path().join("foo"));
+        temp_dir.close().unwrap()
+    }
+
+    #[test]
+    fn get_empty() {
+        with_temp_path(|path: &Path| {
+            File::create(path).unwrap();
+            assert_eq!(StdFiler.get(path).unwrap(), "".as_bytes());
+        })
+    }
+
+    #[test]
+    fn put_get() {
+        with_temp_path(|path| {
+            StdFiler.put(path, "spam").unwrap();
+            assert_eq!(StdFiler.get(path).unwrap(), "spam".as_bytes())
+        })
+    }
+
+    #[test]
+    fn put_get_overwrite() {
+        with_temp_path(|path| {
+            StdFiler.put(path, "spam").unwrap();
+            StdFiler.put(path, "ham").unwrap();
+            assert_eq!(StdFiler.get(path).unwrap(), "ham".as_bytes())
+        })
+    }
+}
