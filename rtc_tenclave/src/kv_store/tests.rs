@@ -4,12 +4,10 @@
 use std::prelude::v1::*;
 
 use std::collections::HashMap;
-use std::fs::create_dir_all;
-use std::fs::remove_dir_all;
-use std::path::Path;
 
 use proptest::prelude::*;
 use proptest::test_runner::TestCaseResult;
+use tempfile::TempDir;
 
 use super::fs::{std_filer::StdFiler, FsStore};
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
@@ -31,13 +29,6 @@ fn prop_store_ops_match_model() {
             .prop_shuffle()
     };
 
-    // XXX: hacky clearing
-    pub fn clear_dir(path: &Path) {
-        if path.is_dir() {
-            remove_dir_all(path).expect("remove_dir_all failed");
-        };
-    }
-
     fn test(store_ops_vec: Vec<(String, String)>) -> TestCaseResult {
         // FIXME: This value type parameter needs better handling.
         type V = String;
@@ -47,11 +38,9 @@ fn prop_store_ops_match_model() {
         let mut store_model_json: InMemoryJsonStore = InMemoryJsonStore::default();
 
         // Init the store under test
-        let path = Path::new("store_test");
-        clear_dir(path); // Clear before each test
-        create_dir_all(path).expect("create_dir_all failed");
+        let temp_dir = TempDir::new().unwrap();
         let mut store_fs: FsStore<StdFiler> =
-            FsStore::new(path, StdFiler).expect("FsStore::new failed");
+            FsStore::new(&temp_dir, StdFiler).expect("FsStore::new failed");
 
         for (k, v) in store_ops_vec {
             store_model
@@ -73,7 +62,7 @@ fn prop_store_ops_match_model() {
             );
         }
 
-        clear_dir(path); // Clear after successful tests, just to keep the workdir clean
+        temp_dir.close()?;
         Ok(())
     }
 
