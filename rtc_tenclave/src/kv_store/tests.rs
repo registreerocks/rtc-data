@@ -9,6 +9,7 @@ use std::fs::remove_dir_all;
 use std::path::Path;
 
 use proptest::prelude::*;
+use proptest::test_runner::TestCaseResult;
 
 use super::fs::{std_filer::StdFiler, FsStore};
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
@@ -37,7 +38,7 @@ fn prop_store_ops_match_model() {
         };
     }
 
-    proptest!(|(store_ops_vec in store_ops_strategy)| {
+    fn test(store_ops_vec: Vec<(String, String)>) -> TestCaseResult {
         // FIXME: This value type parameter needs better handling.
         type V = String;
 
@@ -73,6 +74,11 @@ fn prop_store_ops_match_model() {
         }
 
         clear_dir(path); // Clear after successful tests, just to keep the workdir clean
+        Ok(())
+    }
+
+    proptest!(|(store_ops_vec in store_ops_strategy)| {
+        test(store_ops_vec)?;
     });
 }
 
