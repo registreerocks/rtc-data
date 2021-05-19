@@ -8,6 +8,7 @@ use std::io::Result;
 use std::io::Write;
 use std::path::Path;
 
+use sgx_tstd::sgxfs;
 use sgx_tstd::sgxfs::SgxFile;
 
 use super::Filer;
@@ -36,6 +37,13 @@ impl Filer for SgxFiler {
         // TODO: create_ex with key
         let mut value_file = SgxFile::create(path)?;
         value_file.write_all(contents)
+    }
+
+    fn delete(&self, path: impl AsRef<Path>) -> Result<()> {
+        match sgxfs::remove(path) {
+            Err(error) if error.kind() == NotFound => Ok(()),
+            result => result,
+        }
     }
 }
 

@@ -31,6 +31,9 @@ pub trait Filer {
 
     /// Write `content` to `path`. Discard any existing content.
     fn put(&self, path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> io::Result<()>;
+
+    /// Delete `path`. Discard any existing content.
+    fn delete(&self, path: impl AsRef<Path>) -> io::Result<()>;
 }
 
 /// [`KvStore`] using a file per key under `root_dir`.
@@ -101,6 +104,12 @@ where
         self.filer
             .put(&value_file_name, serialized)
             .map_err(|err| format!("FsStore: write to {:?} failed: {}", value_file_name, err))?;
+        Ok(())
+    }
+
+    fn delete(&mut self, key: &str) -> StoreResult<()> {
+        let path = self.value_path(key);
+        self.filer.delete(path)?;
         Ok(())
     }
 }

@@ -25,7 +25,8 @@ pub trait KvStore<V> {
     ///
     fn save(&mut self, key: &str, value: &V) -> StoreResult<()>;
 
-    // TODO: add update()
+    /// Delete the saved value for `key`.
+    fn delete(&mut self, key: &str) -> StoreResult<()>;
 }
 
 mod fs;

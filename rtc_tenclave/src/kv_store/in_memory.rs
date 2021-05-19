@@ -25,6 +25,11 @@ where
         self.map.insert(key.to_string(), value.clone());
         Ok(())
     }
+
+    fn delete(&mut self, key: &str) -> StoreResult<()> {
+        self.map.remove(key);
+        Ok(())
+    }
 }
 
 /// In-memory [`KvStore`] using [`HashMap`] and [`serde_json`] serialization
@@ -46,6 +51,11 @@ where
     fn save(&mut self, key: &str, value: &V) -> StoreResult<()> {
         let serialized = serde_json::to_vec(&value)?;
         self.map.insert(key.to_string(), serialized);
+        Ok(())
+    }
+
+    fn delete(&mut self, key: &str) -> StoreResult<()> {
+        self.map.remove(key);
         Ok(())
     }
 }

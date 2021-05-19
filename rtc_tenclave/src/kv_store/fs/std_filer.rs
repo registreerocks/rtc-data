@@ -32,6 +32,13 @@ impl Filer for StdFiler {
         let mut value_file = File::create(path)?;
         value_file.write_all(contents)
     }
+
+    fn delete(&self, path: impl AsRef<Path>) -> Result<()> {
+        match fs::remove_file(path) {
+            Err(error) if error.kind() == NotFound => Ok(()),
+            result => result,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -77,6 +84,26 @@ mod tests {
             StdFiler.put(path, "spam").unwrap();
             StdFiler.put(path, "ham").unwrap();
             assert_eq!(StdFiler.get(path).unwrap().unwrap(), "ham".as_bytes())
+        })
+    }
+
+    #[test]
+    fn delete_missing() {
+        with_temp_path(|path: &Path| {
+            assert!(!path.exists());
+            assert_eq!(StdFiler.delete(path).unwrap(), ());
+            assert!(!path.exists());
+        })
+    }
+
+    #[test]
+    fn delete_present() {
+        with_temp_path(|path: &Path| {
+            StdFiler.put(path, "spam").unwrap();
+            assert_eq!(StdFiler.get(path).unwrap().unwrap(), "spam".as_bytes());
+            assert!(path.exists());
+            assert_eq!(StdFiler.delete(path).unwrap(), ());
+            assert!(!path.exists());
         })
     }
 }
