@@ -30,8 +30,6 @@ pub trait KvStore<V> {
 mod fs;
 mod in_memory;
 mod inspect;
-#[cfg(not(test))]
-mod sgxfs;
 
 #[cfg(test)]
 mod tests;

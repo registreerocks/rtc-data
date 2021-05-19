@@ -4,12 +4,13 @@
 use std::prelude::v1::*;
 
 use std::collections::HashMap;
+use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
 use std::path::Path;
 
 use proptest::prelude::*;
 
-use super::fs::FsStore;
+use super::fs::{std_filer::StdFiler, FsStore};
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
 use super::inspect::InspectStore;
 use super::KvStore;
@@ -47,7 +48,8 @@ fn prop_store_ops_match_model() {
         // Init the store under test
         let path = Path::new("store_test");
         clear_dir(path);  // Clear before each test
-        let mut store_fs: FsStore = FsStore::new(path).expect("FsStore::new failed");
+        create_dir_all(path).expect("create_dir_all failed");
+        let mut store_fs: FsStore<StdFiler> = FsStore::new(path, StdFiler).expect("FsStore::new failed");
 
         for (k, v) in store_ops_vec {
             store_model.save(&k, v.clone()).expect("InMemoryStore save failed!");
