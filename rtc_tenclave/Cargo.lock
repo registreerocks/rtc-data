@@ -438,6 +438,7 @@ dependencies = [
  "sgx_types",
  "sgx_ucrypto",
  "sodalite",
+ "tempfile",
  "thiserror 1.0.24",
  "thiserror 1.0.9",
  "zeroize",
