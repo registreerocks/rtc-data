@@ -12,54 +12,91 @@ use tempfile::TempDir;
 use super::fs::{std_filer::StdFiler, FsStore};
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
 use super::inspect::InspectStore;
-use super::KvStore;
+use super::{KvStore, StoreResult};
 
 /// Verify that executing a sequence of store operations matches a simple model.
 #[test]
 fn prop_store_ops_match_model() {
-    // Strategy to generate store operations: currently, just key / value pairs to save.
+    // FIXME: This value type parameter needs better handling.
+    type V = String;
+
+    /// Helper: Represent store operations.
+    #[derive(Debug)]
+    enum StoreOp {
+        Save { key: String, value: V },
+        Delete { key: String },
+    }
+    use StoreOp::*;
+    impl StoreOp {
+        /// Apply operation, and also check some invariants.
+        fn apply(&self, store: &mut impl KvStore<V>) -> StoreResult<()> {
+            match self {
+                Save { key, value } => {
+                    store.save(key, value)?;
+                    assert_eq!(store.load(key)?.as_ref(), Some(value));
+                }
+                Delete { key } => {
+                    store.delete(key)?;
+                    assert_eq!(store.load(key)?, None);
+                }
+            };
+            Ok(())
+        }
+    }
+
+    // Strategy to generate lists of store operations.
     let store_ops_strategy = {
         let keys = prop_oneof!(r"[a-z]{0,5}", ".*");
         let values = prop_oneof!(keys.clone()); // TODO: Non-string values
+        let half_ops = prop_oneof!(
+            (Just("Save"), values.clone().prop_map(Some)),
+            (Just("Delete"), Just(None)),
+        );
 
         // This strategy will generate key / value pairs with multiple values per key,
         // and shuffle them to have some interleaving, for bugs that depend on that.
-        proptest::collection::hash_map(keys, proptest::collection::vec(values, 0..10), 0..10)
+        proptest::collection::hash_map(keys, proptest::collection::vec(half_ops, 0..10), 0..10)
             .prop_map(flatten_key_values)
+            .prop_map(|pairs: Vec<_>| -> Vec<StoreOp> {
+                pairs
+                    .into_iter()
+                    .map(|(key, half_op)| -> StoreOp {
+                        match half_op {
+                            ("Save", Some(value)) => Save { key, value },
+                            ("Delete", None) => Delete { key },
+                            unexpected => panic!("unexpected: {:?}", unexpected),
+                        }
+                    })
+                    .collect()
+            })
             .prop_shuffle()
     };
 
-    fn test(store_ops_vec: Vec<(String, String)>) -> TestCaseResult {
-        // FIXME: This value type parameter needs better handling.
-        type V = String;
+    /// Helper: Check that store state matches model.
+    fn check_state(store1: &impl InspectStore<V>, store2: &impl InspectStore<V>) -> TestCaseResult {
+        prop_assert_eq!(store1.as_map(), store2.as_map());
+        Ok(())
+    }
 
+    fn test(store_ops_vec: Vec<StoreOp>) -> TestCaseResult {
         // Init the models
-        let mut store_model: InMemoryStore<V> = InMemoryStore::default();
-        let mut store_model_json: InMemoryJsonStore = InMemoryJsonStore::default();
+        let ref mut store_model = InMemoryStore::default();
+        let ref mut store_model_json = InMemoryJsonStore::default();
 
         // Init the store under test
         let temp_dir = TempDir::new().unwrap();
-        let mut store_fs: FsStore<StdFiler> =
-            FsStore::new(&temp_dir, StdFiler).expect("FsStore::new failed");
+        let ref mut store_fs = FsStore::new(&temp_dir, StdFiler).expect("FsStore::new failed");
 
-        for (k, v) in store_ops_vec {
-            store_model
-                .save(&k, &v)
-                .expect("InMemoryStore save failed!");
-            store_model_json
-                .save(&k, &v)
-                .expect("InMemoryJsonStore save failed!");
-            store_fs.save(&k, &v).expect("FsStore save failed!");
+        for ref op in store_ops_vec {
+            op.apply(store_model).unwrap();
+            op.apply(store_model_json).unwrap();
+            op.apply(store_fs).unwrap();
 
             // Models match each other
-            prop_assert_eq!(store_model.as_map(), store_model_json.as_map());
+            check_state(store_model, store_model_json)?;
             // Models match store_fs
-            prop_assert_eq!(store_model.as_map(), store_fs.as_map());
-            // FIXME: explicit coercion for as_map()
-            prop_assert_eq!(
-                store_model_json.as_map() as HashMap<String, V>,
-                store_fs.as_map()
-            );
+            check_state(store_model, store_fs)?;
+            check_state(store_model_json, store_fs)?;
         }
 
         temp_dir.close()?;
