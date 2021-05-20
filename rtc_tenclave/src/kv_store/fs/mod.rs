@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use super::{KvStore, StoreResult};
+use super::KvStore;
 
 /// Simplified interface for reading and writing files.
 pub trait Filer {
@@ -68,14 +68,15 @@ where
         format!("x{}", encoded)
     }
 
+    // FIXME: Just use a generic String as the error type, for now.
     #[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
-    pub(crate) fn decode_key(file_name: &str) -> StoreResult<String> {
+    pub(crate) fn decode_key(file_name: &str) -> Result<String, String> {
         let encoded: &str = file_name
             .strip_prefix("x")
             .ok_or_else(|| format!("FsStore::decode_key: missing x prefix for {:?}", file_name))?;
-        // FIXME: Dodgy err.to_string()
         let bytes: Vec<u8> = hex::decode(encoded).map_err(|err| err.to_string())?;
-        String::from_utf8(bytes).map_err(|err| err.into())
+        let decoded = String::from_utf8(bytes).map_err(|err| err.to_string())?;
+        Ok(decoded) //
     }
 }
 
@@ -84,32 +85,44 @@ where
     F: Filer,
     V: Serialize + DeserializeOwned,
 {
-    fn load(&self, key: &str) -> StoreResult<Option<V>> {
+    // XXX: More explicit handling of serde_json::Error?
+    type Error = io::Error;
+
+    fn load(&self, key: &str) -> Result<Option<V>, Self::Error> {
         let value_file_name = self.value_path(key);
 
         // Note: Read all the data into memory first, then deserialize, for efficiency.
         // See the docs for [`serde_json::de::from_reader`],
         // and https://github.com/serde-rs/json/issues/160
-        let loaded: Option<Vec<u8>> = self
-            .filer
-            .get(&value_file_name)
-            .map_err(|err| format!("FsStore: read from {:?} failed: {}", value_file_name, err))?;
+        let loaded: Option<Vec<u8>> = self.filer.get(&value_file_name).map_err(|err| {
+            // XXX: Annotate err with some basic debugging context, for now.
+            Self::Error::new(
+                err.kind(),
+                format!("FsStore: read from {:?} failed: {}", value_file_name, err),
+            )
+        })?;
         let value: Option<V> = loaded
             .map(|serialised: Vec<u8>| serde_json::from_slice(serialised.as_slice()))
             .transpose()?;
         Ok(value)
     }
 
-    fn save(&mut self, key: &str, value: &V) -> StoreResult<()> {
+    fn save(&mut self, key: &str, value: &V) -> Result<(), Self::Error> {
         let value_file_name = self.value_path(key);
         let serialized: Vec<u8> = serde_json::to_vec(&value)?;
         self.filer
             .put(&value_file_name, serialized)
-            .map_err(|err| format!("FsStore: write to {:?} failed: {}", value_file_name, err))?;
+            .map_err(|err| {
+                // XXX: Annotate err with some basic debugging context, for now.
+                Self::Error::new(
+                    err.kind(),
+                    format!("FsStore: write to {:?} failed: {}", value_file_name, err),
+                )
+            })?;
         Ok(())
     }
 
-    fn delete(&mut self, key: &str) -> StoreResult<()> {
+    fn delete(&mut self, key: &str) -> Result<(), Self::Error> {
         let path = self.value_path(key);
         self.filer.delete(path)?;
         Ok(())

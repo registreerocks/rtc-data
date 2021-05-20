@@ -12,7 +12,7 @@ use tempfile::TempDir;
 use super::fs::{std_filer::StdFiler, FsStore};
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
 use super::inspect::InspectStore;
-use super::{KvStore, StoreResult};
+use super::KvStore;
 
 /// Verify that executing a sequence of store operations matches a simple model.
 #[test]
@@ -32,7 +32,10 @@ fn prop_store_ops_match_model() {
     use StoreOp::*;
     impl StoreOp {
         /// Apply operation, and also check some invariants.
-        fn apply(&self, store: &mut impl KvStore<V>) -> StoreResult<()> {
+        fn apply<S>(&self, store: &mut S) -> Result<(), S::Error>
+        where
+            S: KvStore<V>,
+        {
             match self {
                 Save { key, value } => {
                     store.save(key, value)?;

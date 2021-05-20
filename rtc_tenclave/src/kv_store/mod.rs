@@ -1,12 +1,7 @@
 //! Simple key-value store abstraction
 
-use std::boxed::Box;
-use std::error::Error;
-
 mod fs;
 mod in_memory;
-
-type StoreResult<T> = Result<T, Box<dyn Error>>;
 
 /// A key-value store.
 ///
@@ -14,28 +9,28 @@ type StoreResult<T> = Result<T, Box<dyn Error>>;
 /// to suit cloning / serialising implementations.
 ///
 pub trait KvStore<V> {
-    // TODO: Use associated type for V?
+    type Error;
 
     /// Load the saved value for `key`, if any.
     ///
     /// Return [`None`] if `key` has no previous value.
     ///
-    fn load(&self, key: &str) -> StoreResult<Option<V>>;
+    fn load(&self, key: &str) -> Result<Option<V>, Self::Error>;
 
     /// Save a new value for `key`.
     ///
     /// This will replace any existing value.
     ///
-    fn save(&mut self, key: &str, value: &V) -> StoreResult<()>;
+    fn save(&mut self, key: &str, value: &V) -> Result<(), Self::Error>;
 
     /// Delete the saved value for `key`.
-    fn delete(&mut self, key: &str) -> StoreResult<()>;
+    fn delete(&mut self, key: &str) -> Result<(), Self::Error>;
 
     /// Alter the value of `key`.
     ///
     /// This operation is a generalisation of [`Self::load`], [`Self::save`], and [`Self::delete`].
     ///
-    fn alter<F>(&mut self, key: &str, alter_fn: F) -> StoreResult<Option<V>>
+    fn alter<F>(&mut self, key: &str, alter_fn: F) -> Result<Option<V>, Self::Error>
     where
         F: FnOnce(Option<V>) -> Option<V>,
     {
