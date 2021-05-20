@@ -45,8 +45,8 @@ pub unsafe extern "C" fn validate_and_save(
     };
 
     match ocalls::save_sealed_blob_u(sealed.sealed_data, sealed.uuid) {
-        (sgx_status_t::SGX_SUCCESS) => EcallResult::Ok(sealed.client_payload.into()),
-        (err) => EcallResult::Err(DataUploadError::Sealing(err)),
+        sgx_status_t::SGX_SUCCESS => EcallResult::Ok(sealed.client_payload.into()),
+        err => EcallResult::Err(DataUploadError::Sealing(err)),
     }
 }
 
