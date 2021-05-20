@@ -91,7 +91,7 @@ mod tests {
     fn delete_missing() {
         with_temp_path(|path: &Path| {
             assert!(!path.exists());
-            assert_eq!(StdFiler.delete(path).unwrap(), ());
+            assert!(StdFiler.delete(path).is_ok());
             assert!(!path.exists());
         })
     }
@@ -102,7 +102,7 @@ mod tests {
             StdFiler.put(path, "spam").unwrap();
             assert_eq!(StdFiler.get(path).unwrap().unwrap(), "spam".as_bytes());
             assert!(path.exists());
-            assert_eq!(StdFiler.delete(path).unwrap(), ());
+            assert!(StdFiler.delete(path).is_ok());
             assert!(!path.exists());
         })
     }
