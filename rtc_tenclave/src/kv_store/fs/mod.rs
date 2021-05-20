@@ -131,3 +131,32 @@ pub(crate) fn decode_from_fs_safe(file_name: &str) -> Result<String, String> {
 
 #[cfg(test)]
 mod inspect;
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::*;
+
+    use super::decode_from_fs_safe;
+    use super::encode_to_fs_safe;
+
+    /// [`encode_to_fs_safe`] encodes to filesystem-safe, and [`decode_from_fs_safe`] round-trips.
+    #[test]
+    fn prop_fs_safe_roundtrip() {
+        let test = |key: &String| {
+            let encoded = &encode_to_fs_safe(key);
+            assert!(
+                is_fs_safe(encoded),
+                "expected filesystem-safe, got encoded = {:?}",
+                encoded
+            );
+            let decoded = &decode_from_fs_safe(encoded).unwrap();
+            assert_eq!(key, decoded);
+        };
+        proptest!(|(key in ".*")| test(&key));
+    }
+
+    /// Helper: Very conservative definition of filesystem-safe.
+    fn is_fs_safe(encoded: &str) -> bool {
+        !encoded.is_empty() && encoded.chars().all(|c| c.is_ascii_alphanumeric())
+    }
+}
