@@ -108,12 +108,12 @@ fn prop_store_ops_match_model() {
 
     fn test(store_ops_vec: Vec<StoreOp>) -> TestCaseResult {
         // Init the models
-        let ref mut store_model = InMemoryStore::default();
-        let ref mut store_model_json = InMemoryJsonStore::default();
+        let store_model = &mut InMemoryStore::default();
+        let store_model_json = &mut InMemoryJsonStore::default();
 
         // Init the store under test
         let temp_dir = TempDir::new().unwrap();
-        let ref mut store_fs = FsStore::new(&temp_dir, StdFiler);
+        let store_fs = &mut FsStore::new(&temp_dir, StdFiler);
 
         for ref op in store_ops_vec {
             op.apply(store_model).unwrap();
