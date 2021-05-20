@@ -45,11 +45,14 @@ impl<F> FsStore<F>
 where
     F: Filer,
 {
-    /// Validate that `root_dir` exists as a directory.
+    /// # Note
+    ///
+    /// The caller must ensure that `root` exists as a directory.
+    ///
     #[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
-    pub fn new(root: impl AsRef<Path>, filer: F) -> StoreResult<Self> {
+    pub fn new(root: impl AsRef<Path>, filer: F) -> Self {
         let root_dir = root.as_ref().to_path_buf();
-        Ok(FsStore { root_dir, filer })
+        FsStore { root_dir, filer }
     }
 
     /// Resolve file name for the value of `key`.

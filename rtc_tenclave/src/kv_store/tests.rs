@@ -110,7 +110,7 @@ fn prop_store_ops_match_model() {
 
         // Init the store under test
         let temp_dir = TempDir::new().unwrap();
-        let ref mut store_fs = FsStore::new(&temp_dir, StdFiler).expect("FsStore::new failed");
+        let ref mut store_fs = FsStore::new(&temp_dir, StdFiler);
 
         for ref op in store_ops_vec {
             op.apply(store_model).unwrap();
