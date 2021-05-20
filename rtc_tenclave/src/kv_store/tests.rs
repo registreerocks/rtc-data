@@ -25,6 +25,9 @@ fn prop_store_ops_match_model() {
     enum StoreOp {
         Save { key: String, value: V },
         Delete { key: String },
+        AlterId { key: String },
+        AlterConst { key: String, replacement: Option<V> },
+        AlterUpdate { key: String, new_value: V },
     }
     use StoreOp::*;
     impl StoreOp {
@@ -39,6 +42,22 @@ fn prop_store_ops_match_model() {
                     store.delete(key)?;
                     assert_eq!(store.load(key)?, None);
                 }
+                AlterId { key } => {
+                    let previous = store.load(key)?;
+                    store.alter(key, |loaded| loaded)?;
+                    assert_eq!(store.load(key)?, previous);
+                }
+                AlterConst { key, replacement } => {
+                    store.alter(key, |_| replacement.clone())?;
+                    assert_eq!(store.load(key)?.as_ref(), replacement.as_ref());
+                }
+                AlterUpdate { key, new_value } => {
+                    let previous = store.load(key)?;
+                    store.alter(key, |existing: Option<V>| {
+                        existing.map(|_| new_value.clone())
+                    })?;
+                    assert_eq!(store.load(key)?.as_ref(), previous.map(|_| new_value));
+                }
             };
             Ok(())
         }
@@ -51,6 +70,9 @@ fn prop_store_ops_match_model() {
         let half_ops = prop_oneof!(
             (Just("Save"), values.clone().prop_map(Some)),
             (Just("Delete"), Just(None)),
+            (Just("AlterId"), Just(None)),
+            (Just("AlterConst"), proptest::option::of(values.clone())),
+            (Just("AlterUpdate"), values.clone().prop_map(Some)),
         );
 
         // This strategy will generate key / value pairs with multiple values per key,
@@ -64,6 +86,9 @@ fn prop_store_ops_match_model() {
                         match half_op {
                             ("Save", Some(value)) => Save { key, value },
                             ("Delete", None) => Delete { key },
+                            ("AlterId", None) => AlterId { key },
+                            ("AlterConst", replacement) => AlterConst { key, replacement },
+                            ("AlterUpdate", Some(new_value)) => AlterUpdate { key, new_value },
                             unexpected => panic!("unexpected: {:?}", unexpected),
                         }
                     })

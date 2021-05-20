@@ -27,6 +27,23 @@ pub trait KvStore<V> {
 
     /// Delete the saved value for `key`.
     fn delete(&mut self, key: &str) -> StoreResult<()>;
+
+    /// Alter the value of `key`.
+    ///
+    /// This operation is a generalisation of [`Self::load`], [`Self::save`], and [`Self::delete`].
+    ///
+    fn alter<F>(&mut self, key: &str, alter_fn: F) -> StoreResult<Option<V>>
+    where
+        F: FnOnce(Option<V>) -> Option<V>,
+    {
+        let loaded: Option<V> = self.load(key)?;
+        let altered: Option<V> = alter_fn(loaded);
+        match &altered {
+            None => self.delete(key)?,
+            Some(value) => self.save(key, value)?,
+        };
+        Ok(altered)
+    }
 }
 
 mod fs;
