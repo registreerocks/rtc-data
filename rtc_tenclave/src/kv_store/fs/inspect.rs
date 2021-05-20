@@ -21,12 +21,12 @@ where
     V: Serialize + DeserializeOwned,
 {
     fn to_map(&self) -> HashMap<String, V> {
-        let entries: impl Iterator<Item = io::Result<DirEntry>> = self
+        let entries /* impl Iterator<Item = io::Result<DirEntry>> */ = self
             .root_dir
             .read_dir()
             .unwrap_or_else(|_| panic!("read_dir {:?} failed", self.root_dir));
 
-        let keys: impl Iterator<Item = String> = entries.map(|entry: io::Result<DirEntry>| {
+        let keys /* impl Iterator<Item = String> */ = entries.map(|entry: io::Result<DirEntry>| {
             let entry: DirEntry = entry.expect("read_dir entry failed");
             let file_path: PathBuf = entry.path();
             let os_file_name: &OsStr = file_path
