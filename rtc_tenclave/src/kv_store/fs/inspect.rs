@@ -20,7 +20,7 @@ impl<V> InspectStore<V> for FsStore<StdFiler>
 where
     V: Serialize + DeserializeOwned,
 {
-    fn as_map(&self) -> HashMap<String, V> {
+    fn to_map(&self) -> HashMap<String, V> {
         let entries: impl Iterator<Item = io::Result<DirEntry>> = self
             .root_dir
             .read_dir()

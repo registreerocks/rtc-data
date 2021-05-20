@@ -99,7 +99,7 @@ fn prop_store_ops_match_model() {
 
     /// Helper: Check that store state matches model.
     fn check_state(store1: &impl InspectStore<V>, store2: &impl InspectStore<V>) -> TestCaseResult {
-        prop_assert_eq!(store1.as_map(), store2.as_map());
+        prop_assert_eq!(store1.to_map(), store2.to_map());
         Ok(())
     }
 
