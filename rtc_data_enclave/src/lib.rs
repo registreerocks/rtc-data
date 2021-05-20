@@ -29,7 +29,8 @@ use std::prelude::v1::*;
 use sgx_tcrypto::rsgx_sha256_slice;
 use zeroize::Zeroize;
 
-use rtc_tenclave::enclave::*;
+#[allow(unused_imports)] // for ECALL linking
+use rtc_tenclave::enclave::enclave_create_report;
 
 /// Validates and save a payload encrypted for the enclave
 ///
