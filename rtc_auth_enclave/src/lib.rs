@@ -9,4 +9,5 @@
 extern crate sgx_tstd as std;
 
 pub use rtc_tenclave::dh::*;
-pub use rtc_tenclave::enclave::*;
+#[allow(unused_imports)] // for ECALL linking
+use rtc_tenclave::enclave::enclave_create_report;
