@@ -56,7 +56,7 @@ fn generate_client_payload(
         Err(err) => return Err(CryptoError::Rand(err.code().map_or(0, |code| code.get()))),
     };
 
-    let mut message = util::concat_u8(&pass, uuid.as_bytes());
+    let message = util::concat_u8(&pass, uuid.as_bytes());
 
     pass.zeroize();
 
