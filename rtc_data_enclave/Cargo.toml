@@ -29,7 +29,7 @@ rtc_types = { path = "../rtc_types", features = ["teaclave_sgx"]}
 rtc_tenclave = { path = "../rtc_tenclave" }
 
 [dependencies]
-# The build fails when specifying rev here, I don't know what is causing it.
+# XXX: See comment about serde-sgx dependency versioning in rtc_tenclave/Cargo.toml
 serde_derive = { git = "https://github.com/mesalock-linux/serde-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx", features = ["derive"]}
 bincode = { git = "https://github.com/mesalock-linux/bincode-sgx.git" }
