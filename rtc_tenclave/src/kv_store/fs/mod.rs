@@ -1,10 +1,9 @@
 //! Filesystem-based [`KvStore`] implementation
 
-#[cfg(test)]
-pub(crate) mod inspect;
+pub mod std_filer;
+
 #[cfg(not(test))]
 pub mod sgx_filer;
-pub mod std_filer;
 
 // sgx_tstd (v1.1.3) does not support `fs::read_dir`, so limit the following to tests, for now.
 //
@@ -113,3 +112,6 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod inspect;

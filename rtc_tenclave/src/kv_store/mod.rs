@@ -3,6 +3,9 @@
 use std::boxed::Box;
 use std::error::Error;
 
+mod fs;
+mod in_memory;
+
 type StoreResult<T> = Result<T, Box<dyn Error>>;
 
 /// A key-value store.
@@ -46,8 +49,6 @@ pub trait KvStore<V> {
     }
 }
 
-mod fs;
-mod in_memory;
 #[cfg(test)]
 mod inspect;
 
