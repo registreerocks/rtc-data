@@ -9,25 +9,18 @@
 // TODO: Clean up existing cases causing a flood of warnings for this check, and re-enable
 // #![warn(missing_docs)]
 
-use rtc_tenclave::crypto::{RtcCrypto, SodaBoxCrypto};
 use sgx_types;
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
-use sgx_tcrypto;
-use sgx_tse;
 
 mod data_upload;
 mod ocalls;
 
 use core::slice;
 use rtc_types::*;
-use sgx_tse::rsgx_create_report;
 use sgx_types::*;
 use std::prelude::v1::*;
-
-use sgx_tcrypto::rsgx_sha256_slice;
-use zeroize::Zeroize;
 
 #[allow(unused_imports)] // for ECALL linking
 use rtc_tenclave::enclave::enclave_create_report;
