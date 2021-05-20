@@ -1,18 +1,10 @@
 use actix::Actor;
-use actix_web::{
-    http,
-    test::{self, read_body},
-    App,
-};
-use base64;
+use actix_web::{test, test::read_body, App};
 use insta;
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::handlers::*;
-use rtc_types::{DataUploadResponse, UploadMetadata};
 use rtc_uenclave::EnclaveConfig;
-use sgx_types::sgx_target_info_t;
-use sodalite;
 
 use std::sync::Arc;
 
