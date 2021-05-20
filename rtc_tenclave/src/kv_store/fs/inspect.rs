@@ -9,6 +9,7 @@ use std::iter::Iterator;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::kv_store::fs::decode_from_fs_safe;
 use crate::kv_store::inspect::InspectStore;
 use crate::kv_store::KvStore;
 
@@ -33,7 +34,7 @@ where
                 .file_name()
                 .unwrap_or_else(|| panic!("directory entry lacks file_name: {:?}", file_path));
             let file_name: &str = os_file_name.to_str().expect("OsStr.to_str failed");
-            Self::decode_key(file_name).expect("FsStore::decode_key failed")
+            decode_from_fs_safe(file_name).expect("decode_from_fs_safe failed")
         });
 
         keys.map(|k| {

@@ -57,26 +57,8 @@ where
 
     /// Resolve file name for the value of `key`.
     fn value_path(&self, key: &str) -> PathBuf {
-        let file_name = Self::encode_key(key);
+        let file_name = encode_to_fs_safe(key);
         self.root_dir.join(file_name)
-    }
-
-    // Make keys filesystem-safe using hex (conservative, but effective):
-
-    pub(crate) fn encode_key(key: &str) -> String {
-        let encoded = hex::encode(key);
-        format!("x{}", encoded)
-    }
-
-    // FIXME: Just use a generic String as the error type, for now.
-    #[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
-    pub(crate) fn decode_key(file_name: &str) -> Result<String, String> {
-        let encoded: &str = file_name
-            .strip_prefix("x")
-            .ok_or_else(|| format!("FsStore::decode_key: missing x prefix for {:?}", file_name))?;
-        let bytes: Vec<u8> = hex::decode(encoded).map_err(|err| err.to_string())?;
-        let decoded = String::from_utf8(bytes).map_err(|err| err.to_string())?;
-        Ok(decoded) //
     }
 }
 
@@ -127,6 +109,24 @@ where
         self.filer.delete(path)?;
         Ok(())
     }
+}
+
+/// Helper: Make `key` filesystem-safe.
+pub(crate) fn encode_to_fs_safe(key: &str) -> String {
+    let encoded = hex::encode(key);
+    format!("x{}", encoded)
+}
+
+/// Inverse of [`encode_to_fs_safe`].
+// FIXME: Just use a generic String as the error type, for now.
+#[cfg_attr(not(test), allow(dead_code))] // currently only referenced in tests
+pub(crate) fn decode_from_fs_safe(file_name: &str) -> Result<String, String> {
+    let encoded: &str = file_name
+        .strip_prefix("x")
+        .ok_or_else(|| format!("decode_from_fs_safe: missing x prefix for {:?}", file_name))?;
+    let bytes: Vec<u8> = hex::decode(encoded).map_err(|err| err.to_string())?;
+    let decoded = String::from_utf8(bytes).map_err(|err| err.to_string())?;
+    Ok(decoded)
 }
 
 #[cfg(test)]
