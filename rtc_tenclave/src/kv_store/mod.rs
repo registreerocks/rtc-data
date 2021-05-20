@@ -48,6 +48,7 @@ pub trait KvStore<V> {
 
 mod fs;
 mod in_memory;
+#[cfg(test)]
 mod inspect;
 
 #[cfg(test)]
