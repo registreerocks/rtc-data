@@ -1,7 +1,6 @@
 use crate::data_enclave_actor::DataEnclaveActor;
 use actix::{Handler, Message};
 use actix_web::error::ErrorInternalServerError;
-use rtc_types::{AttestError, AttestReqMetadata, AttestationResponse};
 use rtc_uenclave::AttestationError;
 
 #[derive(Default)]
