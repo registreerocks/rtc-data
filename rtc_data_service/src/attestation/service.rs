@@ -2,7 +2,6 @@ use std::convert::TryInto;
 
 use actix::{Addr, MailboxError};
 use actix_web::{error::ErrorInternalServerError, get, web, HttpRequest};
-use rtc_types::{AttestError, AttestationResponse};
 use rtc_uenclave::AttestationError;
 
 use crate::data_enclave_actor::DataEnclaveActor;

@@ -22,9 +22,6 @@ pub use data_upload::*;
 mod exec_token;
 pub use exec_token::*;
 
-mod attestation;
-pub use attestation::*;
-
 mod ecall_result;
 pub use ecall_result::*;
 
