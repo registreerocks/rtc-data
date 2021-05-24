@@ -47,3 +47,5 @@ sodalite = { version = "0.4.0", default-features = false }
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
 sgx_tcrypto = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_alloc = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }

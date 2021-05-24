@@ -73,6 +73,8 @@ serde_json_std = { package = "serde_json", version = "1.0.0" }
 proptest = "1.0.0"
 tempfile = "3.2.0"
 
-
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tcrypto = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_alloc = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
