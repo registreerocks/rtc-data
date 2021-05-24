@@ -30,6 +30,7 @@ mod ecall_result;
 pub use ecall_result::*;
 
 pub mod byte_formats;
+pub mod enclave_messages;
 
 #[repr(C)]
 #[derive(Clone, Debug)]
