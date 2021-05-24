@@ -25,6 +25,8 @@ pub use exec_token::*;
 mod ecall_result;
 pub use ecall_result::*;
 
+pub mod enclave_messages;
+
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct EncryptedMessage {

@@ -4,6 +4,8 @@ use secrecy::{ExposeSecret, Secret};
 use sgx_tcrypto::{rsgx_rijndael128GCM_decrypt, rsgx_rijndael128GCM_encrypt};
 use sgx_types::*;
 
+use rtc_types::enclave_messages::{EncryptedEnclaveMessage, RecommendedAesGcmIv};
+
 use super::types::AlignedKey;
 use crate::util::concat_u8;
 
@@ -11,9 +13,6 @@ use crate::util::concat_u8;
 use super::enclave;
 #[cfg(not(test))]
 use sgx_tstd::enclave;
-
-// NIST AES-GCM recommended IV size
-type RecommendedAesGcmIv = [u8; 12];
 
 pub struct ProtectedChannel {
     iv_constructor: DeterministicAesGcmIvConstructor,
@@ -68,13 +67,6 @@ impl ProtectedChannel {
         )?;
         Ok(dst)
     }
-}
-
-pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: usize> {
-    tag: sgx_aes_gcm_128bit_tag_t,
-    ciphertext: [u8; MESSAGE_SIZE],
-    aad: [u8; AAD_SIZE],
-    nonce: RecommendedAesGcmIv,
 }
 
 /// Implement the deterministic construction of AES-GCM IVs, as described in section 8.2.1 of [NIST SP 800-38D],
