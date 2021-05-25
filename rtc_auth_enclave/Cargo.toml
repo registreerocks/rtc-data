@@ -23,3 +23,6 @@ rtc_tenclave = { path = "../rtc_tenclave" }
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tcrypto = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_alloc = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }

@@ -1,5 +1,4 @@
 // TODO: Document
-#![feature(min_const_generics)]
 #![cfg_attr(feature = "teaclave_sgx", no_std)]
 #[cfg(feature = "teaclave_sgx")]
 extern crate sgx_tstd as std;
