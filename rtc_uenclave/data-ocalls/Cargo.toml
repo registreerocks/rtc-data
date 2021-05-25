@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["extra_traits"] }
+sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }
+
 rtc_types = { path = "../../rtc_types" }
 uuid = "0.8.2"

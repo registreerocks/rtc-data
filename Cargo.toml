@@ -17,5 +17,4 @@ exclude = [
 ]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
-sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
-sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
+sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda" }
