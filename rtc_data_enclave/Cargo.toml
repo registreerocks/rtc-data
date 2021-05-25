@@ -16,6 +16,7 @@ cbindgen = "0.19.0"
 [features]
 default = []
 
+# See "Pinning SGX dependencies" in HACKING.md
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 sgx_tcrypto = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda" }
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }

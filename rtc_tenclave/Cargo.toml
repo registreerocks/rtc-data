@@ -15,6 +15,7 @@ default = ["sgx_tstd", "sgx_tse", "rtc_types/teaclave_sgx", "rand", "thiserror",
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# See "Pinning SGX dependencies" in HACKING.md
 [dependencies]
 # default
 sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["backtrace"], optional = true }

@@ -13,6 +13,7 @@ crate-type = ["staticlib"]
 cc = "1.0.67"
 cbindgen = "0.19.0"
 
+# See "Pinning SGX dependencies" in HACKING.md
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }
 sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["backtrace"] }
