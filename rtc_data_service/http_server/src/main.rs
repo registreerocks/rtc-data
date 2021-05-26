@@ -7,6 +7,7 @@ mod tls;
 
 use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::data_enclave_actor::*;
+use rtc_data_service::auth_enclave_actor::*;
 use rtc_data_service::data_upload::*;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::attestation::*;
@@ -29,7 +30,8 @@ use actix_web::{
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let config = AppConfig::new().expect("Server config expected");
-    let enclave_config = Arc::new(config.data_enclave.clone());
+    let data_enclave_config = Arc::new(config.data_enclave.clone());
+    let auth_enclave_config = Arc::new(config.auth_enclave.clone());
     let allowed_origins = config.http_server.allowed_origins;
 
     let enclave_arbiter = Arbiter::new();
@@ -38,9 +40,14 @@ async fn main() -> std::io::Result<()> {
     // see: https://actix.rs/docs/application/
     // Addr might also use Arc internally, so we might have Arc<Arc<_>>. Not sure if this
     // is a big deal atm.
-    let enclave_addr = Data::new(Supervisor::start_in_arbiter(
+    let data_enclave_addr = Data::new(Supervisor::start_in_arbiter(
         &enclave_arbiter.handle(),
-        move |_| DataEnclaveActor::new(enclave_config.clone()),
+        move |_| DataEnclaveActor::new(data_enclave_config.clone()),
+    ));
+
+    let auth_enclave_addr = Data::new(Supervisor::start_in_arbiter(
+        &enclave_arbiter.handle(),
+        move |_| AuthEnclaveActor::new(auth_enclave_config.clone()),
     ));
 
     println!(
@@ -52,7 +59,8 @@ async fn main() -> std::io::Result<()> {
         let cors = build_cors(&allowed_origins);
         let app = App::new()
             .wrap(cors)
-            .app_data(enclave_addr.clone())
+            .app_data(data_enclave_addr.clone())
+            .app_data(auth_enclave_addr.clone())
             .route("/", web::get().to(server_status))
             .service(data_enclave_attestation)
             .service(upload_file)

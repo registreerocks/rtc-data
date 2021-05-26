@@ -1,4 +1,4 @@
-use crate::data_enclave_actor::DataEnclaveActor;
+use crate::auth_enclave_actor::AuthEnclaveActor;
 use actix::{Handler, Message};
 use actix_web::error::ErrorInternalServerError;
 use rtc_uenclave::AttestationError;
@@ -10,7 +10,7 @@ impl Message for AttestationMessage {
     type Result = Result<String, AttestationError>;
 }
 
-impl Handler<AttestationMessage> for DataEnclaveActor {
+impl Handler<AttestationMessage> for AuthEnclaveActor {
     type Result = <AttestationMessage as Message>::Result;
 
     fn handle(&mut self, _msg: AttestationMessage, _ctx: &mut Self::Context) -> Self::Result {
