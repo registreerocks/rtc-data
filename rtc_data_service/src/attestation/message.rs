@@ -17,7 +17,7 @@ impl Handler<AttestationMessage> for AuthEnclaveActor {
         let jwt = self.get_enclave().dcap_attestation_azure();
         match jwt {
             Ok(result) => Ok(result),
-            Err(err) => Err(err)
+            Err(err) => Err(err),
         }
     }
 }

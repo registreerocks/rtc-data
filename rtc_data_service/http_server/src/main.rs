@@ -6,11 +6,11 @@
 mod tls;
 
 use rtc_data_service::app_config::AppConfig;
-use rtc_data_service::data_enclave_actor::*;
+use rtc_data_service::attestation::*;
 use rtc_data_service::auth_enclave_actor::*;
+use rtc_data_service::data_enclave_actor::*;
 use rtc_data_service::data_upload::*;
 use rtc_data_service::exec_token::*;
-use rtc_data_service::attestation::*;
 use rtc_data_service::handlers::*;
 use rtc_data_service::merge_error;
 use rustls::{AllowAnyAuthenticatedClient, NoClientAuth, RootCertStore, ServerConfig};

@@ -14,8 +14,8 @@ pub async fn req_attestation_jwt(
     _req: HttpRequest,
     enclave: web::Data<Addr<AuthEnclaveActor>>,
 ) -> actix_web::Result<String> {
-    let result=
-        enclave.send(AttestationMessage::default())
+    let result = enclave
+        .send(AttestationMessage::default())
         .await
         .merge_err();
     match result {
