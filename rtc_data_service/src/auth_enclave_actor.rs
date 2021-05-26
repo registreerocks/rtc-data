@@ -31,12 +31,6 @@ impl AuthEnclaveActor {
     }
 }
 
-impl Drop for AuthEnclaveActor {
-    fn drop(&mut self) {
-        println!("Dropping enclave actor");
-    }
-}
-
 impl Actor for AuthEnclaveActor {
     type Context = Context<AuthEnclaveActor>;
 
