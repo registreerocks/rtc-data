@@ -56,7 +56,7 @@ where
     TResp: RtcDhResponder,
     TInit: RtcDhInitiator,
 {
-    sessions: RwLock<HashMap<u64, Arc<AtomicSession<TResp>>>>,
+    sessions: RwLock<HashMap<sgx_enclave_id_t, Arc<AtomicSession<TResp>>>>,
     _phantom_init: PhantomData<TInit>,
 }
 
