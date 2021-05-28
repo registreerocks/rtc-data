@@ -239,8 +239,6 @@ fn exchange_report_ocall(
         sgx_status_t::SGX_SUCCESS => ret.into(),
         err => Err(err),
     }
-
-    // dh_sessions().exchange_report(this_enclave_id, dh_msg2)
 }
 
 #[no_mangle]

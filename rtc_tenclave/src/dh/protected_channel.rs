@@ -87,18 +87,3 @@ pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: us
     aad: [u8; AAD_SIZE],
     nonce: GcmNonce,
 }
-
-// impl<const MESSAGE_SIZE: usize, const AAD_SIZE: usize> EncryptedEnclaveMessage {
-//     // IV should contain 64 random bits, and 32 counter bits
-//     fn encrypt_ecall(
-//         key: Secret<sgx_aes_gcm_128bit_key_t>,
-//         plaintext: [u8; MESSAGE_SIZE],
-//     ) -> Result<Self, ()> {
-//     }
-
-//     fn decrypt_ecall<T>(&self, key: Secret<sgx_aes_gcm_128bit_key_t>) -> Result<T, ()> {}
-// }
-
-// fn encrypt_ecall<const MESSAGE_SIZE: usize>(key: Secret<sgx_aes_gcm_128bit_key_t>) -> Result<EncryptedEcall, ()> {}
-
-// fn decrypt_ecall<T>(key: Secret<sgx_aes_gcm_128bit_key_t>) -> Result<T, ()> {}
