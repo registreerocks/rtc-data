@@ -24,7 +24,7 @@ fn dh_responders() -> &'static RwLock<DhResponders> {
 }
 
 pub fn set_responder(
-    enclave_id: u64,
+    enclave_id: sgx_enclave_id_t,
     responder: Box<(dyn ResponderSys + 'static)>,
 ) -> Result<(), sgx_status_t> {
     match dh_responders().write() {
@@ -39,11 +39,11 @@ pub fn set_responder(
     }
 }
 
-fn get_responder(id: u64) -> Result<SyncSendResponder, sgx_status_t> {
+fn get_responder(enclave_id: sgx_enclave_id_t) -> Result<SyncSendResponder, sgx_status_t> {
     dh_responders()
         .read()
         .or(Err(sgx_status_t::SGX_ERROR_UNEXPECTED))?
-        .get(&id)
+        .get(&enclave_id)
         .ok_or(sgx_status_t::SGX_ERROR_INVALID_ENCLAVE_ID)
         .map(Clone::clone)
 }
