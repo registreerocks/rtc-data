@@ -65,11 +65,11 @@ where
     TResp: RtcDhResponder,
     TInit: RtcDhInitiator,
 {
-    fn get(&self, enclave_id: &sgx_enclave_id_t) -> Option<Arc<AtomicSession<TResp>>> {
+    fn get(&self, enclave_id: sgx_enclave_id_t) -> Option<Arc<AtomicSession<TResp>>> {
         self.sessions
             .read()
             .expect("RwLock poisoned")
-            .get(enclave_id)
+            .get(&enclave_id)
             .map(Clone::clone)
     }
 
@@ -77,24 +77,21 @@ where
         self.sessions.write().expect("RwLock poisoned")
     }
 
-    pub fn get_active(
-        &self,
-        enclave_id: &sgx_enclave_id_t,
-    ) -> Option<Arc<Mutex<ProtectedChannel>>> {
+    pub fn get_active(&self, enclave_id: sgx_enclave_id_t) -> Option<Arc<Mutex<ProtectedChannel>>> {
         match self.get(enclave_id)?.as_ref() {
             AtomicSession::Active(x) => Some(x.clone()),
             _ => None,
         }
     }
 
-    fn take_in_progress(&self, enclave_id: &sgx_enclave_id_t) -> Option<TResp> {
+    fn take_in_progress(&self, enclave_id: sgx_enclave_id_t) -> Option<TResp> {
         let mut sessions = self.lock_write();
 
         if matches!(
-            sessions.get(enclave_id)?.as_ref(),
+            sessions.get(&enclave_id)?.as_ref(),
             AtomicSession::InProgress(_)
         ) {
-            match Arc::try_unwrap(sessions.remove(enclave_id)?) {
+            match Arc::try_unwrap(sessions.remove(&enclave_id)?) {
                 Ok(AtomicSession::InProgress(resp)) => Some(resp),
                 Ok(_) => unreachable!(),
                 Err(_) => None,
@@ -104,9 +101,9 @@ where
         }
     }
 
-    pub fn close_session(&self, enclave_id: &sgx_enclave_id_t) -> () {
+    pub fn close_session(&self, enclave_id: sgx_enclave_id_t) -> () {
         let mut sessions = self.lock_write();
-        sessions.insert(*enclave_id, Arc::new(AtomicSession::Closed));
+        sessions.insert(enclave_id, Arc::new(AtomicSession::Closed));
         ()
     }
 
@@ -140,12 +137,12 @@ where
     /// Active -> In Progress = Ok if keying material differs
     fn set_in_progress(
         &self,
-        enclave_id: &sgx_enclave_id_t,
+        enclave_id: sgx_enclave_id_t,
         responder: TResp,
     ) -> Result<(), sgx_status_t> {
         let _result = self
             .lock_write()
-            .insert(*enclave_id, Arc::new(AtomicSession::InProgress(responder)));
+            .insert(enclave_id, Arc::new(AtomicSession::InProgress(responder)));
 
         Ok(())
     }
@@ -170,7 +167,7 @@ where
 
     pub fn initiate_response(
         &self,
-        src_enclave_id: &sgx_enclave_id_t,
+        src_enclave_id: sgx_enclave_id_t,
     ) -> Result<sgx_dh_msg1_t, sgx_status_t> {
         let mut responder = TResp::init_session();
 
@@ -187,7 +184,7 @@ where
         dh_msg2: &sgx_dh_msg2_t,
     ) -> Result<sgx_dh_msg3_t, sgx_status_t> {
         let mut responder = self
-            .take_in_progress(&src_enclave_id)
+            .take_in_progress(src_enclave_id)
             // TODO: custom error
             .ok_or(sgx_status_t::SGX_ERROR_UNEXPECTED)?;
 
@@ -204,7 +201,7 @@ where
         &self,
         dest_enclave_id: sgx_enclave_id_t,
     ) -> Result<Arc<Mutex<ProtectedChannel>>, sgx_status_t> {
-        if let Some(channel) = self.get_active(&dest_enclave_id) {
+        if let Some(channel) = self.get_active(dest_enclave_id) {
             Ok(channel)
         } else {
             self.establish_new(dest_enclave_id)
@@ -250,13 +247,13 @@ fn exchange_report_ocall(
 
 #[no_mangle]
 pub extern "C" fn session_request(src_enclave_id: sgx_enclave_id_t) -> SessionRequestResult {
-    dh_sessions().initiate_response(&src_enclave_id).into()
+    dh_sessions().initiate_response(src_enclave_id).into()
 }
 
 #[no_mangle]
 pub extern "C" fn end_session(src_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
     // TODO: Ensure sessions close on both ends?
-    dh_sessions().close_session(&src_enclave_id);
+    dh_sessions().close_session(src_enclave_id);
     sgx_status_t::SGX_SUCCESS
 }
 
