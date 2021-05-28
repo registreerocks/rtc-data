@@ -65,30 +65,36 @@ where
     TResp: RtcDhResponder,
     TInit: RtcDhInitiator,
 {
-    fn get(&self, id: &u64) -> Option<Arc<AtomicSession<TResp>>> {
+    fn get(&self, enclave_id: &sgx_enclave_id_t) -> Option<Arc<AtomicSession<TResp>>> {
         self.sessions
             .read()
             .expect("RwLock poisoned")
-            .get(id)
+            .get(enclave_id)
             .map(Clone::clone)
     }
 
-    fn lock_write(&self) -> RwLockWriteGuard<HashMap<u64, Arc<AtomicSession<TResp>>>> {
+    fn lock_write(&self) -> RwLockWriteGuard<HashMap<sgx_enclave_id_t, Arc<AtomicSession<TResp>>>> {
         self.sessions.write().expect("RwLock poisoned")
     }
 
-    pub fn get_active(&self, id: &u64) -> Option<Arc<Mutex<ProtectedChannel>>> {
-        match self.get(id)?.as_ref() {
+    pub fn get_active(
+        &self,
+        enclave_id: &sgx_enclave_id_t,
+    ) -> Option<Arc<Mutex<ProtectedChannel>>> {
+        match self.get(enclave_id)?.as_ref() {
             AtomicSession::Active(x) => Some(x.clone()),
             _ => None,
         }
     }
 
-    fn take_in_progress(&self, id: &u64) -> Option<TResp> {
+    fn take_in_progress(&self, enclave_id: &sgx_enclave_id_t) -> Option<TResp> {
         let mut sessions = self.lock_write();
 
-        if matches!(sessions.get(id)?.as_ref(), AtomicSession::InProgress(_)) {
-            match Arc::try_unwrap(sessions.remove(id)?) {
+        if matches!(
+            sessions.get(enclave_id)?.as_ref(),
+            AtomicSession::InProgress(_)
+        ) {
+            match Arc::try_unwrap(sessions.remove(enclave_id)?) {
                 Ok(AtomicSession::InProgress(resp)) => Some(resp),
                 Ok(_) => unreachable!(),
                 Err(_) => None,
@@ -98,9 +104,9 @@ where
         }
     }
 
-    pub fn close_session(&self, id: &u64) -> () {
+    pub fn close_session(&self, enclave_id: &sgx_enclave_id_t) -> () {
         let mut sessions = self.lock_write();
-        sessions.insert(*id, Arc::new(AtomicSession::Closed));
+        sessions.insert(*enclave_id, Arc::new(AtomicSession::Closed));
         ()
     }
 
@@ -117,12 +123,12 @@ where
     ///     with the same key.
     fn set_active(
         &self,
-        id: u64,
+        enclave_id: sgx_enclave_id_t,
         key: Secret<AlignedKey>,
     ) -> Result<Arc<Mutex<ProtectedChannel>>, sgx_status_t> {
         let channel = Arc::new(Mutex::new(ProtectedChannel::init(key)));
         self.lock_write()
-            .insert(id, Arc::new(AtomicSession::Active(channel.clone())));
+            .insert(enclave_id, Arc::new(AtomicSession::Active(channel.clone())));
         Ok(channel)
     }
 
@@ -132,10 +138,14 @@ where
     /// InProgress -> InProgress = Ok
     /// Closed -> InProgress = Ok
     /// Active -> In Progress = Ok if keying material differs
-    fn set_in_progress(&self, id: &u64, responder: TResp) -> Result<(), sgx_status_t> {
+    fn set_in_progress(
+        &self,
+        enclave_id: &sgx_enclave_id_t,
+        responder: TResp,
+    ) -> Result<(), sgx_status_t> {
         let _result = self
             .lock_write()
-            .insert(*id, Arc::new(AtomicSession::InProgress(responder)));
+            .insert(*enclave_id, Arc::new(AtomicSession::InProgress(responder)));
 
         Ok(())
     }
@@ -192,7 +202,7 @@ where
 
     pub fn get_or_create_session(
         &self,
-        dest_enclave_id: u64,
+        dest_enclave_id: sgx_enclave_id_t,
     ) -> Result<Arc<Mutex<ProtectedChannel>>, sgx_status_t> {
         if let Some(channel) = self.get_active(&dest_enclave_id) {
             Ok(channel)
@@ -203,8 +213,8 @@ where
 }
 
 fn init_responder_ocall(
-    this_enclave_id: u64,
-    dest_enclave_id: u64,
+    this_enclave_id: sgx_enclave_id_t,
+    dest_enclave_id: sgx_enclave_id_t,
 ) -> Result<sgx_dh_msg1_t, sgx_status_t> {
     let mut ret = SessionRequestResult::default();
 
@@ -220,8 +230,8 @@ fn init_responder_ocall(
 }
 
 fn exchange_report_ocall(
-    this_enclave_id: u64,
-    dest_enclave_id: u64,
+    this_enclave_id: sgx_enclave_id_t,
+    dest_enclave_id: sgx_enclave_id_t,
     dh_msg2: &sgx_dh_msg2_t,
 ) -> Result<sgx_dh_msg3_t, sgx_status_t> {
     let mut ret = ExchangeReportResult::default();
