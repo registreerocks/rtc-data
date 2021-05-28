@@ -56,8 +56,9 @@ pub unsafe extern "C" fn validate_and_save(
     }
 }
 
-/// Tries to perform local attestation to an enclave at dest_enclave_id. The enclave needs to be
-/// initialized as a `ResponderSys` in rtc_udh'
+/// Tries to perform local attestation to an enclave at dest_enclave_id.
+///
+/// See: [`DhSessions::establish_new`]
 #[no_mangle]
 pub unsafe extern "C" fn local_attestation(dest_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
     let res = rtc_tenclave::dh::dh_sessions().establish_new(dest_enclave_id);

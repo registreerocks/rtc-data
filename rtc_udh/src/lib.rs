@@ -23,6 +23,7 @@ fn dh_responders() -> &'static RwLock<DhResponders> {
     DH_RESPONDERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
+/// Register enclave as a DH responder.
 pub fn set_responder(
     enclave_id: sgx_enclave_id_t,
     responder: Box<(dyn ResponderSys + 'static)>,
@@ -39,6 +40,7 @@ pub fn set_responder(
     }
 }
 
+/// Retrieve enclave's registered responder.
 fn get_responder(enclave_id: sgx_enclave_id_t) -> Result<SyncSendResponder, sgx_status_t> {
     dh_responders()
         .read()

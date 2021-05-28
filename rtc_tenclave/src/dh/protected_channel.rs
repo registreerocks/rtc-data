@@ -1,3 +1,5 @@
+//! Secure symmetric communication channels based on [`sgx_tcrypto`]'s AES-GCM.
+
 use secrecy::{ExposeSecret, Secret};
 use sgx_tcrypto::{rsgx_rijndael128GCM_decrypt, rsgx_rijndael128GCM_encrypt};
 use sgx_types::*;
