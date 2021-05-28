@@ -52,7 +52,6 @@ fn main() {
         .with_codegen_config(CodegenConfig::FUNCTIONS | CodegenConfig::TYPES)
         .allowlist_recursively(false)
         .array_pointers_in_arguments(true)
-        // TODO: see if there is a way to include functions using globbing
         .allowlist_function("rtc_data_.*")
         .clang_args(&inc_args)
         .generate()
