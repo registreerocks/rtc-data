@@ -222,8 +222,6 @@ fn init_responder_ocall(
         sgx_status_t::SGX_SUCCESS => ret.into(),
         err => Err(err),
     }
-
-    // dh_sessions().initiate_response(this_enclave_id)
 }
 
 fn exchange_report_ocall(
