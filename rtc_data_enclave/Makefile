@@ -24,6 +24,7 @@ else ifeq ($(MITIGATION-CVE-2020-0551), CF)
 export MITIGATION_CVE_2020_0551=CF
 endif
 
+ENCLAVE_NAME = rtc_data
 CRATE_LIB_NAME := enclave
 CRATE_BUILD_PATH := ./target/release
 CODEGEN_PATH = /root/rtc-data/codegen/data_enclave
@@ -36,11 +37,11 @@ Crate_Files := $(wildcard src/*.rs ../rtc_tenclave/src/*.rs)
 Out_StaticLib := $(CRATE_BUILD_PATH)/lib$(CRATE_LIB_NAME).a
 Out_Bindings := $(CODEGEN_PATH)/bindings.h
 
-Out_EdgeObject := $(CUSTOM_LIBRARY_PATH)/Enclave_t.o
+Out_EdgeObject := $(CUSTOM_LIBRARY_PATH)/$(ENCLAVE_NAME)_t.o
 Out_Dylib := $(CUSTOM_LIBRARY_PATH)/enclave.so
 Out_SignedDylib := $(CUSTOM_BIN_PATH)/enclave.signed.so
 
-Out_CodegenFiles := $(CODEGEN_PATH)/Enclave_t.c $(CODEGEN_PATH)/Enclave_t.h $(CODEGEN_PATH)/Enclave_u.c $(CODEGEN_PATH)/Enclave_u.h
+Out_CodegenFiles := $(CODEGEN_PATH)/$(ENCLAVE_NAME)_t.c $(CODEGEN_PATH)/$(ENCLAVE_NAME)_t.h $(CODEGEN_PATH)/$(ENCLAVE_NAME)_u.c $(CODEGEN_PATH)/$(ENCLAVE_NAME)_u.h
 
 .PHONY: all
 
@@ -97,12 +98,12 @@ $(Out_StaticLib) $(Out_Bindings): $(Crate_Files)
 	@rm -f $(Out_StaticLib) $(Out_Bindings)
 	cargo build --release
 
-$(Out_CodegenFiles): $(SGX_EDGER8R) ./Enclave.edl $(Out_Bindings) | $(CODEGEN_PATH)
-	$(SGX_EDGER8R) ./Enclave.edl --search-path $(SGX_SDK)/include --search-path $(RUST_EDL_PATH) --trusted-dir $(CODEGEN_PATH) --untrusted-dir $(CODEGEN_PATH)
+$(Out_CodegenFiles): $(SGX_EDGER8R) ./$(ENCLAVE_NAME).edl $(Out_Bindings) | $(CODEGEN_PATH)
+	$(SGX_EDGER8R) --use-prefix ./$(ENCLAVE_NAME).edl --search-path $(SGX_SDK)/include --search-path $(RUST_EDL_PATH) --search-path $(RTC_EDL_PATH) --trusted-dir $(CODEGEN_PATH) --untrusted-dir $(CODEGEN_PATH)
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 $(Out_EdgeObject): $(Out_CodegenFiles) | $(CODEGEN_PATH) $(CUSTOM_LIBRARY_PATH)
-	@$(CC) $(RustEnclave_Compile_Flags) -c $(CODEGEN_PATH)/Enclave_t.c -o $@
+	@$(CC) $(RustEnclave_Compile_Flags) -c $(CODEGEN_PATH)/$(ENCLAVE_NAME)_t.c -o $@
 	@echo "CC   <=  $<"
 
 $(Out_Dylib): $(Out_StaticLib) $(Out_EdgeObject) | $(CUSTOM_LIBRARY_PATH)

@@ -1,5 +1,5 @@
-#ifndef ENCLAVE_T_H__
-#define ENCLAVE_T_H__
+#ifndef RTC_DATA_T_H__
+#define RTC_DATA_T_H__
 
 #include <stdint.h>
 #include <wchar.h>
@@ -8,12 +8,15 @@
 
 #include "sgx_tprotected_fs.h"
 #include "sgx_report.h"
+#include "sgx_dh.h"
 #include "bindings.h"
 #include "time.h"
 #include "inc/stat.h"
 #include "sys/uio.h"
 #include "inc/stat.h"
 #include "inc/dirent.h"
+#include "sgx_eid.h"
+#include "sgx_dh.h"
 
 #include <stdlib.h> /* for size_t */
 
@@ -24,9 +27,13 @@ extern "C" {
 #endif
 
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-DataUploadResult rtc_validate_and_save(const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+DataUploadResult validate_and_save(const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+sgx_status_t local_attestation(sgx_enclave_id_t rtc_local_attestation);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
+SessionRequestResult session_request(sgx_enclave_id_t src_enclave_id);
+ExchangeReportResult exchange_report(sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
+sgx_status_t end_session(sgx_enclave_id_t src_enclave_id);
 
 sgx_status_t SGX_CDECL rtc_save_sealed_blob_u(sgx_status_t* retval, const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16]);
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);
@@ -99,6 +106,9 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_remove(int32_t* retval, const char* file
 sgx_status_t SGX_CDECL u_sgxprotectedfs_recovery_file_open(void** retval, const char* filename);
 sgx_status_t SGX_CDECL u_sgxprotectedfs_fwrite_recovery_node(uint8_t* retval, void* f, uint8_t* data, uint32_t data_length);
 sgx_status_t SGX_CDECL u_sgxprotectedfs_do_file_recovery(int32_t* retval, const char* filename, const char* recovery_filename, uint32_t node_size);
+sgx_status_t SGX_CDECL rtc_session_request_u(SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
+sgx_status_t SGX_CDECL rtc_exchange_report_u(ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id, sgx_dh_msg2_t* dh_msg2);
+sgx_status_t SGX_CDECL rtc_end_session_u(sgx_status_t* retval, sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
 
 #ifdef __cplusplus
 }

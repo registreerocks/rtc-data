@@ -319,6 +319,7 @@ dependencies = [
  "cc",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "sgx_types",
  "sgx_urts",
 ]
@@ -629,6 +630,7 @@ dependencies = [
  "data-ocalls",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "sgx_types",
  "sgx_urts",
 ]
@@ -1677,6 +1679,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rtc_udh"
+version = "0.1.0"
+dependencies = [
+ "mockall",
+ "once_cell",
+ "rtc_types",
+ "sgx_types",
+]
+
+[[package]]
 name = "rtc_uenclave"
 version = "0.1.0"
 dependencies = [
@@ -1692,6 +1704,7 @@ dependencies = [
  "rsa",
  "rtc-ecalls",
  "rtc_types",
+ "rtc_udh",
  "serde 1.0.125",
  "serde_json",
  "sgx_types",

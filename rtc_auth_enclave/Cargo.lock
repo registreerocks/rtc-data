@@ -211,6 +211,14 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
+version = "1.4.0"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx.git?tag=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+dependencies = [
+ "sgx_tstd",
+]
+
+[[package]]
+name = "once_cell"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af8b08b04175473088b46763e51ee54da5f9a164bc162f615b91bc179dbf15a3"
@@ -340,7 +348,7 @@ checksum = "55ae9a4d2975bdd8254d7bcdd2261be62b42b8920f903ec682b08cdc11b87af2"
 dependencies = [
  "cc",
  "libc",
- "once_cell",
+ "once_cell 1.7.2",
  "spin",
  "untrusted",
  "web-sys",
@@ -365,6 +373,7 @@ version = "0.1.0"
 dependencies = [
  "cfg-if 1.0.0",
  "hex",
+ "once_cell 1.4.0",
  "rand 0.7.3",
  "ring",
  "rtc_types",
@@ -372,6 +381,7 @@ dependencies = [
  "serde 1.0.118",
  "serde_json 1.0.60",
  "sgx_tcrypto",
+ "sgx_tdh",
  "sgx_tse",
  "sgx_tstd",
  "sgx_types",
@@ -493,6 +503,17 @@ name = "sgx_tcrypto"
 version = "1.1.3"
 source = "git+https://github.com/apache/incubator-teaclave-sgx-sdk.git?rev=b9d1bda#b9d1bda674564668f8cf2e1ee202d08533fde46f"
 dependencies = [
+ "sgx_types",
+]
+
+[[package]]
+name = "sgx_tdh"
+version = "1.1.3"
+source = "git+https://github.com/apache/incubator-teaclave-sgx-sdk.git?rev=b9d1bda#b9d1bda674564668f8cf2e1ee202d08533fde46f"
+dependencies = [
+ "sgx_tcrypto",
+ "sgx_trts",
+ "sgx_tse",
  "sgx_types",
 ]
 

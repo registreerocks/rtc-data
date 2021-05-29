@@ -20,7 +20,16 @@ pub struct EnclaveReportResult {
 
 /// Error returned when the enclave fails to create a report
 pub type CreateReportError = EcallError<CreateReportResult>;
-pub trait RtcEcalls: RtcEnclaveEcalls {
+
+pub trait RtcEcalls {
+    fn create_report(
+        &self,
+        eid: sgx_enclave_id_t,
+        qe_target_info: &sgx_target_info_t,
+    ) -> Result<EnclaveReportResult, CreateReportError>;
+}
+
+impl<T: RtcEnclaveEcalls> RtcEcalls for T {
     fn create_report(
         &self,
         eid: sgx_enclave_id_t,
@@ -56,8 +65,6 @@ pub trait RtcEcalls: RtcEnclaveEcalls {
         }
     }
 }
-
-impl<T: RtcEnclaveEcalls> RtcEcalls for T {}
 
 #[cfg(test)]
 mod test {

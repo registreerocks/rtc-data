@@ -1,5 +1,5 @@
-#ifndef ENCLAVE_U_H__
-#define ENCLAVE_U_H__
+#ifndef RTC_AUTH_U_H__
+#define RTC_AUTH_U_H__
 
 #include <stdint.h>
 #include <wchar.h>
@@ -8,12 +8,15 @@
 #include "sgx_edger8r.h" /* for sgx_status_t etc. */
 
 #include "sgx_report.h"
+#include "sgx_dh.h"
 #include "bindings.h"
 #include "time.h"
 #include "inc/stat.h"
 #include "sys/uio.h"
 #include "inc/stat.h"
 #include "inc/dirent.h"
+#include "sgx_eid.h"
+#include "sgx_dh.h"
 
 #include <stdlib.h> /* for size_t */
 
@@ -243,10 +246,45 @@ int SGX_UBRIDGE(SGX_NOCONVENTION, u_dirfd_ocall, (int* error, void* dirp));
 #define U_FSTATAT64_OCALL_DEFINED__
 int SGX_UBRIDGE(SGX_NOCONVENTION, u_fstatat64_ocall, (int* error, int dirfd, const char* pathname, struct stat64_t* buf, int flags));
 #endif
+#ifndef RTC_SESSION_REQUEST_U_DEFINED__
+#define RTC_SESSION_REQUEST_U_DEFINED__
+SessionRequestResult SGX_UBRIDGE(SGX_NOCONVENTION, rtc_session_request_u, (sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id));
+#endif
+#ifndef RTC_EXCHANGE_REPORT_U_DEFINED__
+#define RTC_EXCHANGE_REPORT_U_DEFINED__
+ExchangeReportResult SGX_UBRIDGE(SGX_NOCONVENTION, rtc_exchange_report_u, (sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id, sgx_dh_msg2_t* dh_msg2));
+#endif
+#ifndef RTC_END_SESSION_U_DEFINED__
+#define RTC_END_SESSION_U_DEFINED__
+sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_end_session_u, (sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id));
+#endif
+#ifndef SGX_OC_CPUIDEX_DEFINED__
+#define SGX_OC_CPUIDEX_DEFINED__
+void SGX_UBRIDGE(SGX_CDECL, sgx_oc_cpuidex, (int cpuinfo[4], int leaf, int subleaf));
+#endif
+#ifndef SGX_THREAD_WAIT_UNTRUSTED_EVENT_OCALL_DEFINED__
+#define SGX_THREAD_WAIT_UNTRUSTED_EVENT_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, sgx_thread_wait_untrusted_event_ocall, (const void* self));
+#endif
+#ifndef SGX_THREAD_SET_UNTRUSTED_EVENT_OCALL_DEFINED__
+#define SGX_THREAD_SET_UNTRUSTED_EVENT_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_untrusted_event_ocall, (const void* waiter));
+#endif
+#ifndef SGX_THREAD_SETWAIT_UNTRUSTED_EVENTS_OCALL_DEFINED__
+#define SGX_THREAD_SETWAIT_UNTRUSTED_EVENTS_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, sgx_thread_setwait_untrusted_events_ocall, (const void* waiter, const void* self));
+#endif
+#ifndef SGX_THREAD_SET_MULTIPLE_UNTRUSTED_EVENTS_OCALL_DEFINED__
+#define SGX_THREAD_SET_MULTIPLE_UNTRUSTED_EVENTS_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (const void** waiters, size_t total));
+#endif
 
-sgx_status_t enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
-sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
+sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
+sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid);
+sgx_status_t rtc_auth_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);
+sgx_status_t rtc_auth_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult* retval, sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
+sgx_status_t rtc_auth_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t src_enclave_id);
 
 #ifdef __cplusplus
 }

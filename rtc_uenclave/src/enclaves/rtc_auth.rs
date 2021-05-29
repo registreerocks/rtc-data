@@ -1,9 +1,8 @@
 use std::borrow::Borrow;
 
+use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 use auth_sys::AuthSys;
 use sgx_types::*;
-
-use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 
 /// Wraps all the functionality for interacting with the auth enclave
 pub struct RtcAuthEnclave<TCfg>(RtcEnclave<TCfg, AuthSys>)
@@ -42,5 +41,10 @@ where
     /// `true` if the enclave have been initialized
     pub fn is_initialized(&self) -> bool {
         self.0.is_initialized()
+    }
+
+    /// Get the id of this enclave instance
+    pub fn geteid(&self) -> sgx_enclave_id_t {
+        self.0.geteid()
     }
 }

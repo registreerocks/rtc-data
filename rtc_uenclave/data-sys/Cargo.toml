@@ -3,7 +3,10 @@ name = "data-sys"
 version = "0.1.0"
 authors = ["Herman <herman@registree.io>"]
 edition = "2018"
-links = "Enclave_u"
+links = "Enclave_data_u"
+
+[lib]
+crate-type = ["rlib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,6 +18,7 @@ sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", r
 rtc_types = { path = "../../rtc_types" }
 data-ocalls = { path = "../data-ocalls" }
 rtc-ecalls = { path = "../rtc-ecalls" }
+rtc_udh = { path = "../../rtc_udh" }
 
 [build-dependencies]
 cc = "1.0.67"

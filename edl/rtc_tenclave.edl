@@ -1,0 +1,21 @@
+enclave  {
+    from "sgx_tstd.edl" import *;
+    from "sgx_stdio.edl" import *;
+    from "sgx_backtrace.edl" import *;
+    from "sgx_tstdc.edl" import *;
+
+    include "sgx_eid.h"
+    include "sgx_dh.h"
+
+    trusted{
+        public SessionRequestResult session_request(sgx_enclave_id_t src_enclave_id);
+        public ExchangeReportResult exchange_report(sgx_enclave_id_t src_enclave_id, [in]const sgx_dh_msg2_t *dh_msg2);
+        public sgx_status_t end_session(sgx_enclave_id_t src_enclave_id);
+    };
+
+    untrusted{
+        SessionRequestResult rtc_session_request_u(sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
+        ExchangeReportResult rtc_exchange_report_u(sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id, [in]sgx_dh_msg2_t *dh_msg2);
+        sgx_status_t rtc_end_session_u(sgx_enclave_id_t src_enclave_id, sgx_enclave_id_t dest_enclave_id);
+    };
+};

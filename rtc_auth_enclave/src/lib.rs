@@ -4,8 +4,9 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(clippy::mem_forget)]
 
-use sgx_types::{sgx_report_t, sgx_status_t, sgx_target_info_t};
+#[cfg(not(target_env = "sgx"))]
+#[macro_use]
+extern crate sgx_tstd as std;
 
-use rtc_types::{CreateReportResult, EnclaveHeldData};
-
-use rtc_tenclave::enclave::*;
+pub use rtc_tenclave::dh::*;
+pub use rtc_tenclave::enclave::*;

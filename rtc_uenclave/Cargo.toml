@@ -28,6 +28,7 @@ serde_json = "1.0.64"
 data-sys = { path = "./data-sys", optional = true }
 auth-sys = { path = "./auth-sys", optional = true }
 rtc-ecalls = { path = "./rtc-ecalls" }
+rtc_udh = { path = "../rtc_udh" }
 
 [dev-dependencies]
 rand = "0.7.3"

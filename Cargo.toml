@@ -8,6 +8,7 @@ members = [
     "rtc_uenclave/data-sys",
     "rtc_uenclave/auth-sys",
     "rtc_uenclave/rtc-ecalls",
+    "rtc_udh",
 ]
 # TODO: Look at creating a seperate workspace for enclave code to share lockfile?
 exclude = [

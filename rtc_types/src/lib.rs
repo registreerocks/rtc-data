@@ -16,6 +16,7 @@ use sgx_types::*;
 use std::boxed::Box;
 
 mod data_upload;
+pub mod dh;
 pub use data_upload::*;
 
 mod exec_token;

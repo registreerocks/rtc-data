@@ -9,7 +9,7 @@ use mockall::predicate::*;
 #[cfg(test)]
 use mockall::*;
 use mockall_double::double;
-use rtc_types::{ExecTokenError, ExecTokenResponse};
+use rtc_udh::{self, ResponderSys};
 use serde::Deserialize;
 use sgx_types::*;
 use thiserror::Error;
@@ -52,7 +52,11 @@ pub struct EnclaveConfig {
 ///
 /// This struct contains the basic functionality required from all RTC enclaves
 #[cfg_attr(not(test), derive(Debug))]
-pub(crate) struct RtcEnclave<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> {
+pub(crate) struct RtcEnclave<TCfg, TEcalls>
+where
+    TCfg: Borrow<EnclaveConfig>,
+    TEcalls: RtcEcalls + Default + ResponderSys + 'static,
+{
     pub(crate) base_enclave: SgxEnclave,
     pub(crate) quoting_enclave: QuotingEnclave,
     pub(crate) attestation_client: AzureAttestationClient<ureq::Agent>,
@@ -60,13 +64,21 @@ pub(crate) struct RtcEnclave<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> {
     ecalls: TEcalls,
 }
 
-impl<TCfg: Borrow<EnclaveConfig>, TEcalls: RtcEcalls> RtcEnclave<TCfg, TEcalls> {
+impl<TCfg, TEcalls> RtcEnclave<TCfg, TEcalls>
+where
+    TCfg: Borrow<EnclaveConfig>,
+    TEcalls: RtcEcalls + Default + ResponderSys + 'static,
+{
     /// Creates a new enclave instance with the provided configuration
     pub fn init(cfg: TCfg) -> Result<Self, sgx_status_t> {
+        let base_enclave = Self::init_base_enclave(cfg.borrow())?;
+        rtc_udh::set_responder(base_enclave.geteid(), Box::new(TEcalls::default()))
+            .expect("Failed to register enclave as dh responder");
+
         Ok(RtcEnclave {
             attestation_client: Self::init_attestation_client(),
             quoting_enclave: Self::init_quoting_enclave(),
-            base_enclave: Self::init_base_enclave(cfg.borrow())?,
+            base_enclave,
             config: cfg,
             ecalls: TEcalls::default(),
         })
@@ -201,11 +213,48 @@ mod tests {
     use proptest::collection::size_range;
     use proptest::prelude::*;
     use rtc_ecalls::MockRtcEnclaveEcalls;
+    use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
     use rtc_types::CreateReportResult;
     use rtc_types::EnclaveHeldData;
     use rtc_types::{ENCLAVE_HELD_DATA_SIZE, RSA3072_PKCS8_DER_SIZE};
     use simple_asn1::{to_der, ASN1Block, BigInt, BigUint, OID};
     use std::convert::TryInto;
+
+    mock! {
+        TEcalls {}
+
+        impl RtcEcalls for TEcalls {
+            fn create_report(
+                &self,
+                eid: sgx_enclave_id_t,
+                qe_target_info: &sgx_target_info_t,
+            ) -> Result<EnclaveReportResult, CreateReportError>;
+        }
+
+        impl ResponderSys for TEcalls {
+            unsafe fn rtc_session_request(
+                &self,
+                eid: sgx_enclave_id_t,
+                retval: *mut SessionRequestResult,
+                src_enclave_id: sgx_enclave_id_t,
+            ) -> sgx_status_t;
+
+            unsafe fn rtc_exchange_report(
+                &self,
+                eid: sgx_enclave_id_t,
+                retval: *mut ExchangeReportResult,
+                src_enclave_id: sgx_enclave_id_t,
+                dh_msg2_ptr: *const sgx_dh_msg2_t,
+            ) -> sgx_status_t;
+
+            unsafe fn rtc_end_session(
+                &self,
+                eid: sgx_enclave_id_t,
+                retval: *mut sgx_status_t,
+                src_enclave_id: sgx_enclave_id_t,
+            ) -> sgx_status_t;
+        }
+    }
 
     #[test]
     fn dcap_azure_attestation_works() {
@@ -233,24 +282,21 @@ mod tests {
             let qe_target_info = sgx_target_info_t::default();
             let ehd = [2; ENCLAVE_HELD_DATA_SIZE];
             let report = sgx_report_t::default();
-            let mut sys_mock = MockRtcEnclaveEcalls::default();
-            sys_mock
-                .expect_enclave_create_report()
-                .returning(move |_, ret, _, key, rep| {
-                    unsafe {
-                        *rep = report;
-                        (*key).copy_from_slice(&ehd);
-                        *ret = CreateReportResult::Success;
-                    }
-                    sgx_status_t::SGX_SUCCESS
-                });
+
+            let mut tecalls_mock = MockTEcalls::default();
+            tecalls_mock
+                .expect_create_report()
+                .return_const(Ok(EnclaveReportResult {
+                    enclave_report: report,
+                    enclave_held_data: ehd,
+                }));
 
             RtcEnclave {
                 base_enclave: mock_be,
                 quoting_enclave: mock_qe,
                 attestation_client: mock_aa_client,
                 config: EnclaveConfig::default(),
-                ecalls: sys_mock,
+                ecalls: tecalls_mock,
             }
         };
 
@@ -351,24 +397,21 @@ mod tests {
 
             let eid = 12u64;
             let qe_target_info = sgx_target_info_t::default();
-            let mut sys_mock = MockRtcEnclaveEcalls::default();
-            sys_mock
-                .expect_enclave_create_report()
-                .returning(move |_, ret, _, key, rep| {
-                    unsafe {
-                        *rep = report;
-                        (*key).copy_from_slice(&ehd);
-                        *ret = CreateReportResult::Success;
-                    }
-                    sgx_status_t::SGX_SUCCESS
-                });
+
+            let mut tecalls_mock = MockTEcalls::default();
+            tecalls_mock
+                .expect_create_report()
+                .return_const(Ok(EnclaveReportResult {
+                    enclave_report: report,
+                    enclave_held_data: ehd,
+                }));
 
             let sut = RtcEnclave{
                 base_enclave: mock,
                 quoting_enclave: QuotingEnclave::default(),
                 attestation_client: AzureAttestationClient::<ureq::Agent>::default(),
                 config: EnclaveConfig::default(),
-                ecalls: sys_mock,
+                ecalls: tecalls_mock,
             };
 
             let res = sut.create_report(&qe_ti).unwrap();

@@ -18,7 +18,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
 
     let mut base_u = cc::Build::new()
-        .file(enclave_gen.join("Enclave_u.c"))
+        .file(enclave_gen.join("rtc_data_u.c"))
         .no_default_flags(true)
         .includes(&includes)
         .flag("-fstack-protector")
@@ -30,9 +30,9 @@ fn main() {
         .to_owned();
 
     if profile == "release" {
-        base_u.flag("-O2").compile("Enclave_u");
+        base_u.flag("-O2").compile("rtc_data_u");
     } else {
-        base_u.flag("-O0").flag("-g").compile("Enclave_u");
+        base_u.flag("-O0").flag("-g").compile("rtc_data_u");
     }
 
     println!("cargo:rerun-if-changed=wrapper.h");
@@ -52,9 +52,7 @@ fn main() {
         .with_codegen_config(CodegenConfig::FUNCTIONS | CodegenConfig::TYPES)
         .allowlist_recursively(false)
         .array_pointers_in_arguments(true)
-        // TODO: see if there is a way to include functions using globbing
-        .allowlist_function("enclave_create_report")
-        .allowlist_function("rtc_validate_and_save")
+        .allowlist_function("rtc_data_.*")
         .clang_args(&inc_args)
         .generate()
         .expect("Unable to generate bindings")

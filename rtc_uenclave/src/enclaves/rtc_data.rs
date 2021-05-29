@@ -55,6 +55,11 @@ where
         })
     }
 
+    /// Performs local attestation to the destination enclave
+    pub fn local_attestation(&self, dest_enclave_id: sgx_enclave_id_t) -> sgx_status_t {
+        ecalls::local_attestation(self.0.geteid(), dest_enclave_id)
+    }
+
     /// Take ownership of self and drop resources
     pub fn destroy(self) {
         // Take ownership of self and drop
@@ -63,6 +68,11 @@ where
     /// `true` if the enclave have been initialized
     pub fn is_initialized(&self) -> bool {
         self.0.is_initialized()
+    }
+
+    /// Get the id of this enclave instance
+    pub fn geteid(&self) -> sgx_enclave_id_t {
+        self.0.geteid()
     }
 }
 
@@ -79,8 +89,30 @@ pub mod ecalls {
         let mut retval = DataUploadResult::default();
         // TODO: Safety
         let res = unsafe {
-            ffi::rtc_validate_and_save(eid, &mut retval, payload.as_ptr(), payload.len(), metadata)
+            ffi::rtc_data_validate_and_save(
+                eid,
+                &mut retval,
+                payload.as_ptr(),
+                payload.len(),
+                metadata,
+            )
         };
         retval.to_ecall_err(res).into()
+    }
+
+    pub fn local_attestation(
+        eid: sgx_enclave_id_t,
+        dest_enclave_id: sgx_enclave_id_t,
+    ) -> sgx_status_t {
+        let mut retval = sgx_status_t::SGX_SUCCESS;
+        let res = unsafe { ffi::rtc_data_local_attestation(eid, &mut retval, dest_enclave_id) };
+
+        match res {
+            sgx_status_t::SGX_SUCCESS => res,
+            err => {
+                println!("local_attestation err, ecall failed: {:?}", err);
+                err
+            }
+        }
     }
 }
