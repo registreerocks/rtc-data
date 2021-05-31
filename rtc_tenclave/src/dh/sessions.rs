@@ -149,7 +149,7 @@ where
 
     /// Attest and establish a new active session between this enclave and `dest_enclave_id`.
     ///
-    /// The responding enclave must be registered using [`rtc_udh::set_responder`].
+    /// The responding enclave must be registered using `rtc_udh::set_responder`.
     pub fn establish_new(
         &self,
         dest_enclave_id: sgx_enclave_id_t,
