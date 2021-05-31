@@ -1,8 +1,5 @@
-use std::convert::TryInto;
-
-use actix::{Addr, MailboxError};
+use actix::Addr;
 use actix_web::{error::ErrorInternalServerError, get, web, HttpRequest};
-use rtc_uenclave::AttestationError;
 
 use crate::auth_enclave_actor::AuthEnclaveActor;
 use crate::merge_error::*;

@@ -1,6 +1,5 @@
 use crate::auth_enclave_actor::AuthEnclaveActor;
 use actix::{Handler, Message};
-use actix_web::error::ErrorInternalServerError;
 use rtc_uenclave::AttestationError;
 
 #[derive(Default)]
