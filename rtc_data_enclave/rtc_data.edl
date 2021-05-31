@@ -13,6 +13,7 @@ enclave {
     include "sgx_dh.h"
     include "bindings.h"
 
+    // See "ECALL enclave name prefixing and --use-prefix" in HACKING.md
     trusted {
         /* define ECALLs here. */
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
