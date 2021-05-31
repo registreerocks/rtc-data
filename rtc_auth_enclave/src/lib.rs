@@ -4,7 +4,6 @@
 #![deny(clippy::mem_forget)]
 
 #[cfg(not(target_env = "sgx"))]
-#[macro_use]
 extern crate sgx_tstd as std;
 
 pub use rtc_tenclave::dh::*;
