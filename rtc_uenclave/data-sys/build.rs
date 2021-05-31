@@ -17,8 +17,10 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
 
+    let filename_u = "rtc_data_u";
+
     let mut base_u = cc::Build::new()
-        .file(enclave_gen.join("rtc_data_u.c"))
+        .file(enclave_gen.join(filename_u).with_extension("c"))
         .no_default_flags(true)
         .includes(&includes)
         .flag("-fstack-protector")
@@ -30,9 +32,9 @@ fn main() {
         .to_owned();
 
     if profile == "release" {
-        base_u.flag("-O2").compile("rtc_data_u");
+        base_u.flag("-O2").compile(filename_u);
     } else {
-        base_u.flag("-O0").flag("-g").compile("rtc_data_u");
+        base_u.flag("-O0").flag("-g").compile(filename_u);
     }
 
     println!("cargo:rerun-if-changed=wrapper.h");
