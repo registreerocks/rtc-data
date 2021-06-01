@@ -6,7 +6,7 @@ use actix_web::{
 };
 use base64;
 use insta;
-use rtc_data_service::data_enclave_actor::*;
+use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::handlers::*;
 use rtc_types::{DataUploadResponse, UploadMetadata};
 use rtc_uenclave::EnclaveConfig;
@@ -17,6 +17,10 @@ use std::sync::Arc;
 
 #[actix_rt::test]
 async fn data_service_attestation_ok() {
+    attestation_ok("/data/attest").await;
+}
+
+async fn attestation_ok(uri_path: &str) {
     let mut app = test::init_service(
         App::new()
             .data(
@@ -31,7 +35,7 @@ async fn data_service_attestation_ok() {
     )
     .await;
 
-    let req = test::TestRequest::get().uri("/data/attest").to_request();
+    let req = test::TestRequest::get().uri(uri_path).to_request();
     let resp = test::call_service(&mut app, req).await;
 
     insta::assert_debug_snapshot!(resp);
