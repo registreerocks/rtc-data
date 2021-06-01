@@ -3,7 +3,7 @@ name = "data-sys"
 version = "0.1.0"
 authors = ["Herman <herman@registree.io>"]
 edition = "2018"
-links = "Enclave_data_u"
+links = "rtc_data_u"
 
 [lib]
 crate-type = ["rlib"]

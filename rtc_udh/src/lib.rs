@@ -13,6 +13,7 @@ use rtc_types::{
     EcallResult,
 };
 use sgx_types::*;
+use std::collections::hash_map::Entry;
 
 type SyncSendResponder = Arc<Mutex<Responder>>;
 
@@ -24,16 +25,29 @@ fn dh_responders() -> &'static RwLock<DhResponders> {
 }
 
 /// Register enclave as a DH responder.
+///
+/// # Panics
+///
+/// If `enclave_id` already has a registered responder.
 pub fn set_responder(
     enclave_id: sgx_enclave_id_t,
     responder: Box<(dyn ResponderSys + 'static)>,
 ) -> Result<(), sgx_status_t> {
     match dh_responders().write() {
         Ok(mut resp_map) => {
-            resp_map.insert(
-                enclave_id,
-                Arc::new(Mutex::new(Responder::new(enclave_id, responder))),
-            );
+            let value = Arc::new(Mutex::new(Responder::new(enclave_id, responder)));
+
+            // TODO: Use [`HashMap::try_insert`] once stable.
+            // Unstable tracking issue: <https://github.com/rust-lang/rust/issues/82766>
+            match resp_map.entry(enclave_id) {
+                // TODO: Is there any way to report more useful debug information about
+                //       the new and existing responders?
+                Entry::Occupied(_entry) => panic!(
+                    "set_responder: enclave_id {:?} already has a registered responder",
+                    enclave_id,
+                ),
+                Entry::Vacant(entry) => entry.insert(value),
+            };
             Ok(())
         }
         Err(_) => Err(sgx_status_t::SGX_ERROR_UNEXPECTED),

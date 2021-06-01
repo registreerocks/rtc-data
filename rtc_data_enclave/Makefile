@@ -98,6 +98,7 @@ $(Out_StaticLib) $(Out_Bindings): $(Crate_Files)
 	@rm -f $(Out_StaticLib) $(Out_Bindings)
 	cargo build --release
 
+# See "ECALL enclave name prefixing and --use-prefix" in HACKING.md
 $(Out_CodegenFiles): $(SGX_EDGER8R) ./$(ENCLAVE_NAME).edl $(Out_Bindings) | $(CODEGEN_PATH)
 	$(SGX_EDGER8R) --use-prefix ./$(ENCLAVE_NAME).edl --search-path $(SGX_SDK)/include --search-path $(RUST_EDL_PATH) --search-path $(RTC_EDL_PATH) --trusted-dir $(CODEGEN_PATH) --untrusted-dir $(CODEGEN_PATH)
 	@echo "GEN  =>  $(Enclave_EDL_Files)"

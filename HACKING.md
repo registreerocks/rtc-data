@@ -59,3 +59,34 @@ Rust SGX SDK:
 * [v1.1.0 release notes](https://github.com/apache/incubator-teaclave-sgx-sdk/blob/v1.1.0/release_notes.md#rust-sgx-sdk-v110)
 * [Mitigation of Intel SA 00219 in Rust SGX](https://github.com/apache/incubator-teaclave-sgx-sdk/wiki/Mitigation-of-Intel-SA-00219-in-Rust-SGX)
 
+
+## ECALL enclave name prefixing and --use-prefix
+
+See "[Avoiding Name Collisions]" in the Intel SGX Developer Reference.
+
+[Avoiding Name Collisions]: https://download.01.org/intel-sgx/sgx-linux/2.13/docs/Intel_SGX_Developer_Reference_Linux_2.13_Open_Source.pdf#Avoiding%20Name%20Collisions
+
+When linking more than one enclave library into an application,
+all ECALL and OCALL function names must be unique to avoid linking collisions.
+The `sgx_edger8r` tool automatically prevents OCALL name collisions by
+prepending the enclave name to all bridge functions, but does not do the same
+for ECALL names by default.
+
+This means that when more than one enclave library uses a shared library with
+its own ECALLs, like we do with `rtc_tenclave`, the ECALL function names of
+the different instances of shared library will collide, by default.
+
+To avoid this, we pass the `--use-prefix` option to `sgx_edger8r` to prepend
+the enclave name to all untrusted proxy function names, so that the shared
+library ECALLs will have a unique interface for each enclave library they're
+exposed from.
+
+This means that the shared library's trusted code and EDL will refer to a function
+like `session_request`, but the untrusted code will refer to different per-enclave
+instances of it, like `rtc_auth_session_request`, `rtc_data_session_request`,
+and so on.
+
+However, this means that all other references to the enclave's non-library ECALLs
+will also become prefixed in the same way: the function names in the EDL will use
+the unprefixed form, while the references in the untrusted code must use the
+prefixed from.
