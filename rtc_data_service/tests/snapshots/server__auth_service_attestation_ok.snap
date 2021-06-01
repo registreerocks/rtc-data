@@ -1,0 +1,11 @@
+---
+source: rtc_data_service/tests/server.rs
+expression: resp
+
+---
+
+ServiceResponse HTTP/1.1 500 Internal Server Error
+  headers:
+    "content-type": "text/plain; charset=utf-8"
+  body: Sized(49)
+

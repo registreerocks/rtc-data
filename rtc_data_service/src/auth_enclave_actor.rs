@@ -1,10 +1,10 @@
-//! [`Actor`] implementation for [`RtcDataEnclave`]
+//! [`Actor`] implementation for [`RtcAuthEnclave`]
 //!
-//! TODO: This module currently mirrors [`super::auth_enclave_actor`], and should be kept in sync with it
+//! TODO: This module currently mirrors [`super::data_enclave_actor`], and should be kept in sync with it
 //!       until we factor out the shared code.
 
 use actix::prelude::*;
-use rtc_uenclave::{AttestationError, EnclaveConfig, RtcDataEnclave};
+use rtc_uenclave::{AttestationError, EnclaveConfig, RtcAuthEnclave};
 use std::sync::Arc;
 
 #[derive(Default)]
@@ -16,12 +16,12 @@ impl Message for RequestAttestation {
     type Result = RequestAttestationResult;
 }
 
-pub struct DataEnclaveActor {
-    enclave: Option<RtcDataEnclave<Arc<EnclaveConfig>>>,
+pub struct AuthEnclaveActor {
+    enclave: Option<RtcAuthEnclave<Arc<EnclaveConfig>>>,
     config: Arc<EnclaveConfig>,
 }
 
-impl DataEnclaveActor {
+impl AuthEnclaveActor {
     pub fn new(config: Arc<EnclaveConfig>) -> Self {
         Self {
             enclave: None,
@@ -34,15 +34,15 @@ impl DataEnclaveActor {
     /// # Panics
     ///
     /// Panics if the enclave was not initialised.
-    pub(crate) fn get_enclave(&self) -> &RtcDataEnclave<Arc<EnclaveConfig>> {
+    pub(crate) fn get_enclave(&self) -> &RtcAuthEnclave<Arc<EnclaveConfig>> {
         self.enclave
             .as_ref()
-            .expect("DataEnclaveActor: tried to access enclave while not initialised")
+            .expect("AuthEnclaveActor: tried to access enclave while not initialised")
     }
 }
 
-impl Actor for DataEnclaveActor {
-    type Context = Context<DataEnclaveActor>;
+impl Actor for AuthEnclaveActor {
+    type Context = Context<AuthEnclaveActor>;
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         self.enclave.take().map(|enclave| enclave.destroy());
@@ -50,11 +50,11 @@ impl Actor for DataEnclaveActor {
 
     fn started(&mut self, _ctx: &mut Self::Context) {
         self.enclave
-            .replace(RtcDataEnclave::init(self.config.clone()).expect("enclave to initialize"));
+            .replace(RtcAuthEnclave::init(self.config.clone()).expect("enclave to initialize"));
     }
 }
 
-impl Handler<RequestAttestation> for DataEnclaveActor {
+impl Handler<RequestAttestation> for AuthEnclaveActor {
     type Result = RequestAttestationResult;
 
     fn handle(&mut self, _msg: RequestAttestation, _ctx: &mut Self::Context) -> Self::Result {
@@ -63,10 +63,10 @@ impl Handler<RequestAttestation> for DataEnclaveActor {
 }
 
 // TODO: Investigate supervisor returning `Err(Cancelled)` (see supervisor docs on Actix)
-impl actix::Supervised for DataEnclaveActor {
-    fn restarting(&mut self, _ctx: &mut Context<DataEnclaveActor>) {
+impl actix::Supervised for AuthEnclaveActor {
+    fn restarting(&mut self, _ctx: &mut Context<AuthEnclaveActor>) {
         self.enclave
-            .replace(RtcDataEnclave::init(self.config.clone()).expect("enclave to be initialized"))
+            .replace(RtcAuthEnclave::init(self.config.clone()).expect("enclave to be initialized"))
             .map(|enc| enc.destroy());
     }
 }
