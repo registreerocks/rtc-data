@@ -1,3 +1,8 @@
+//! [`Actor`] implementation for [`RtcAuthEnclave`]
+//!
+//! TODO: This module currently mirrors [`super::data_enclave_actor`], and should be kept in sync with it
+//!       until we factor out the shared code.
+
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcAuthEnclave};
 use std::sync::Arc;
@@ -24,6 +29,11 @@ impl AuthEnclaveActor {
         }
     }
 
+    /// Return a reference to this actor's RTC enclave.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the enclave was not initialised.
     pub(crate) fn get_enclave(&self) -> &RtcAuthEnclave<Arc<EnclaveConfig>> {
         self.enclave
             .as_ref()
@@ -52,6 +62,7 @@ impl Handler<RequestAttestation> for AuthEnclaveActor {
     }
 }
 
+// TODO: Investigate supervisor returning `Err(Cancelled)` (see supervisor docs on Actix)
 impl actix::Supervised for AuthEnclaveActor {
     fn restarting(&mut self, _ctx: &mut Context<AuthEnclaveActor>) {
         self.enclave

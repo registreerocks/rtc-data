@@ -1,3 +1,8 @@
+//! [`Actor`] implementation for [`RtcDataEnclave`]
+//!
+//! TODO: This module currently mirrors [`super::auth_enclave_actor`], and should be kept in sync with it
+//!       until we factor out the shared code.
+
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcDataEnclave};
 use std::sync::Arc;
@@ -33,12 +38,6 @@ impl DataEnclaveActor {
         self.enclave
             .as_ref()
             .expect("DataEnclaveActor: tried to access enclave while not initialised")
-    }
-}
-
-impl Drop for DataEnclaveActor {
-    fn drop(&mut self) {
-        println!("Dropping enclave actor");
     }
 }
 
