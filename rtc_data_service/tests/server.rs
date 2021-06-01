@@ -6,6 +6,7 @@ use actix_web::{
 };
 use base64;
 use insta;
+use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::handlers::*;
 use rtc_types::{DataUploadResponse, UploadMetadata};
@@ -16,6 +17,11 @@ use sodalite;
 use std::sync::Arc;
 
 #[actix_rt::test]
+async fn auth_service_attestation_ok() {
+    attestation_ok("/auth/attest").await;
+}
+
+#[actix_rt::test]
 async fn data_service_attestation_ok() {
     attestation_ok("/data/attest").await;
 }
@@ -24,6 +30,14 @@ async fn attestation_ok(uri_path: &str) {
     let mut app = test::init_service(
         App::new()
             .data(
+                AuthEnclaveActor::new(Arc::new(EnclaveConfig {
+                    lib_path: "/root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so"
+                        .to_string(),
+                    ..Default::default()
+                }))
+                .start(),
+            )
+            .data(
                 DataEnclaveActor::new(Arc::new(EnclaveConfig {
                     lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
                         .to_string(),
@@ -31,6 +45,7 @@ async fn attestation_ok(uri_path: &str) {
                 }))
                 .start(),
             )
+            .service(auth_enclave_attestation)
             .service(data_enclave_attestation),
     )
     .await;

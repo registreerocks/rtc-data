@@ -6,9 +6,8 @@
 mod tls;
 
 use rtc_data_service::app_config::AppConfig;
-use rtc_data_service::attestation::*;
-use rtc_data_service::auth_enclave_actor::*;
-use rtc_data_service::data_enclave_actor::*;
+use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
+use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::*;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::handlers::*;
@@ -62,10 +61,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(data_enclave_addr.clone())
             .app_data(auth_enclave_addr.clone())
             .route("/", web::get().to(server_status))
+            .service(auth_enclave_attestation)
             .service(data_enclave_attestation)
             .service(upload_file)
-            .service(req_exec_token)
-            .service(req_attestation_jwt);
+            .service(req_exec_token);
 
         app
     })
