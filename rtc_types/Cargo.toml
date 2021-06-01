@@ -16,6 +16,7 @@ teaclave_sgx = ["thiserror_sgx", "sgx_tstd"]
 # See "Pinning SGX dependencies" in HACKING.md
 [dependencies]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }
+rkyv = { version = "0.6.6", features = ["const_generics", "strict"], default_features = false }
 
 # default
 thiserror = { version = "1.0.24", optional = true}
