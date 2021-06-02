@@ -32,8 +32,10 @@ CUSTOM_BUILD_PATH := build
 CUSTOM_LIBRARY_PATH := $(CUSTOM_BUILD_PATH)/lib
 CUSTOM_BIN_PATH := $(CUSTOM_BUILD_PATH)/bin
 
-# XXX: Is there a better way to express this source dependency on rtc_tenclave?
-Crate_Files := $(wildcard src/*.rs ../rtc_tenclave/src/*.rs)
+# Changes to these files trigger a rebuild of the enclave library (Out_StaticLib).
+# This includes the Rust source files of this crate, as well as the workspace crates we depend on.
+Crate_Files := $(shell find src ../rtc_tenclave/src ../rtc_types/src -name '*.rs')
+
 Out_StaticLib := $(CRATE_BUILD_PATH)/lib$(CRATE_LIB_NAME).a
 Out_Bindings := $(CODEGEN_PATH)/bindings.h
 
