@@ -1,4 +1,3 @@
-#![feature(unsafe_block_in_unsafe_fn)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![cfg_attr(target_env = "sgx", feature(rustc_private))]
 #![allow(incomplete_features)]

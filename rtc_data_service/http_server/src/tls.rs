@@ -8,14 +8,12 @@ use thiserror::Error;
 
 use std::io::BufReader;
 use std::iter;
-use std::sync::Arc;
 use std::{fs, io};
 
 pub fn get_tls_server_config(config: TlsConfig) -> Result<TlsServerConfig, TlsConfigError> {
     let client_auth = match config.client_cert_path {
         Some(path) => {
-            let f = fs::File::open(&path)?;
-            let mut roots = load_certs(&path)?;
+            let roots = load_certs(&path)?;
             let mut client_auth_roots = RootCertStore::empty();
             for root in roots {
                 client_auth_roots.add(&root)?;

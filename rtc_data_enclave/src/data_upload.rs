@@ -1,16 +1,14 @@
-use core::convert::TryInto;
 use rand::prelude::*;
 use rtc_tenclave::crypto::RtcCrypto;
 use rtc_tenclave::crypto::SodaBoxCrypto as Crypto;
 use rtc_tenclave::util;
+use rtc_types::DataUploadError as DataError;
 use rtc_types::UploadMetadata as Metadata;
-use rtc_types::{CryptoError, DataUploadResponse, EncryptedMessage};
-use rtc_types::{DataUploadError as DataError, SizedEncryptedMessage};
-use secrecy::{ExposeSecret, Secret, Zeroize};
+use rtc_types::{CryptoError, DataUploadResponse};
+use secrecy::{ExposeSecret, Zeroize};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
 use std::prelude::v1::*;
-use thiserror::Error;
 use uuid::Uuid;
 
 pub struct SealedResult {
@@ -58,7 +56,7 @@ fn generate_client_payload(
         Err(err) => return Err(CryptoError::Rand(err.code().map_or(0, |code| code.get()))),
     };
 
-    let mut message = util::concat_u8(&pass, uuid.as_bytes());
+    let message = util::concat_u8(&pass, uuid.as_bytes());
 
     pass.zeroize();
 

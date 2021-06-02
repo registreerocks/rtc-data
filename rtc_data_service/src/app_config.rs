@@ -2,7 +2,6 @@ use config::{Config, ConfigError, Environment, File};
 use rtc_uenclave::EnclaveConfig;
 use serde::Deserialize;
 use std::env;
-use std::path::Path;
 
 // Configuration specific to the server
 #[derive(Deserialize, Clone, Default)]

@@ -47,6 +47,7 @@ where
         ecalls::validate_and_save(self.0.geteid(), payload, metadata)
     }
 
+    /// Issue a new execution token.
     pub fn get_exec_token(&self) -> Result<ExecTokenResponse, ExecTokenError> {
         // TODO: Placeholder response
         Ok(ExecTokenResponse {

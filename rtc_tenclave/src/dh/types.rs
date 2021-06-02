@@ -23,6 +23,7 @@ impl Zeroize for AlignedKey {
 
 pub struct DhValues {
     pub(crate) session_key: Secret<AlignedKey>,
+    #[allow(dead_code)] // not used yet, but will be
     pub(crate) peer_identity: sgx_dh_session_enclave_identity_t,
 }
 

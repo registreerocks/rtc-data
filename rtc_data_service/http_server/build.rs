@@ -1,14 +1,13 @@
-use cc;
 use std::env;
 
 fn main() {
-    let test_enabled = env::var_os("CARGO_FEATURE_TEST").is_some();
+    let _test_enabled = env::var_os("CARGO_FEATURE_TEST").is_some();
 
-    let cur_dir = env::current_dir().unwrap();
+    let _cur_dir = env::current_dir().unwrap();
 
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
-    let profile = env::var("PROFILE").unwrap();
+    let _profile = env::var("PROFILE").unwrap();
 
     println!("cargo:rerun-if-env-changed=SGX_MODE");
 

@@ -1,9 +1,8 @@
-use cc;
 use std::env;
 use std::process::Command;
 fn main() {
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());
-    let profile = env::var("PROFILE").unwrap();
+    let _profile = env::var("PROFILE").unwrap();
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
     println!("cargo:rerun-if-env-changed=SGX_MODE");

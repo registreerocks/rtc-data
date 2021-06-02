@@ -41,7 +41,7 @@ pub struct EnclaveConfig {
     /// the virtual machine
     ///
     /// For as list of shared providers per region, see:
-    /// https://docs.microsoft.com/en-us/azure/attestation/basic-concepts#regional-shared-provider
+    /// <https://docs.microsoft.com/en-us/azure/attestation/basic-concepts#regional-shared-provider>
     pub attestation_provider_url: String,
 
     /// `true` to run the enclave in debug mode (INSECURE).

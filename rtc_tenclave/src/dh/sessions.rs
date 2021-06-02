@@ -149,7 +149,7 @@ where
 
     /// Attest and establish a new active session between this enclave and `dest_enclave_id`.
     ///
-    /// The responding enclave must be registered using [`rtc_udh::set_responder`].
+    /// The responding enclave must be registered using `rtc_udh::set_responder`.
     pub fn establish_new(
         &self,
         dest_enclave_id: sgx_enclave_id_t,
@@ -270,6 +270,7 @@ pub unsafe extern "C" fn exchange_report(
 }
 
 // TODO: Integrate using function reference with similar signature or a config obj
+#[allow(dead_code)] // not used yet, but will be
 fn verify_peer_enclave_trust(peer_identity: &sgx_dh_session_enclave_identity_t) -> Result<(), ()> {
     let required_flags = SGX_FLAGS_INITTED;
     let denied_flags = SGX_FLAGS_DEBUG;

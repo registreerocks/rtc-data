@@ -1,4 +1,4 @@
-//! [`std::fs::File`] support
+//! [`File`] support
 
 use std::prelude::v1::Vec;
 
