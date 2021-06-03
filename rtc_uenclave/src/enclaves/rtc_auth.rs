@@ -1,6 +1,7 @@
 use std::borrow::Borrow;
 
 use auth_sys::AuthSys;
+use rtc_types::enclave_messages::set_access_key;
 use rtc_types::{EcallError, EncryptedMessage, ExecReqMetadata, ExecTokenError};
 use sgx_types::*;
 
@@ -50,6 +51,17 @@ where
         self.0.geteid()
     }
 
+    /// Save the generated access key for some data.
+    ///
+    /// This should be called from the data enclave with messages encrypted
+    /// using an established protected channel.
+    pub fn save_access_key(
+        &self,
+        encrypted_request: set_access_key::EncryptedRequest,
+    ) -> Result<set_access_key::SetAccessKeyResult, sgx_status_t> {
+        ecalls::save_access_key(self.0.geteid(), encrypted_request)
+    }
+
     /// Issues an execution token using the provided payload
     pub fn issue_execution_token(
         &self,
@@ -61,9 +73,33 @@ where
 }
 
 pub mod ecalls {
+    //! Rust-friendly wrappers for the Edger8r-generated untrusted ECALL bridge functions.
+
     use auth_sys::ffi;
+    use rtc_types::enclave_messages::{ffi_set_access_key, set_access_key};
     use rtc_types::*;
     use sgx_types::*;
+
+    /// Implement [`super::RtcAuthEnclave::save_access_key`].
+    ///
+    /// This takes care of converting between the [`set_access_key`] and [`ffi_set_access_key`] types.
+    pub(crate) fn save_access_key(
+        eid: sgx_enclave_id_t,
+        encrypted_request: set_access_key::EncryptedRequest,
+    ) -> Result<set_access_key::SetAccessKeyResult, sgx_status_t> {
+        let mut retval = ffi_set_access_key::SetAccessKeyResult::default();
+        let encrypted_request: ffi_set_access_key::SetAccessKeyEncryptedRequest =
+            encrypted_request.into();
+
+        // Safety: Copies ffi_set_access_key::SetAccessKeyResult into retval,
+        // but only valid for sgx_status_t::SGX_SUCCESS.
+        let status = unsafe { ffi::rtc_auth_save_access_key(eid, &mut retval, encrypted_request) };
+
+        match status {
+            sgx_status_t::SGX_SUCCESS => Ok(set_access_key::SetAccessKeyResult::from(retval)),
+            err => Err(err),
+        }
+    }
 
     pub fn issue_execution_token(
         eid: sgx_enclave_id_t,
