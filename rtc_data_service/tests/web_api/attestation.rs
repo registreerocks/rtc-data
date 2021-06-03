@@ -19,7 +19,7 @@ async fn data_service_attestation_ok() {
 }
 
 async fn attestation_ok(uri_path: &str) {
-    let mut app = test::init_service(
+    let app = test::init_service(
         App::new()
             .data(
                 AuthEnclaveActor::new(Arc::new(EnclaveConfig {
@@ -43,7 +43,7 @@ async fn attestation_ok(uri_path: &str) {
     .await;
 
     let req = test::TestRequest::get().uri(uri_path).to_request();
-    let resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     insta::assert_debug_snapshot!(resp);
 

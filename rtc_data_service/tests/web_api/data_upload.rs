@@ -21,7 +21,7 @@ const CRYPTO_BOX_BOXZEROBYTES: usize = 16;
 #[actix_rt::test]
 async fn data_service_data_upload_ok() {
     // TODO: Split this test into re-usable components
-    let mut app = test::init_service(
+    let app = test::init_service(
         App::new()
             .data(
                 DataEnclaveActor::new(Arc::new(EnclaveConfig {
@@ -79,7 +79,7 @@ async fn data_service_data_upload_ok() {
         .set_json(&req_body)
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert!(resp.status().is_success());
 
