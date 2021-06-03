@@ -8,6 +8,11 @@ typedef struct ms_enclave_create_report_t {
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
+typedef struct ms_save_access_key_t {
+	SetAccessKeyResult ms_retval;
+	SetAccessKeyEncryptedRequest ms_encrypted_request;
+} ms_save_access_key_t;
+
 typedef struct ms_issue_execution_token_t {
 	IssueTokenResult ms_retval;
 	const uint8_t* ms_payload_ptr;
@@ -1225,6 +1230,16 @@ sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportRe
 	return status;
 }
 
+sgx_status_t rtc_auth_save_access_key(sgx_enclave_id_t eid, SetAccessKeyResult* retval, SetAccessKeyEncryptedRequest encrypted_request)
+{
+	sgx_status_t status;
+	ms_save_access_key_t ms;
+	ms.ms_encrypted_request = encrypted_request;
+	status = sgx_ecall(eid, 1, &ocall_table_rtc_auth, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
 sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used)
 {
 	sgx_status_t status;
@@ -1235,7 +1250,7 @@ sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResu
 	ms.ms_out_token_ptr = out_token_ptr;
 	ms.ms_out_token_capacity = out_token_capacity;
 	ms.ms_out_token_used = out_token_used;
-	status = sgx_ecall(eid, 1, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 2, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1247,14 +1262,14 @@ sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, con
 	ms.ms_id = id;
 	ms.ms_path = path;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 2, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 3, &ocall_table_rtc_auth, &ms);
 	return status;
 }
 
 sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
-	status = sgx_ecall(eid, 3, &ocall_table_rtc_auth, NULL);
+	status = sgx_ecall(eid, 4, &ocall_table_rtc_auth, NULL);
 	return status;
 }
 
@@ -1263,7 +1278,7 @@ sgx_status_t rtc_auth_session_request(sgx_enclave_id_t eid, SessionRequestResult
 	sgx_status_t status;
 	ms_session_request_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
-	status = sgx_ecall(eid, 4, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 5, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1274,7 +1289,7 @@ sgx_status_t rtc_auth_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult
 	ms_exchange_report_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
 	ms.ms_dh_msg2 = dh_msg2;
-	status = sgx_ecall(eid, 5, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 6, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1284,7 +1299,7 @@ sgx_status_t rtc_auth_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sg
 	sgx_status_t status;
 	ms_end_session_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
-	status = sgx_ecall(eid, 6, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 7, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }

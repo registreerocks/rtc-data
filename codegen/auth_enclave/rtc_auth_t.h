@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 CreateReportResult enclave_create_report(const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+SetAccessKeyResult save_access_key(SetAccessKeyEncryptedRequest encrypted_request);
 IssueTokenResult issue_execution_token(const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
