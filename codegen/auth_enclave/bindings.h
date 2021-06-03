@@ -16,6 +16,22 @@
 
 #define RESPONSE_SIZE 1
 
+typedef uint8_t RecommendedAesGcmIv[12];
+
+typedef struct EncryptedResponse {
+  sgx_aes_gcm_128bit_tag_t tag;
+  uint8_t ciphertext[RESPONSE_SIZE];
+  uint8_t aad[0];
+  RecommendedAesGcmIv nonce;
+} EncryptedResponse;
+
+typedef struct EncryptedRequest {
+  sgx_aes_gcm_128bit_tag_t tag;
+  uint8_t ciphertext[REQUEST_SIZE];
+  uint8_t aad[0];
+  RecommendedAesGcmIv nonce;
+} EncryptedRequest;
+
 /**
  * FFI safe result type that can be converted to and from a rust result.
  */
