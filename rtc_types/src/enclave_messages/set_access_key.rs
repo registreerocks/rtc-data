@@ -18,6 +18,7 @@ pub struct Response {
 }
 
 // Begin FFI types
+// (Keep these FFI type comments in sync between set_access_key and ffi_set_access_key, for diffing!)
 
 // FFI type: REQUEST_SIZE
 pub const REQUEST_SIZE: usize = mem::size_of::<ArchivedRequest>();

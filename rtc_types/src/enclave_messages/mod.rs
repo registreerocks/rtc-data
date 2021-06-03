@@ -11,4 +11,5 @@ pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: us
     pub nonce: RecommendedAesGcmIv,
 }
 
+pub mod ffi_set_access_key;
 pub mod set_access_key;

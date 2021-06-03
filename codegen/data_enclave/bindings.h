@@ -12,6 +12,10 @@
  */
 #define DATA_UPLOAD_RESPONSE_LEN (16 + (24 + 16))
 
+#define SET_ACCESS_KEY_REQUEST_SIZE 40
+
+#define SET_ACCESS_KEY_RESPONSE_SIZE 1
+
 typedef struct DataUploadResponse {
   uint8_t ciphertext[DATA_UPLOAD_RESPONSE_LEN];
   uint8_t nonce[24];

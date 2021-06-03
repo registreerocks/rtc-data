@@ -12,6 +12,10 @@
  */
 #define DATA_UPLOAD_RESPONSE_LEN (16 + (24 + 16))
 
+#define SET_ACCESS_KEY_REQUEST_SIZE 40
+
+#define SET_ACCESS_KEY_RESPONSE_SIZE 1
+
 /**
  * FFI safe result type that can be converted to and from a rust result.
  */
