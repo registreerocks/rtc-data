@@ -280,6 +280,7 @@ int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (cons
 #endif
 
 sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_auth_save_access_key(sgx_enclave_id_t eid, EncryptedResponse* retval, EncryptedRequest encrypted_request);
 sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid);
 sgx_status_t rtc_auth_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);

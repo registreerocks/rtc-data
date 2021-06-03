@@ -7,6 +7,9 @@ use rtc_types::*;
 use rtc_udh;
 use sgx_types::*;
 
+// XXX: We need the non-generic versions for `rtc_auth_enclave`'s [`enclave::ecalls::save_access_key`].
+use rtc_types::enclave_messages::ng_set_access_key::*;
+
 pub mod ffi {
     use super::*;
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

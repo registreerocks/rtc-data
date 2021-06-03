@@ -12,5 +12,7 @@ enclave {
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
                                               [out, isary]EnclaveHeldData enclave_data,
                                               [out]sgx_report_t* p_report);
+
+        public EncryptedResponse save_access_key(EncryptedRequest encrypted_request);
     };
 };
