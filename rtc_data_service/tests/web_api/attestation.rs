@@ -1,6 +1,6 @@
 use actix::Actor;
 use actix_web::{test, test::read_body, App};
-use insta;
+
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::handlers::*;

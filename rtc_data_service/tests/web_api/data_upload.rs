@@ -9,7 +9,6 @@ use rtc_data_service::data_enclave_actor::*;
 use rtc_data_service::data_upload::*;
 use rtc_uenclave::EnclaveConfig;
 use sgx_types::sgx_target_info_t;
-use sodalite;
 use uuid::Uuid;
 
 use std::{convert::TryInto, path::Path, sync::Arc};
