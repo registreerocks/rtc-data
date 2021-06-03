@@ -12,6 +12,10 @@
  */
 #define DATA_UPLOAD_RESPONSE_LEN (16 + (24 + 16))
 
+#define REQUEST_SIZE 40
+
+#define RESPONSE_SIZE 1
+
 /**
  * FFI safe result type that can be converted to and from a rust result.
  */

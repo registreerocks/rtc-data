@@ -40,6 +40,115 @@ pub mod set_access_key {
     pub type EncryptedResponse = EncryptedEnclaveMessage<RESPONSE_SIZE, 0>;
 }
 
+/// FIXME: Non-generic version of [`set_access_key`], with conversions.
+///
+/// This is a workaround for cbindgen not supporting const generics in structs yet,
+/// and should be removed once cbindgen implements that.
+///
+/// Tracking issue: <https://github.com/eqrion/cbindgen/issues/687>
+pub mod ng_set_access_key {
+    use sgx_types::sgx_aes_gcm_128bit_tag_t;
+
+    use super::RecommendedAesGcmIv;
+
+    use super::set_access_key;
+
+    // These sizes should match the ones computed in `set_access_key`.
+    // (The Rust compiler should report an error if these don't line up:
+    // this can be used to update these if `set_access_key` changes.)
+    pub const REQUEST_SIZE: usize = 40;
+    pub const RESPONSE_SIZE: usize = 1;
+
+    #[repr(C)]
+    pub struct EncryptedRequest {
+        pub tag: sgx_aes_gcm_128bit_tag_t,
+        pub ciphertext: [u8; REQUEST_SIZE],
+        pub aad: [u8; 0],
+        pub nonce: RecommendedAesGcmIv,
+    }
+
+    impl From<set_access_key::EncryptedRequest> for EncryptedRequest {
+        fn from(
+            set_access_key::EncryptedRequest {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            }: set_access_key::EncryptedRequest,
+        ) -> Self {
+            return EncryptedRequest {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            };
+        }
+    }
+
+    impl From<EncryptedRequest> for set_access_key::EncryptedRequest {
+        fn from(
+            EncryptedRequest {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            }: EncryptedRequest,
+        ) -> Self {
+            return set_access_key::EncryptedRequest {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            };
+        }
+    }
+
+    #[derive(Default)]
+    #[repr(C)]
+    pub struct EncryptedResponse {
+        pub tag: sgx_aes_gcm_128bit_tag_t,
+        pub ciphertext: [u8; RESPONSE_SIZE],
+        pub aad: [u8; 0],
+        pub nonce: RecommendedAesGcmIv,
+    }
+
+    impl From<set_access_key::EncryptedResponse> for EncryptedResponse {
+        fn from(
+            set_access_key::EncryptedResponse {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            }: set_access_key::EncryptedResponse,
+        ) -> Self {
+            return EncryptedResponse {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            };
+        }
+    }
+
+    impl From<EncryptedResponse> for set_access_key::EncryptedResponse {
+        fn from(
+            EncryptedResponse {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            }: EncryptedResponse,
+        ) -> Self {
+            return set_access_key::EncryptedResponse {
+                tag,
+                ciphertext,
+                aad,
+                nonce,
+            };
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use rkyv::{
