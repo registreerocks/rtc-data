@@ -1,12 +1,6 @@
-use actix::Actor;
-use actix_web::{test, test::read_body, App};
+use actix_web::test;
 
-use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
-use rtc_data_service::data_enclave_actor::DataEnclaveActor;
-use rtc_data_service::handlers::*;
-use rtc_uenclave::EnclaveConfig;
-
-use std::sync::Arc;
+use crate::helpers;
 
 #[actix_rt::test]
 async fn auth_service_attestation_ok() {
@@ -19,34 +13,13 @@ async fn data_service_attestation_ok() {
 }
 
 async fn attestation_ok(uri_path: &str) {
-    let app = test::init_service(
-        App::new()
-            .data(
-                AuthEnclaveActor::new(Arc::new(EnclaveConfig {
-                    lib_path: "/root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so"
-                        .to_string(),
-                    ..Default::default()
-                }))
-                .start(),
-            )
-            .data(
-                DataEnclaveActor::new(Arc::new(EnclaveConfig {
-                    lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
-                        .to_string(),
-                    ..Default::default()
-                }))
-                .start(),
-            )
-            .service(auth_enclave_attestation)
-            .service(data_enclave_attestation),
-    )
-    .await;
+    let app = helpers::init_rtc_service().await;
 
     let req = test::TestRequest::get().uri(uri_path).to_request();
     let resp = test::call_service(&app, req).await;
 
     insta::assert_debug_snapshot!(resp);
 
-    let body = read_body(resp).await;
+    let body = test::read_body(resp).await;
     insta::assert_debug_snapshot!(body);
 }

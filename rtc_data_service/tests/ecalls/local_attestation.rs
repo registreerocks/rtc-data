@@ -2,21 +2,12 @@
 
 use sgx_types::sgx_status_t;
 
-use rtc_uenclave::EnclaveConfig;
+use crate::helpers;
 
 #[test]
 fn test_local_attestation_success() {
-    let auth_enclave = rtc_uenclave::RtcAuthEnclave::init(EnclaveConfig {
-        lib_path: "/root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so".to_string(),
-        ..Default::default()
-    })
-    .unwrap();
-
-    let data_enclave = rtc_uenclave::RtcDataEnclave::init(EnclaveConfig {
-        lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
-        ..Default::default()
-    })
-    .unwrap();
+    let auth_enclave = helpers::init_auth_enclave();
+    let data_enclave = helpers::init_data_enclave();
 
     let res = data_enclave.local_attestation(auth_enclave.geteid());
     assert_eq!(res, sgx_status_t::SGX_SUCCESS);

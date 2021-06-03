@@ -1,31 +1,15 @@
 //! Tests for [`rtc_data_service::exec_token`]
 
-use std::sync::Arc;
-
-use actix::Actor;
 use actix_web::web::Bytes;
-use actix_web::App;
 use actix_web::{http, test};
 
-use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::exec_token;
+
+use crate::helpers;
 
 #[actix_rt::test]
 async fn data_service_exec_token_ok() {
-    // TODO: Split this test into re-usable components
-    let app = test::init_service(
-        App::new()
-            .data(
-                DataEnclaveActor::new(Arc::new(rtc_uenclave::EnclaveConfig {
-                    lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
-                        .to_string(),
-                    ..Default::default()
-                }))
-                .start(),
-            )
-            .service(exec_token::req_exec_token),
-    )
-    .await;
+    let app = helpers::init_rtc_service().await;
 
     // Call the endpoint
 
