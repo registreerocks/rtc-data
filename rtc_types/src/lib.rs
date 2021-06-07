@@ -1,3 +1,7 @@
+// Used by: rtc_types::binhelpers::rkyv_write_const
+#![allow(incomplete_features)]
+#![feature(const_generics)]
+#![feature(const_evaluatable_checked)]
 // TODO: Document
 #![cfg_attr(feature = "teaclave_sgx", no_std)]
 #[cfg(feature = "teaclave_sgx")]
@@ -25,6 +29,7 @@ pub use exec_token::*;
 mod ecall_result;
 pub use ecall_result::*;
 
+mod binhelpers;
 pub mod enclave_messages;
 
 #[repr(C)]
