@@ -6,6 +6,10 @@ use rkyv::{
         serializers::{BufferSerializer, BufferSerializerError},
         Serializer,
     },
+    validation::{
+        check_archived_root_with_context,
+        validators::{ArchiveBoundsError, ArchiveBoundsValidator},
+    },
     Aligned, Archive, Deserialize, Infallible, Serialize, Unreachable,
 };
 
@@ -80,3 +84,14 @@ mod tests {
         Ok(())
     }
 }
+
+pub fn rkyv_read_archived<'a, T>(bytes: &[u8]) -> Result<&'a T::Archived, ArchiveBoundsError>
+where
+    T: Archive,
+{
+    let context = &mut ArchiveBoundsValidator { bytes };
+    let archived = check_archived_root_with_context(bytes, context)?;
+    Ok(archived)
+}
+
+// pub fn rkyv_read_deserialize() {}
