@@ -7,6 +7,7 @@ pub mod app_config;
 pub mod auth_enclave_actor;
 pub mod data_enclave_actor;
 pub mod data_upload;
+pub mod exec;
 pub mod exec_enclave_actor;
 pub mod exec_token;
 pub mod handlers;
