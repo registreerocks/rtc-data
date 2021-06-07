@@ -25,6 +25,8 @@ pub use exec_token::*;
 mod ecall_result;
 pub use ecall_result::*;
 
+pub mod byte_formats;
+
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct EncryptedMessage {
