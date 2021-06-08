@@ -15,7 +15,7 @@ use rtc_data_service::data_upload::upload_file;
 use rtc_data_service::exec_token::req_exec_token;
 use rtc_data_service::handlers;
 
-/// Initialise a data enclave for testing.
+/// Initialise an auth enclave for testing.
 pub(crate) fn init_auth_enclave() -> RtcAuthEnclave<EnclaveConfig> {
     RtcAuthEnclave::init(EnclaveConfig {
         lib_path: "/root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so".to_string(),
