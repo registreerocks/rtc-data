@@ -12,6 +12,7 @@ use rtc_uenclave::{EnclaveConfig, RtcAuthEnclave, RtcDataEnclave};
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::upload_file;
+use rtc_data_service::exec_enclave_actor::ExecEnclaveActor;
 use rtc_data_service::exec_token::req_exec_token;
 use rtc_data_service::handlers;
 
@@ -40,6 +41,7 @@ pub(crate) async fn init_rtc_service() -> impl types::WebService {
     let app = App::new()
         .data(init_auth_enclave_actor().start())
         .data(init_data_enclave_actor().start())
+        .data(init_exec_enclave_actor().start())
         .service(handlers::auth_enclave_attestation)
         .service(handlers::data_enclave_attestation)
         .service(upload_file)
@@ -57,6 +59,13 @@ fn init_auth_enclave_actor() -> AuthEnclaveActor {
 fn init_data_enclave_actor() -> DataEnclaveActor {
     DataEnclaveActor::new(Arc::new(EnclaveConfig {
         lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
+        ..Default::default()
+    }))
+}
+
+fn init_exec_enclave_actor() -> ExecEnclaveActor {
+    ExecEnclaveActor::new(Arc::new(EnclaveConfig {
+        lib_path: "/root/rtc-data/rtc_exec_enclave/build/bin/enclave.signed.so".to_string(),
         ..Default::default()
     }))
 }
