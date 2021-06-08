@@ -7,6 +7,7 @@ members = [
     "rtc_uenclave/data-ocalls",
     "rtc_uenclave/data-sys",
     "rtc_uenclave/auth-sys",
+    "rtc_uenclave/exec-sys",
     "rtc_uenclave/rtc-ecalls",
     "rtc_udh",
 ]

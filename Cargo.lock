@@ -715,6 +715,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "exec-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "rtc-ecalls",
+ "rtc_types",
+ "rtc_udh",
+ "sgx_types",
+ "sgx_urts",
+]
+
+[[package]]
 name = "flate2"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1696,6 +1709,7 @@ dependencies = [
  "auth-sys",
  "base64",
  "data-sys",
+ "exec-sys",
  "mockall",
  "mockall_double",
  "num-bigint 0.4.0",

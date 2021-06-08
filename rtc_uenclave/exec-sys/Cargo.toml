@@ -1,0 +1,24 @@
+[package]
+name = "exec-sys"
+version = "0.1.0"
+authors = ["Registree <dev@registree.io>"]
+edition = "2018"
+links = "rtc_exec_u"
+
+[lib]
+crate-type = ["rlib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# See "Pinning SGX dependencies" in HACKING.md
+[dependencies]
+sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }
+sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda" }
+
+rtc_types = { path = "../../rtc_types" }
+rtc-ecalls = { path = "../rtc-ecalls" }
+rtc_udh = { path = "../../rtc_udh" }
+
+[build-dependencies]
+cc = "1.0.67"
+bindgen = "0.58.1"

@@ -9,6 +9,8 @@ use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::*;
+use rtc_data_service::exec::request_execution;
+use rtc_data_service::exec_enclave_actor::ExecEnclaveActor;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::handlers::*;
 
@@ -27,6 +29,7 @@ async fn main() -> std::io::Result<()> {
     let config = AppConfig::new().expect("Server config expected");
     let data_enclave_config = Arc::new(config.data_enclave.clone());
     let auth_enclave_config = Arc::new(config.auth_enclave.clone());
+    let exec_enclave_config = Arc::new(config.exec_enclave.clone());
     let allowed_origins = config.http_server.allowed_origins;
 
     let enclave_arbiter = Arbiter::new();
@@ -45,6 +48,11 @@ async fn main() -> std::io::Result<()> {
         move |_| AuthEnclaveActor::new(auth_enclave_config.clone()),
     ));
 
+    let exec_enclave_addr = Data::new(Supervisor::start_in_arbiter(
+        &enclave_arbiter.handle(),
+        move |_| ExecEnclaveActor::new(exec_enclave_config.clone()),
+    ));
+
     println!(
         "Starting server at http://{}:{}/",
         config.http_server.host, config.http_server.port
@@ -56,11 +64,13 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(data_enclave_addr.clone())
             .app_data(auth_enclave_addr.clone())
+            .app_data(exec_enclave_addr.clone())
             .route("/", web::get().to(server_status))
             .service(auth_enclave_attestation)
             .service(data_enclave_attestation)
             .service(upload_file)
-            .service(req_exec_token);
+            .service(req_exec_token)
+            .service(request_execution);
 
         app
     })
