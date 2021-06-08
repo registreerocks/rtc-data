@@ -42,11 +42,7 @@ pub mod set_access_key {
 
 #[cfg(test)]
 mod test {
-    use rkyv::{
-        archived_root,
-        ser::{serializers::BufferSerializer, Serializer},
-        Aligned, Deserialize, Infallible,
-    };
+    use crate::byte_formats::rkyv_format;
 
     use super::*;
 
@@ -57,11 +53,8 @@ mod test {
             access_key: [2u8; 24],
         };
 
-        let mut serializer = BufferSerializer::new(Aligned([0u8; set_access_key::REQUEST_SIZE]));
-        serializer.serialize_value(&request.clone()).unwrap();
-        let buf = serializer.into_inner();
-        let archived = unsafe { archived_root::<set_access_key::Request>(buf.as_ref()) };
-        let deserialized = archived.deserialize(&mut Infallible).unwrap();
+        let buf = rkyv_format::write_array(&request).unwrap();
+        let deserialized = unsafe { rkyv_format::read_array(&buf) };
 
         assert_eq!(
             request, deserialized,
