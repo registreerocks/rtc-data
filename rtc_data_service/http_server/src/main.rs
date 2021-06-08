@@ -9,6 +9,7 @@ use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::*;
+use rtc_data_service::exec::request_execution;
 use rtc_data_service::exec_enclave_actor::ExecEnclaveActor;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::handlers::*;
@@ -68,7 +69,8 @@ async fn main() -> std::io::Result<()> {
             .service(auth_enclave_attestation)
             .service(data_enclave_attestation)
             .service(upload_file)
-            .service(req_exec_token);
+            .service(req_exec_token)
+            .service(request_execution);
 
         app
     })
