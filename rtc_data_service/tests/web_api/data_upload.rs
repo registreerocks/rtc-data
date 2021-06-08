@@ -1,18 +1,16 @@
 //! Tests for [`rtc_data_service::data_upload`]
 
-use actix::Actor;
-use actix_web::{
-    test::{self, read_body},
-    App,
-};
-use rtc_data_service::data_enclave_actor::*;
-use rtc_data_service::data_upload::*;
-use rtc_uenclave::EnclaveConfig;
+use std::convert::TryInto;
+use std::path::Path;
+
 use sgx_types::sgx_target_info_t;
-use sodalite;
+
+use actix_web::test;
 use uuid::Uuid;
 
-use std::{convert::TryInto, path::Path, sync::Arc};
+use rtc_data_service::data_upload::models;
+
+use crate::helpers;
 
 // See rtc_tenclave/src/crypto.rs
 const CRYPTO_BOX_ZEROBYTES: usize = 32;
@@ -21,28 +19,11 @@ const CRYPTO_BOX_BOXZEROBYTES: usize = 16;
 /// Upload some data, decrypt and check the result.
 #[actix_rt::test]
 async fn data_service_data_upload_ok() {
-    // TODO: Split this test into re-usable components
-    let mut app = test::init_service(
-        App::new()
-            .data(
-                DataEnclaveActor::new(Arc::new(EnclaveConfig {
-                    lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so"
-                        .to_string(),
-                    ..Default::default()
-                }))
-                .start(),
-            )
-            .service(upload_file),
-    )
-    .await;
+    let app = helpers::init_rtc_service().await;
 
     // TODO: Add a test that can run inside of the enclave and use the JWT token to get
     // the enclave key
-    let enclave = rtc_uenclave::RtcDataEnclave::init(EnclaveConfig {
-        lib_path: "/root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so".to_string(),
-        ..Default::default()
-    })
-    .unwrap();
+    let enclave = helpers::init_data_enclave();
 
     let enclave_pubkey = enclave
         .create_report(&sgx_target_info_t::default())
@@ -80,11 +61,11 @@ async fn data_service_data_upload_ok() {
         .set_json(&req_body)
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert!(resp.status().is_success());
 
-    let body: models::ResponseBody = serde_json::from_slice(&read_body(resp).await).unwrap();
+    let body: models::ResponseBody = serde_json::from_slice(&test::read_body(resp).await).unwrap();
 
     // NOTE: re-add padding since sodalite supports the C-style nacl api
     let mut m = vec![0_u8; body.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];

@@ -39,6 +39,9 @@ insta = "1.7.1"
 sodalite = "0.4.0"
 uuid = "0.8.2"
 
+# Only for type name references. (This should match the version used by actix-web.)
+actix-http = "3.0.0-beta.6"
+
 [features]
 test = []
 

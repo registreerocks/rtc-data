@@ -1641,6 +1641,7 @@ name = "rtc_data_service"
 version = "0.0.1"
 dependencies = [
  "actix",
+ "actix-http",
  "actix-rt",
  "actix-web",
  "anyhow",
