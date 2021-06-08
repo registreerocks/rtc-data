@@ -45,6 +45,7 @@ pub(crate) async fn init_rtc_service() -> impl types::WebService {
         .data(init_exec_enclave_actor().start())
         .service(handlers::auth_enclave_attestation)
         .service(handlers::data_enclave_attestation)
+        .service(handlers::exec_enclave_attestation)
         .service(upload_file)
         .service(req_exec_token)
         .service(request_execution);

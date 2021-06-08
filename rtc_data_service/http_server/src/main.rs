@@ -68,6 +68,7 @@ async fn main() -> std::io::Result<()> {
             .route("/", web::get().to(server_status))
             .service(auth_enclave_attestation)
             .service(data_enclave_attestation)
+            .service(exec_enclave_attestation)
             .service(upload_file)
             .service(req_exec_token)
             .service(request_execution);

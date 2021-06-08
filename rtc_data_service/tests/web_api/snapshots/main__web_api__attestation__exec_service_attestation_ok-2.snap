@@ -1,0 +1,6 @@
+---
+source: rtc_data_service/tests/web_api/attestation.rs
+expression: body
+
+---
+b"Failed to get quote: SGX_QL_INTERFACE_UNAVAILABLE"
