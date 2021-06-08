@@ -12,6 +12,11 @@ async fn data_service_attestation_ok() {
     attestation_ok("/data/attest").await;
 }
 
+#[actix_rt::test]
+async fn exec_service_attestation_ok() {
+    attestation_ok("/exec/attest").await;
+}
+
 async fn attestation_ok(uri_path: &str) {
     let app = helpers::init_rtc_service().await;
 
