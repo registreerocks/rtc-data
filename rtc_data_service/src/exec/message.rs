@@ -21,6 +21,6 @@ impl Handler<RequestExecutionMessage> for ExecEnclaveActor {
     type Result = <RequestExecutionMessage as Message>::Result;
 
     fn handle(&mut self, _msg: RequestExecutionMessage, _ctx: &mut Self::Context) -> Self::Result {
-        todo!()
+        Ok(()) // TODO
     }
 }

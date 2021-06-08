@@ -46,7 +46,7 @@ pub mod models {
 
     impl From<RequestExecutionResponse> for ResponseBody {
         fn from(_resp: RequestExecutionResponse) -> Self {
-            todo!()
+            ResponseBody {} // TODO
         }
     }
 
@@ -60,8 +60,11 @@ pub mod models {
     impl TryFrom<RequestBody> for RequestExecutionMessage {
         type Error = ValidationError;
 
-        fn try_from(_value: RequestBody) -> Result<Self, Self::Error> {
-            todo!()
+        fn try_from(request_body: RequestBody) -> Result<Self, Self::Error> {
+            Ok(RequestExecutionMessage {
+                metadata: (), // TODO
+                payload: request_body.payload.into_boxed_slice(),
+            })
         }
     }
 }
