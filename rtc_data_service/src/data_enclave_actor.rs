@@ -1,7 +1,7 @@
 //! [`Actor`] implementation for [`RtcDataEnclave`]
 //!
-//! TODO: This module currently mirrors [`super::auth_enclave_actor`], and should be kept in sync with it
-//!       until we factor out the shared code.
+//! TODO: The `*_enclave_actor` modules currently mirror each other,
+//!       and should be kept in sync until we factor out the shared code.
 
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcDataEnclave};
