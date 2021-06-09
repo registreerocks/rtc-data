@@ -414,6 +414,7 @@ dependencies = [
  "cc",
  "rtc_tenclave",
  "rtc_types",
+ "sgx_tcrypto",
  "sgx_tstd",
  "sgx_types",
 ]
