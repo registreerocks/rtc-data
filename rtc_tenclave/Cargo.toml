@@ -63,6 +63,7 @@ ring = { version = "0.17.0-alpha.8", default-features = false }
 sodalite = { version = "0.4.0", default-features = false }
 cfg-if = "1.0.0"
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+rkyv = { version = "0.6.6", default_features = false, features = ["const_generics", "strict"] }
 
 [dev-dependencies]
 thiserror_std = { package = "thiserror", version = "1.0.9" }
