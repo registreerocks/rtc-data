@@ -26,7 +26,7 @@ pub mod set_access_key {
         pub access_key: [u8; 24], // [u8; ACCESS_KEY_BYTES]
     }
 
-    pub const REQUEST_SIZE: usize = mem::size_of::<<Request as Archive>::Archived>();
+    pub const REQUEST_SIZE: usize = mem::size_of::<ArchivedRequest>();
 
     pub type EncryptedRequest = EncryptedEnclaveMessage<REQUEST_SIZE, 0>;
 
@@ -35,7 +35,7 @@ pub mod set_access_key {
         pub success: bool,
     }
 
-    pub const RESPONSE_SIZE: usize = mem::size_of::<<Response as Archive>::Archived>();
+    pub const RESPONSE_SIZE: usize = mem::size_of::<ArchivedResponse>();
 
     pub type EncryptedResponse = EncryptedEnclaveMessage<RESPONSE_SIZE, 0>;
 }
