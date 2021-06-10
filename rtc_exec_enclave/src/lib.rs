@@ -31,6 +31,9 @@ pub fn request_execution(token: Token, _params: ()) -> Result<Box<[u8]>, ()> {
     let data = get_data(&token);
 
     // as_ptr() does not take ownership, so the data will be dropped at the end of this function
+    // Safety:
+    // As long as `data` is valid, this should be safe.
+    // Memory will be cleaned up when `data` goes out of scope, which will be after the unsafe function call.
     let result = unsafe { exec_module.call(data.as_ptr(), data.len()) };
 
     match result {
