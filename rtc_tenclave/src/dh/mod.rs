@@ -1,6 +1,7 @@
 //! Support for establishing secure local inter-enclave sessions using [`sgx_tdh`].
 
 mod protected_channel;
+pub mod sealing;
 mod sessions;
 mod types;
 
