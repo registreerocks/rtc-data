@@ -18,3 +18,5 @@
 //!
 //!    - `array` for working with constant-sized arrays (`[u8; ?]`)
 //!    - `slice` for working with variable-sized slices (`[u8]`)
+
+pub mod rkyv_format;

@@ -1,3 +1,7 @@
+// Used by rtc_types::byte_formats::rkyv_format
+#![allow(incomplete_features)]
+#![feature(const_generics)]
+#![feature(const_evaluatable_checked)]
 // TODO: Document
 #![cfg_attr(feature = "teaclave_sgx", no_std)]
 #[cfg(feature = "teaclave_sgx")]
