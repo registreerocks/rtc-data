@@ -17,9 +17,16 @@ teaclave_sgx = ["thiserror_sgx", "sgx_tstd"]
 [dependencies]
 sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["extra_traits"] }
 
+# no_std libraries
+rkyv = { version = "0.6.6", default_features = false, features = ["const_generics", "strict"] }
+
 # default
 thiserror = { version = "1.0.24", optional = true}
 
 # teaclave_sgx
 thiserror_sgx = { git = "https://github.com/mesalock-linux/thiserror-sgx.git", package = "thiserror", optional = true }
 sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda", features = ["backtrace"], optional = true }
+
+[dev-dependencies]
+proptest = "1.0.0"
+proptest-derive = "0.3.0"
