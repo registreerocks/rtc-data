@@ -1,5 +1,6 @@
 #![crate_type = "staticlib"]
 #![no_std]
+#![feature(array_chunks)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(clippy::mem_forget)]
 
