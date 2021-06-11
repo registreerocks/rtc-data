@@ -1,4 +1,11 @@
-use sgx_types::sgx_aes_gcm_128bit_tag_t;
+use core::mem;
+
+use rkyv::Archive;
+use sgx_types::{sgx_aes_gcm_128bit_tag_t, sgx_enclave_id_t};
+
+/// Size of [`Archive`] of [`sgx_enclave_id_t`].
+pub const ARCHIVED_ENCLAVE_ID_SIZE: usize =
+    mem::size_of::<<sgx_enclave_id_t as Archive>::Archived>();
 
 // NIST AES-GCM recommended IV size
 pub type RecommendedAesGcmIv = [u8; 12];
