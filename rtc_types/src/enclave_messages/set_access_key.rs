@@ -12,18 +12,26 @@ pub struct Request {
     pub access_key: [u8; 24], // [u8; ACCESS_KEY_BYTES]
 }
 
-pub const REQUEST_SIZE: usize = mem::size_of::<ArchivedRequest>();
-
-pub type EncryptedRequest = EncryptedEnclaveMessage<REQUEST_SIZE, 0>;
-
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 pub struct Response {
     pub success: bool,
 }
 
+// Begin FFI types
+
+// FFI type: REQUEST_SIZE
+pub const REQUEST_SIZE: usize = mem::size_of::<ArchivedRequest>();
+
+// FFI type: EncryptedRequest
+pub type EncryptedRequest = EncryptedEnclaveMessage<REQUEST_SIZE, 0>;
+
+// FFI type: RESPONSE_SIZE
 pub const RESPONSE_SIZE: usize = mem::size_of::<ArchivedResponse>();
 
+// FFI type: EncryptedResponse
 pub type EncryptedResponse = EncryptedEnclaveMessage<RESPONSE_SIZE, 0>;
+
+// End FFI types
 
 #[cfg(test)]
 mod test {
