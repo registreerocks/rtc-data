@@ -21,9 +21,15 @@ Use `docker-compose run dev` to start the dev container. This will put you in an
 
 To run the application inside of the container, do `cd rtc-data` and then `./runall.sh`
 
-## Running tests
+## Helper scripts
 
-Helper script:
+Check, build, and test everything:
+
+```shell
+./all.sh
+```
+
+Run tests :
 
 ```shell
 ./runtests.sh
