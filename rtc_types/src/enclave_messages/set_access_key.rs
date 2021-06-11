@@ -24,7 +24,7 @@ pub struct Response {
 pub const REQUEST_SIZE: usize = mem::size_of::<ArchivedRequest>();
 
 // FFI type: EncryptedRequest
-pub type EncryptedRequest = EncryptedEnclaveMessage<REQUEST_SIZE, 0>;
+pub type EncryptedRequest = EncryptedEnclaveMessage<REQUEST_SIZE, ARCHIVED_ENCLAVE_ID_SIZE>;
 
 // FFI type: RESPONSE_SIZE
 pub const RESPONSE_SIZE: usize = mem::size_of::<ArchivedResponse>();

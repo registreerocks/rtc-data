@@ -13,6 +13,9 @@ use sgx_types::sgx_aes_gcm_128bit_tag_t;
 
 use super::{set_access_key, RecommendedAesGcmIv};
 
+// See enclave_messages::ARCHIVED_ENCLAVE_ID_SIZE
+pub const ARCHIVED_ENCLAVE_ID_SIZE: usize = 8;
+
 // Begin FFI types
 // (Keep these FFI type comments in sync between set_access_key and ffi_set_access_key, for diffing!)
 
@@ -24,7 +27,7 @@ pub const SET_ACCESS_KEY_REQUEST_SIZE: usize = 40;
 pub struct SetAccessKeyEncryptedRequest {
     pub tag: sgx_aes_gcm_128bit_tag_t,
     pub ciphertext: [u8; SET_ACCESS_KEY_REQUEST_SIZE],
-    pub aad: [u8; 0],
+    pub aad: [u8; ARCHIVED_ENCLAVE_ID_SIZE],
     pub nonce: RecommendedAesGcmIv,
 }
 
