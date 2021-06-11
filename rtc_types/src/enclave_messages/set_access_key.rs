@@ -2,7 +2,7 @@ use core::mem;
 
 use rkyv::{Archive, Deserialize, Serialize};
 
-use crate::enclave_messages::EncryptedEnclaveMessage;
+use crate::enclave_messages::{EncryptedEnclaveMessage, ARCHIVED_ENCLAVE_ID_SIZE};
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq, Clone)]
 pub struct Request {

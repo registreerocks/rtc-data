@@ -11,5 +11,15 @@ pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: us
     pub nonce: RecommendedAesGcmIv,
 }
 
-pub mod ffi_set_access_key;
+/// XXX: Ignore this module to work around cbindgen generic type handling
+///
+/// Issues:
+///
+/// * <https://github.com/eqrion/cbindgen/issues/7>
+/// * <https://github.com/eqrion/cbindgen/issues/286>
+/// * <https://github.com/eqrion/cbindgen/issues/573>
+///
+/// cbindgen:ignore
 pub mod set_access_key;
+
+pub mod ffi_set_access_key;
