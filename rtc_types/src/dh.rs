@@ -1,5 +1,6 @@
-use crate::EcallResult;
 use sgx_types::*;
+
+use crate::EcallResult;
 
 pub type SessionRequestResult = EcallResult<sgx_dh_msg1_t, sgx_status_t>;
 pub type ExchangeReportResult = EcallResult<sgx_dh_msg3_t, sgx_status_t>;

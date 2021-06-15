@@ -12,12 +12,11 @@ extern crate thiserror;
 #[cfg(feature = "teaclave_sgx")]
 extern crate thiserror_sgx as thiserror;
 
+use std::boxed::Box;
 use std::fmt::Display;
-use thiserror::Error;
 
 use sgx_types::*;
-
-use std::boxed::Box;
+use thiserror::Error;
 
 mod data_upload;
 pub mod dh;
