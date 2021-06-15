@@ -1,5 +1,6 @@
-use sgx_types::*;
 use std::boxed::Box;
+
+use sgx_types::*;
 use uuid::Uuid;
 
 extern "C" {
