@@ -75,6 +75,7 @@ once_cell_std = { package = "once_cell", version="1.7.2" }
 
 # Test-only dependencies
 proptest = "1.0.0"
+proptest-derive = "0.3.0"
 tempfile = "3.2.0"
 mockall = { version = "0.9.1", features = ["nightly"] }
 
