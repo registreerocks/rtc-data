@@ -4,7 +4,6 @@ use mockall::automock;
 use mockall::mock;
 #[cfg(test)]
 use mockall::predicate::*;
-
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::*;
 use sgx_types::*;
@@ -68,8 +67,9 @@ impl<T: RtcEnclaveEcalls> RtcEcalls for T {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use rtc_ecalls::MockRtcEnclaveEcalls;
+
+    use super::*;
 
     #[test]
     fn it_works() {

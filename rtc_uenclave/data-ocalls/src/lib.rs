@@ -1,12 +1,11 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
-use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::slice;
-use uuid::Uuid;
+use std::{fs, slice};
 
 use sgx_types::*;
+use uuid::Uuid;
 
 /// Saves a blob of data received from the enclave
 ///

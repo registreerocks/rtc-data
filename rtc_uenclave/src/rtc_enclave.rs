@@ -1,8 +1,5 @@
 use std::borrow::Borrow;
 
-use crate::{
-    azure_attestation::AttestSgxEnclaveRequest, ecalls::RtcEcalls, http_client::HttpRequestError,
-};
 use ecalls::EnclaveReportResult;
 #[cfg(test)]
 use mockall::predicate::*;
@@ -12,22 +9,22 @@ use mockall_double::double;
 use rtc_udh::{self, ResponderSys};
 use serde::Deserialize;
 use sgx_types::*;
-use thiserror::Error;
-
-use crate::{ecalls, CreateReportError};
-
-#[double]
-use crate::quote::QuotingEnclave;
-
-#[cfg(test)]
-pub use self::MockSgxEnclave as SgxEnclave;
 #[cfg(not(test))]
 pub use sgx_urts::SgxEnclave;
+use thiserror::Error;
 
 #[cfg(test)]
 use self::MockAzureAttestationClient as AzureAttestationClient;
+#[cfg(test)]
+pub use self::MockSgxEnclave as SgxEnclave;
+use crate::azure_attestation::AttestSgxEnclaveRequest;
 #[cfg(not(test))]
 use crate::azure_attestation::AzureAttestationClient;
+use crate::ecalls::RtcEcalls;
+use crate::http_client::HttpRequestError;
+#[double]
+use crate::quote::QuotingEnclave;
+use crate::{ecalls, CreateReportError};
 
 /// Configuration for a RtcEnclave
 #[derive(Default, Clone, Deserialize, Debug)]
@@ -206,19 +203,24 @@ mock! {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::azure_attestation::AttestationResponse;
+    use std::convert::TryInto;
+
     use num_bigint;
     use num_traits::FromPrimitive;
     use proptest::collection::size_range;
     use proptest::prelude::*;
     use rtc_ecalls::MockRtcEnclaveEcalls;
     use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
-    use rtc_types::CreateReportResult;
-    use rtc_types::EnclaveHeldData;
-    use rtc_types::{ENCLAVE_HELD_DATA_SIZE, RSA3072_PKCS8_DER_SIZE};
+    use rtc_types::{
+        CreateReportResult,
+        EnclaveHeldData,
+        ENCLAVE_HELD_DATA_SIZE,
+        RSA3072_PKCS8_DER_SIZE,
+    };
     use simple_asn1::{to_der, ASN1Block, BigInt, BigUint, OID};
-    use std::convert::TryInto;
+
+    use super::*;
+    use crate::azure_attestation::AttestationResponse;
 
     mock! {
         TEcalls {}

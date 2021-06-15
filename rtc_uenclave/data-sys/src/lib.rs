@@ -5,14 +5,13 @@
 
 #[allow(unused_imports)]
 use data_ocalls;
-#[allow(unused_imports)]
-use sgx_urts;
-
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::dh::*;
 use rtc_types::*;
 use rtc_udh;
 use sgx_types::*;
+#[allow(unused_imports)]
+use sgx_urts;
 
 pub mod ffi {
     use super::*;

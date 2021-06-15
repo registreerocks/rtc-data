@@ -1,12 +1,13 @@
 // TODO: Change some of this to use https://github.com/Azure/azure-sdk-for-rust
 // once the api have been stabilized
 
-use crate::http_client::HttpClient;
-use crate::http_client::HttpRequestError;
+use std::time::Duration;
+
 use base64::{self, encode_config};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use ureq::AgentBuilder;
+
+use crate::http_client::{HttpClient, HttpRequestError};
 
 // Types from: https://docs.microsoft.com/en-us/rest/api/attestation/attestation/attestsgxenclave#definitions
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Debug)]
@@ -80,10 +81,10 @@ pub(crate) struct AttestationResponse {
 
 #[cfg(test)]
 mod test {
-    use crate::http_client::MockHttpClient;
     use base64::decode_config;
 
     use super::*;
+    use crate::http_client::MockHttpClient;
 
     #[test]
     fn from_quote_works() {
