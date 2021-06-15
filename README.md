@@ -21,30 +21,16 @@ Use `docker-compose run dev` to start the dev container. This will put you in an
 
 To run the application inside of the container, do `cd rtc-data` and then `./runall.sh`
 
-## Running tests
+## Helper scripts
 
-Helper script:
+Check, build, and test everything:
+
+```shell
+./all.sh
+```
+
+Run tests :
 
 ```shell
 ./runtests.sh
 ```
-
-Currently, some tests with static mocks can intermittently fail due to test thread concurrency.
-(For example, see test `rtc_enclave::tests::dcap_azure_attestation_works`.)
-
-To avoid this, run:
-
-```shell
-cargo test -- --test-threads=1
-```
-
-or set:
-
-```shell
-export RUST_TEST_THREADS=1
-```
-
-TODO(Pi): We should probably configure single-threading by default in affected crates
-once `cargo test` implements this:
-
-* [Enable specifying --test-threads in Cargo.toml #8430](https://github.com/rust-lang/cargo/issues/8430)
