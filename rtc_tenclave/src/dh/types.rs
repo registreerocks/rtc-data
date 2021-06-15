@@ -1,8 +1,7 @@
-use secrecy::{Secret, Zeroize};
-use sgx_types::*;
-
 #[cfg(test)]
 use mockall::automock;
+use secrecy::{Secret, Zeroize};
+use sgx_types::*;
 
 pub struct AlignedKey(sgx_align_key_128bit_t);
 
@@ -53,9 +52,10 @@ pub trait RtcDhResponder {
 
 #[cfg(not(test))]
 pub mod impl_sgx {
-    use super::*;
     use sgx_tdh::{SgxDhInitiator, SgxDhMsg3, SgxDhResponder};
     use sgx_tstd::mem;
+
+    use super::*;
 
     impl RtcDhInitiator for SgxDhInitiator {
         fn init_session() -> Self {

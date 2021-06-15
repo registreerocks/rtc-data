@@ -1,10 +1,9 @@
 //! Support for inspecting [`KvStore`] instances (for testing and debugging)
 
-#[cfg(not(test))]
-use std::prelude::v1::*;
-
 use std::borrow::ToOwned;
 use std::collections::HashMap;
+#[cfg(not(test))]
+use std::prelude::v1::*;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;

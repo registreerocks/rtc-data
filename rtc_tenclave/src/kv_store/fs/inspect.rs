@@ -5,17 +5,16 @@ use std::ffi::OsStr;
 use std::fs::DirEntry;
 use std::io;
 use std::iter::Iterator;
+use std::path::PathBuf;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use super::std_filer::StdFiler;
+use super::FsStore;
 use crate::kv_store::fs::decode_from_fs_safe;
 use crate::kv_store::inspect::InspectStore;
 use crate::kv_store::KvStore;
-
-use super::std_filer::StdFiler;
-use super::FsStore;
-use std::path::PathBuf;
 
 impl<V> InspectStore<V> for FsStore<StdFiler>
 where

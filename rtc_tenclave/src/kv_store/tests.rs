@@ -1,15 +1,15 @@
 //! Tests for [`rtc_tenclave::kv_store`]
 
+use std::collections::HashMap;
 #[cfg(not(test))]
 use std::prelude::v1::*;
-
-use std::collections::HashMap;
 
 use proptest::prelude::*;
 use proptest::test_runner::TestCaseResult;
 use tempfile::TempDir;
 
-use super::fs::{std_filer::StdFiler, FsStore};
+use super::fs::std_filer::StdFiler;
+use super::fs::FsStore;
 use super::in_memory::{InMemoryJsonStore, InMemoryStore};
 use super::inspect::InspectStore;
 use super::KvStore;

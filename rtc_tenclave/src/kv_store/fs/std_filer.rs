@@ -1,13 +1,9 @@
 //! [`File`] support
 
-use std::prelude::v1::Vec;
-
 use std::io::ErrorKind::NotFound;
-use std::io::Result;
-use std::io::Write;
-
+use std::io::{Result, Write};
 use std::path::Path;
-
+use std::prelude::v1::Vec;
 // Under sgx_tstd, fs needs the std::untrusted prefix:
 #[cfg(not(test))]
 use std::untrusted::{fs, fs::File};

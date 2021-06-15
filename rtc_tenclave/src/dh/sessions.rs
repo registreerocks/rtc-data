@@ -2,27 +2,27 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::prelude::v1::*;
 use std::sync::Arc;
+#[cfg(test)]
+use std::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use once_cell::sync::OnceCell;
 use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
 use rtc_types::enclave_messages::errors::AcquireSessionError;
 use secrecy::Secret;
-use sgx_types::*;
-
-pub use super::protected_channel::ProtectedChannel;
-use super::types::{AlignedKey, RtcDhInitiator, RtcDhResponder};
-
 #[cfg(not(test))]
 use sgx_tstd::enclave;
 #[cfg(not(test))]
 use sgx_tstd::sync::{
-    SgxMutex as Mutex, SgxRwLock as RwLock, SgxRwLockWriteGuard as RwLockWriteGuard,
+    SgxMutex as Mutex,
+    SgxRwLock as RwLock,
+    SgxRwLockWriteGuard as RwLockWriteGuard,
 };
+use sgx_types::*;
 
 #[cfg(test)]
 use super::enclave;
-#[cfg(test)]
-use std::sync::{Mutex, RwLock, RwLockWriteGuard};
+pub use super::protected_channel::ProtectedChannel;
+use super::types::{AlignedKey, RtcDhInitiator, RtcDhResponder};
 
 extern "C" {
     pub fn rtc_session_request_u(
@@ -322,14 +322,14 @@ fn verify_peer_enclave_trust(peer_identity: &sgx_dh_session_enclave_identity_t) 
 
 #[cfg(not(test))]
 pub use sgx_impl::dh_sessions;
-
 #[cfg(test)]
 pub use test::dh_sessions;
 
 #[cfg(not(test))]
 mod sgx_impl {
-    use super::*;
     use sgx_tdh::{SgxDhInitiator, SgxDhResponder};
+
+    use super::*;
 
     pub fn dh_sessions() -> &'static DhSessions<SgxDhResponder, SgxDhInitiator> {
         // NOTE: Something similar can be done in the OCALL library
