@@ -5,7 +5,7 @@ use cbindgen::{Config, ExportConfig, ItemType};
 use std::env;
 
 fn main() {
-    println!("cargo:rerun-if-changed=Enclave.edl");
+    println!("cargo:rerun-if-changed=rtc_auth.edl");
     println!("cargo:rerun-if-changed=src");
 
     // Also rebuild if we delete bindings.h
