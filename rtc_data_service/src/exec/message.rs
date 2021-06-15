@@ -1,7 +1,8 @@
 use std::convert::Infallible;
 
-use crate::exec_enclave_actor::ExecEnclaveActor;
 use actix::{Handler, Message};
+
+use crate::exec_enclave_actor::ExecEnclaveActor;
 
 // TODO: Replace with types from rtc_types
 pub(crate) type RequestExecutionResponse = ();

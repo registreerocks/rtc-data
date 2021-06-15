@@ -6,9 +6,6 @@ use std::sync::Arc;
 
 use actix::Actor;
 use actix_web::App;
-
-use rtc_uenclave::{EnclaveConfig, RtcAuthEnclave, RtcDataEnclave};
-
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
 use rtc_data_service::data_upload::upload_file;
@@ -16,6 +13,7 @@ use rtc_data_service::exec::request_execution;
 use rtc_data_service::exec_enclave_actor::ExecEnclaveActor;
 use rtc_data_service::exec_token::req_exec_token;
 use rtc_data_service::handlers;
+use rtc_uenclave::{EnclaveConfig, RtcAuthEnclave, RtcDataEnclave};
 
 /// Initialise an auth enclave for testing.
 pub(crate) fn init_auth_enclave() -> RtcAuthEnclave<EnclaveConfig> {

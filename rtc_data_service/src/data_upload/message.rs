@@ -1,6 +1,7 @@
-use crate::data_enclave_actor::DataEnclaveActor;
 use actix::{Handler, Message};
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata};
+
+use crate::data_enclave_actor::DataEnclaveActor;
 
 pub struct DataUploadMessage {
     pub metadata: UploadMetadata,

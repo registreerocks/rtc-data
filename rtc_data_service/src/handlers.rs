@@ -1,14 +1,13 @@
 use actix::Addr;
-use actix_web::{error::ErrorInternalServerError, get, web, HttpRequest, HttpResponse};
+use actix_web::error::ErrorInternalServerError;
+use actix_web::{get, web, HttpRequest, HttpResponse};
 use models::Status;
 
-use crate::auth_enclave_actor;
 use crate::auth_enclave_actor::AuthEnclaveActor;
-use crate::data_enclave_actor;
 use crate::data_enclave_actor::DataEnclaveActor;
-use crate::exec_enclave_actor;
 use crate::exec_enclave_actor::ExecEnclaveActor;
 use crate::merge_error::*;
+use crate::{auth_enclave_actor, data_enclave_actor, exec_enclave_actor};
 
 pub async fn server_status(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Ok().json(Status {

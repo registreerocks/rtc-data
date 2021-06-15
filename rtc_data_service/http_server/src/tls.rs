@@ -1,14 +1,16 @@
+use std::io::BufReader;
+use std::{fs, io, iter};
+
 use rtc_data_service::app_config::TlsConfig;
 use rustls::{
-    AllowAnyAuthenticatedClient, NoClientAuth, PrivateKey, RootCertStore,
+    AllowAnyAuthenticatedClient,
+    NoClientAuth,
+    PrivateKey,
+    RootCertStore,
     ServerConfig as TlsServerConfig,
 };
 use rustls_pemfile::{self, read_one, Item};
 use thiserror::Error;
-
-use std::io::BufReader;
-use std::iter;
-use std::{fs, io};
 
 pub fn get_tls_server_config(config: TlsConfig) -> Result<TlsServerConfig, TlsConfigError> {
     let client_auth = match config.client_cert_path {

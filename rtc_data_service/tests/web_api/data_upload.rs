@@ -3,18 +3,13 @@
 use std::convert::TryInto;
 use std::path::Path;
 
-use sgx_types::sgx_target_info_t;
-
 use actix_web::test;
+use rtc_data_service::data_upload::models;
+use sgx_types::sgx_target_info_t;
 use uuid::Uuid;
 
-use rtc_data_service::data_upload::models;
-
-use crate::helpers;
-
 // See rtc_tenclave/src/crypto.rs
-use crate::CRYPTO_BOX_BOXZEROBYTES;
-use crate::CRYPTO_BOX_ZEROBYTES;
+use crate::{helpers, CRYPTO_BOX_BOXZEROBYTES, CRYPTO_BOX_ZEROBYTES};
 
 /// Upload some data, decrypt and check the result.
 #[actix_rt::test]

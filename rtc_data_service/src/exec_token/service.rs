@@ -1,14 +1,14 @@
 use std::convert::TryInto;
 
 use actix::{Addr, MailboxError};
-use actix_web::{error::ErrorInternalServerError, post, web, HttpRequest};
+use actix_web::error::ErrorInternalServerError;
+use actix_web::{post, web, HttpRequest};
 use models::*;
 use rtc_types::{ExecTokenError, ExecTokenResponse};
 
+use super::ExecTokenMessage;
 use crate::data_enclave_actor::DataEnclaveActor;
 use crate::merge_error::*;
-
-use super::ExecTokenMessage;
 
 #[post("auth/tokens")]
 pub async fn req_exec_token(
@@ -27,13 +27,14 @@ pub async fn req_exec_token(
 }
 
 pub mod models {
-    use crate::validation::ValidationError;
-    use crate::Base64Standard;
-    use rtc_types::{ExecReqMetadata, ExecTokenResponse};
-    use serde::{Deserialize, Serialize};
     use std::convert::TryFrom;
 
+    use rtc_types::{ExecReqMetadata, ExecTokenResponse};
+    use serde::{Deserialize, Serialize};
+
     use crate::exec_token::ExecTokenMessage;
+    use crate::validation::ValidationError;
+    use crate::Base64Standard;
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct RequestBody {

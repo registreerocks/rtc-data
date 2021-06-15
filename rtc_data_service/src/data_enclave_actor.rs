@@ -3,9 +3,10 @@
 //! TODO: The `*_enclave_actor` modules currently mirror each other,
 //!       and should be kept in sync until we factor out the shared code.
 
+use std::sync::Arc;
+
 use actix::prelude::*;
 use rtc_uenclave::{AttestationError, EnclaveConfig, RtcDataEnclave};
-use std::sync::Arc;
 
 #[derive(Default)]
 pub(crate) struct RequestAttestation;

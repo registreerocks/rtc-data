@@ -5,6 +5,13 @@
 
 mod tls;
 
+use std::sync::Arc;
+
+use actix::{Arbiter, Supervisor};
+use actix_cors::Cors;
+use actix_web::http::header;
+use actix_web::web::{self, Data};
+use actix_web::{App, HttpServer};
 use rtc_data_service::app_config::AppConfig;
 use rtc_data_service::auth_enclave_actor::AuthEnclaveActor;
 use rtc_data_service::data_enclave_actor::DataEnclaveActor;
@@ -13,16 +20,6 @@ use rtc_data_service::exec::request_execution;
 use rtc_data_service::exec_enclave_actor::ExecEnclaveActor;
 use rtc_data_service::exec_token::*;
 use rtc_data_service::handlers::*;
-
-use std::sync::Arc;
-
-use actix::{Arbiter, Supervisor};
-use actix_cors::Cors;
-use actix_web::{
-    http::header,
-    web::{self, Data},
-    App, HttpServer,
-};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

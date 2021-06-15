@@ -1,7 +1,8 @@
+use std::env;
+
 use config::{Config, ConfigError, Environment, File};
 use rtc_uenclave::EnclaveConfig;
 use serde::Deserialize;
-use std::env;
 
 // Configuration specific to the server
 #[derive(Deserialize, Clone, Default)]

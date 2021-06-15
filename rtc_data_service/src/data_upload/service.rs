@@ -1,13 +1,14 @@
+use std::convert::TryInto;
+
 use actix::{Addr, MailboxError};
-use actix_web::{error::ErrorInternalServerError, post, web};
+use actix_web::error::ErrorInternalServerError;
+use actix_web::{post, web};
 use models::*;
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError};
 
+use super::DataUploadMessage;
 use crate::data_enclave_actor::DataEnclaveActor;
 use crate::merge_error::*;
-
-use super::DataUploadMessage;
-use std::convert::TryInto;
 
 /// Save uploaded data file using a [`DataUploadMessage`] for [`DataEnclaveActor`].
 ///
@@ -34,13 +35,14 @@ pub async fn upload_file(
 }
 
 pub mod models {
-    use crate::validation::ValidationError;
-    use crate::Base64Standard;
-    use rtc_types::{DataUploadResponse, UploadMetadata};
-    use serde::{Deserialize, Serialize};
     use std::convert::TryFrom;
 
+    use rtc_types::{DataUploadResponse, UploadMetadata};
+    use serde::{Deserialize, Serialize};
+
     use crate::data_upload::DataUploadMessage;
+    use crate::validation::ValidationError;
+    use crate::Base64Standard;
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct RequestBody {
