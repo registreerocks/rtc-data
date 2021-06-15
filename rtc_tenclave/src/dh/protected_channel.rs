@@ -55,7 +55,7 @@ impl ProtectedChannel {
     pub fn decrypt_message<const MESSAGE_SIZE: usize, const AAD_SIZE: usize>(
         &self,
         message: EncryptedEnclaveMessage<MESSAGE_SIZE, AAD_SIZE>,
-    ) -> Result<[u8; MESSAGE_SIZE], sgx_status_t> {
+    ) -> Result<([u8; MESSAGE_SIZE], [u8; AAD_SIZE]), sgx_status_t> {
         let mut dst = [0_u8; MESSAGE_SIZE];
         rsgx_rijndael128GCM_decrypt(
             self.key.expose_secret().key(),
@@ -65,7 +65,7 @@ impl ProtectedChannel {
             &message.tag,
             &mut dst,
         )?;
-        Ok(dst)
+        Ok((dst, message.aad))
     }
 }
 
