@@ -87,6 +87,26 @@ where
     Ok(unsealed)
 }
 
+/// Peek at a sealed message's associated data, without authenticating it.
+///
+/// # Safety
+///
+/// Callers must ensure that the sealed message contains valid serialized data,
+/// to avoid undefined behaviour during deserialization.
+///
+/// See: [`rkyv_format::view_array`]
+pub unsafe fn rkyv_peek_associated<T, A>(
+    sealed: &EncryptedEnclaveMessage<{ size_of::<T::Archived>() }, { size_of::<A::Archived>() }>,
+) -> &A::Archived
+where
+    T: Archive,
+    T::Archived: Deserialize<T, Infallible>,
+    A: Archive,
+    A::Archived: Deserialize<A, Infallible>,
+{
+    unsafe { rkyv_format::view_array::<A>(&sealed.aad) }
+}
+
 #[derive(Debug)]
 pub enum SealingError {
     Rkyv(BufferSerializerError),
