@@ -1,5 +1,6 @@
 use rtc_ecalls::RtcEnclaveEcalls;
 use rtc_types::dh::*;
+pub use rtc_types::enclave_messages::ffi_set_access_key::*;
 use rtc_types::*;
 use rtc_udh;
 use sgx_types::*;
