@@ -5,6 +5,9 @@ pub mod std_filer;
 #[cfg(not(test))]
 pub mod sgx_filer;
 
+#[cfg(not(test))]
+pub use sgx_filer::SgxFiler;
+
 // sgx_tstd (v1.1.3) does not support `fs::read_dir`, so limit the following to tests, for now.
 //
 // See: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/v1.1.3/release_notes.md#partially-supported-modstraits-in-sgx_tstd

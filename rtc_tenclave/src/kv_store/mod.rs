@@ -1,6 +1,6 @@
 //! Simple key-value store abstraction
 
-mod fs;
+pub mod fs;
 mod in_memory;
 
 /// A key-value store.

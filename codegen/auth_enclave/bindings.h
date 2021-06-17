@@ -18,6 +18,43 @@
 
 #define SET_ACCESS_KEY_RESPONSE_SIZE 1
 
+typedef enum ExecTokenError {
+  EXEC_TOKEN_ERROR_GENERATE,
+  EXEC_TOKEN_ERROR_VALIDATION,
+  EXEC_TOKEN_ERROR_OUTPUT_BUFFER_SIZE,
+  EXEC_TOKEN_ERROR_CRYPTO,
+  EXEC_TOKEN_ERROR_IO,
+} ExecTokenError;
+
+typedef uint8_t Nonce[24];
+
+/**
+ * FFI safe result type that can be converted to and from a rust result.
+ */
+typedef enum EcallResult_Nonce__ExecTokenError_Tag {
+  ECALL_RESULT_NONCE_EXEC_TOKEN_ERROR_OK_NONCE_EXEC_TOKEN_ERROR,
+  ECALL_RESULT_NONCE_EXEC_TOKEN_ERROR_ERR_NONCE_EXEC_TOKEN_ERROR,
+} EcallResult_Nonce__ExecTokenError_Tag;
+
+typedef struct EcallResult_Nonce__ExecTokenError {
+  EcallResult_Nonce__ExecTokenError_Tag tag;
+  union {
+    struct {
+      Nonce ok;
+    };
+    struct {
+      enum ExecTokenError err;
+    };
+  };
+} EcallResult_Nonce__ExecTokenError;
+
+typedef struct EcallResult_Nonce__ExecTokenError IssueTokenResult;
+
+typedef struct ExecReqMetadata {
+  uint8_t uploader_pub_key[32];
+  uint8_t nonce[24];
+} ExecReqMetadata;
+
 /**
  * FFI safe result type that can be converted to and from a rust result.
  */
