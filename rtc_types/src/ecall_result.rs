@@ -8,6 +8,17 @@ pub enum EcallResult<T, E> {
     Err(E),
 }
 
+impl<T, E> EcallResult<T, E> {
+    /// See [`Result::map`]
+    pub fn map<U, F: FnOnce(T) -> U>(self, op: F) -> EcallResult<U, E> {
+        use EcallResult::{Err, Ok};
+        match self {
+            Ok(t) => Ok(op(t)),
+            Err(e) => Err(e),
+        }
+    }
+}
+
 impl<T, E> EcallResult<T, E>
 where
     E: 'static + std::error::Error + Display,
