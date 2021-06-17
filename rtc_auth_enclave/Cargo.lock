@@ -683,7 +683,7 @@ dependencies = [
 [[package]]
 name = "thiserror"
 version = "1.0.9"
-source = "git+https://github.com/mesalock-linux/thiserror-sgx.git#c2f806b88616e06aab0af770366a76885d974fdc"
+source = "git+https://github.com/mesalock-linux/thiserror-sgx.git?tag=sgx_1.1.3#c2f806b88616e06aab0af770366a76885d974fdc"
 dependencies = [
  "sgx_tstd",
  "thiserror-impl 1.0.9",
@@ -701,7 +701,7 @@ dependencies = [
 [[package]]
 name = "thiserror-impl"
 version = "1.0.9"
-source = "git+https://github.com/mesalock-linux/thiserror-sgx.git#c2f806b88616e06aab0af770366a76885d974fdc"
+source = "git+https://github.com/mesalock-linux/thiserror-sgx.git?tag=sgx_1.1.3#c2f806b88616e06aab0af770366a76885d974fdc"
 dependencies = [
  "proc-macro2",
  "quote",
