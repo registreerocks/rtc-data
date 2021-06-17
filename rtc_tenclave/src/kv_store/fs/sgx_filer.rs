@@ -3,7 +3,6 @@
 use std::prelude::v1::Vec;
 
 use std::io::ErrorKind::NotFound;
-use std::io::Read;
 use std::io::Result;
 use std::io::Write;
 use std::path::Path;
@@ -23,9 +22,8 @@ pub struct SgxFiler;
 //
 impl Filer for SgxFiler {
     fn get(&self, path: impl AsRef<Path>) -> Result<Option<Vec<u8>>> {
-        // TODO: open_ex with key
-        let value_file = SgxFile::open(path)?;
-        match read_all(value_file) {
+        // TODO: Create `read_ex` to read file with key
+        match sgxfs::read(path) {
             Ok(contents) => Ok(Some(contents)),
             Err(error) if error.kind() == NotFound => Ok(None),
             Err(error) => Err(error),
@@ -45,12 +43,4 @@ impl Filer for SgxFiler {
             result => result,
         }
     }
-}
-
-/// Helper: Like [`fs::read`], but take an open file.
-fn read_all(mut file: SgxFile) -> Result<Vec<u8>> {
-    // XXX: No metadata for initial_buffer_size in sgxfs
-    let mut buf = Vec::new();
-    file.read_to_end(&mut buf)?;
-    Ok(buf)
 }
