@@ -8,7 +8,7 @@ use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
 use secrecy::Secret;
 use sgx_types::*;
 
-use super::protected_channel::ProtectedChannel;
+pub use super::protected_channel::ProtectedChannel;
 use super::types::{AlignedKey, RtcDhInitiator, RtcDhResponder};
 
 #[cfg(not(test))]

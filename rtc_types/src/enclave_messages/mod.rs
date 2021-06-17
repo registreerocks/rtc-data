@@ -10,6 +10,7 @@ pub const ARCHIVED_ENCLAVE_ID_SIZE: usize =
 // NIST AES-GCM recommended IV size
 pub type RecommendedAesGcmIv = [u8; 12];
 
+#[derive(Debug)]
 #[repr(C)]
 pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: usize> {
     pub tag: sgx_aes_gcm_128bit_tag_t,
