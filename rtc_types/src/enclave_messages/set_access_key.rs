@@ -2,6 +2,7 @@ use core::mem;
 
 use rkyv::{Archive, Deserialize, Serialize};
 
+use crate::enclave_messages::errors::SealingError;
 use crate::enclave_messages::{EncryptedEnclaveMessage, ARCHIVED_ENCLAVE_ID_SIZE};
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq, Clone)]
@@ -31,6 +32,9 @@ pub const RESPONSE_SIZE: usize = mem::size_of::<ArchivedResponse>();
 
 // FFI type: EncryptedResponse
 pub type EncryptedResponse = EncryptedEnclaveMessage<RESPONSE_SIZE, 0>;
+
+// FFI type: SetAccessKeyResult
+pub type SetAccessKeyResult = Result<EncryptedResponse, SealingError>;
 
 // End FFI types
 
