@@ -11,6 +11,7 @@ use thiserror::Error;
 /// See: `rtc_tenclave::dh::sessions::DhSessions`
 #[derive(Debug, PartialEq)] // core
 #[derive(Error)] // thiserror
+#[repr(C)]
 pub enum AcquireSessionError {
     /// This should generally be treated as an unrecoverable error.
     #[error("Channel mutex poisoned")]
@@ -40,20 +41,22 @@ impl From<sgx_status_t> for AcquireSessionError {
 
 #[derive(Debug)] // core
 #[derive(Error)] // thiserror
+#[repr(C)]
 pub enum SealingError {
     #[error("Failed to acquire ProtectedChannel: {0}")]
     ChannelNotFound(#[from] AcquireSessionError),
 
-    #[error("Failed to rkyv-serialize message: {0:?}")]
-    RkyvSerializerFailed(BufferSerializerError),
+    #[error("Failed to rkyv-serialize message (BufferSerializerError omitted)")]
+    RkyvBufferSerializerError, // see impl From<BufferSerializerError>
 
     #[error("SGX error: {0:?}")]
     Sgx(sgx_status_t),
 }
 
+/// BufferSerializerError is not FFI-safe: ignore it, for now.
 impl From<BufferSerializerError> for SealingError {
-    fn from(error: BufferSerializerError) -> Self {
-        SealingError::RkyvSerializerFailed(error)
+    fn from(_: BufferSerializerError) -> Self {
+        SealingError::RkyvBufferSerializerError
     }
 }
 
