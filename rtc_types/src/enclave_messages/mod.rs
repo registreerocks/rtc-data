@@ -19,6 +19,8 @@ pub struct EncryptedEnclaveMessage<const MESSAGE_SIZE: usize, const AAD_SIZE: us
     pub nonce: RecommendedAesGcmIv,
 }
 
+pub mod errors;
+
 /// XXX: Ignore this module to work around cbindgen generic type handling
 ///
 /// Issues:
