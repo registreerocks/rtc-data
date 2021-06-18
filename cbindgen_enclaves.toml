@@ -24,6 +24,10 @@ item_types = [
     # "functions",
 ]
 
+[enum]
+# Use qualified enum variant names: some of our enum types conflict, otherwise.
+rename_variants = "QualifiedScreamingSnakeCase"
+
 # Also generate items for our local enclaves libraries.
 [parse]
 parse_deps = true
