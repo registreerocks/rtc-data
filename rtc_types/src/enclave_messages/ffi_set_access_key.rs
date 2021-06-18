@@ -68,12 +68,12 @@ impl From<set_access_key::EncryptedRequest> for SetAccessKeyEncryptedRequest {
             nonce,
         }: set_access_key::EncryptedRequest,
     ) -> Self {
-        return SetAccessKeyEncryptedRequest {
+        SetAccessKeyEncryptedRequest {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -86,12 +86,12 @@ impl From<SetAccessKeyEncryptedRequest> for set_access_key::EncryptedRequest {
             nonce,
         }: SetAccessKeyEncryptedRequest,
     ) -> Self {
-        return set_access_key::EncryptedRequest {
+        set_access_key::EncryptedRequest {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -104,12 +104,12 @@ impl From<set_access_key::EncryptedResponse> for SetAccessKeyEncryptedResponse {
             nonce,
         }: set_access_key::EncryptedResponse,
     ) -> Self {
-        return SetAccessKeyEncryptedResponse {
+        SetAccessKeyEncryptedResponse {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -122,12 +122,12 @@ impl From<SetAccessKeyEncryptedResponse> for set_access_key::EncryptedResponse {
             nonce,
         }: SetAccessKeyEncryptedResponse,
     ) -> Self {
-        return set_access_key::EncryptedResponse {
+        set_access_key::EncryptedResponse {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
