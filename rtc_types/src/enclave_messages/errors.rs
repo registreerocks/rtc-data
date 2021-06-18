@@ -2,6 +2,7 @@
 
 use std::sync::PoisonError;
 
+use rkyv::ser::serializers::BufferSerializerError;
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 use thiserror::Error;
 
@@ -34,5 +35,30 @@ impl<_Guard> From<PoisonError<_Guard>> for AcquireSessionError {
 impl From<sgx_status_t> for AcquireSessionError {
     fn from(err: sgx_status_t) -> Self {
         AcquireSessionError::Sgx(err)
+    }
+}
+
+#[derive(Debug)] // core
+#[derive(Error)] // thiserror
+pub enum SealingError {
+    #[error("Failed to acquire ProtectedChannel: {0}")]
+    ChannelNotFound(#[from] AcquireSessionError),
+
+    #[error("Failed to rkyv-serialize message: {0:?}")]
+    RkyvSerializerFailed(BufferSerializerError),
+
+    #[error("SGX error: {0:?}")]
+    Sgx(sgx_status_t),
+}
+
+impl From<BufferSerializerError> for SealingError {
+    fn from(error: BufferSerializerError) -> Self {
+        SealingError::RkyvSerializerFailed(error)
+    }
+}
+
+impl From<sgx_status_t> for SealingError {
+    fn from(status: sgx_status_t) -> Self {
+        SealingError::Sgx(status)
     }
 }

@@ -2,11 +2,11 @@
 
 use core::mem::size_of;
 
-use rkyv::ser::serializers::{BufferSerializer, BufferSerializerError};
+use rkyv::ser::serializers::BufferSerializer;
 use rkyv::{Aligned, Archive, Deserialize, Infallible, Serialize};
 use rtc_types::byte_formats::rkyv_format;
+use rtc_types::enclave_messages::errors::SealingError;
 use rtc_types::enclave_messages::EncryptedEnclaveMessage;
-use sgx_types::sgx_status_t;
 
 use crate::dh::ProtectedChannel;
 
@@ -105,24 +105,6 @@ where
     A::Archived: Deserialize<A, Infallible>,
 {
     unsafe { rkyv_format::view_array::<A>(&sealed.aad) }
-}
-
-#[derive(Debug)]
-pub enum SealingError {
-    Rkyv(BufferSerializerError),
-    Sgx(sgx_status_t),
-}
-
-impl From<BufferSerializerError> for SealingError {
-    fn from(error: BufferSerializerError) -> Self {
-        SealingError::Rkyv(error)
-    }
-}
-
-impl From<sgx_status_t> for SealingError {
-    fn from(status: sgx_status_t) -> Self {
-        SealingError::Sgx(status)
-    }
 }
 
 #[cfg(test)]
