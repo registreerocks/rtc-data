@@ -1,0 +1,31 @@
+# cbindgen config for the enclave bindings.h files
+#
+# These binding files should include all the types referenced by
+# the functions declared in our EDL files.
+#
+# Docs: <https://github.com/eqrion/cbindgen/blob/master/docs.md#cbindgentoml>
+
+language = "C"
+
+# No C standard imports for enclaves.
+no_includes = true
+
+[export]
+
+# Don't generate items for functions (sgx_edger8r will).
+item_types = [
+    "constants",
+    "globals",
+    "enums",
+    "structs",
+    "unions",
+    "typedefs",
+    "opaque",
+    # "functions",
+]
+
+# Also generate items for our local enclaves libraries.
+[parse]
+parse_deps = true
+include = ["rtc_types", "rtc_tenclave"]
+extra_bindings = ["rtc_types", "rtc_tenclave"]
