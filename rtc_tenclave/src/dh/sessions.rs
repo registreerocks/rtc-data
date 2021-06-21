@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use once_cell::sync::OnceCell;
 use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
+use rtc_types::enclave_messages::errors::AcquireSessionError;
 use secrecy::Secret;
 use sgx_types::*;
 
@@ -65,6 +66,32 @@ where
     TResp: RtcDhResponder,
     TInit: RtcDhInitiator,
 {
+    /// Acquire exclusive access to a session's channel, establishing a new session if necessary.
+    pub fn with_acquire_new_or_established<T>(
+        &self,
+        enclave_id: sgx_enclave_id_t,
+        f: impl FnOnce(&mut ProtectedChannel) -> T,
+    ) -> Result<T, AcquireSessionError> {
+        let channel_mutex = self.get_or_create_session(enclave_id)?;
+        let channel_guard = &mut channel_mutex.lock()?;
+        let result = f(channel_guard);
+        Ok(result)
+    }
+
+    /// Acquire exclusive access to an already-established session's channel.
+    pub fn with_acquire_established<T>(
+        &self,
+        enclave_id: sgx_enclave_id_t,
+        f: impl FnOnce(&mut ProtectedChannel) -> T,
+    ) -> Result<T, AcquireSessionError> {
+        let channel_mutex = self
+            .get_active(enclave_id)
+            .ok_or_else(|| AcquireSessionError::NoActiveSession(enclave_id))?;
+        let channel_guard = &mut channel_mutex.lock()?;
+        let result = f(channel_guard);
+        Ok(result)
+    }
+
     fn get(&self, enclave_id: sgx_enclave_id_t) -> Option<Arc<AtomicSession<TResp>>> {
         self.sessions
             .read()
@@ -331,5 +358,42 @@ mod test {
             sessions: RwLock::new(HashMap::new()),
             _phantom_init: PhantomData::default(),
         })
+    }
+
+    // TODO: Tests for [`DhSessions::with_acquire_new_or_established`]
+    //       (Trying these currently fail with linker errors.)
+
+    #[test]
+    fn with_acquire_established_no_active() {
+        let sessions = dh_sessions();
+        sessions.close_session(5);
+
+        let err = sessions
+            .with_acquire_established(5, |channel| {
+                channel.encrypt_message([1, 2, 3], [4, 5, 6]).unwrap()
+            })
+            .unwrap_err();
+
+        assert_eq!(err, AcquireSessionError::NoActiveSession(5));
+    }
+
+    #[test]
+    fn with_acquire_established_active() {
+        let sessions = dh_sessions();
+        sessions
+            .set_active(5, AlignedKey::new(sgx_align_key_128bit_t::default()))
+            .unwrap();
+
+        let sealed = sessions
+            .with_acquire_established(5, |channel| {
+                channel.encrypt_message([1, 2, 3], [4, 5, 6]).unwrap()
+            })
+            .unwrap();
+
+        let unsealed = sessions
+            .with_acquire_established(5, |channel| channel.decrypt_message(sealed).unwrap())
+            .unwrap();
+
+        assert_eq!(unsealed, (([1, 2, 3], [4, 5, 6])));
     }
 }
