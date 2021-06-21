@@ -22,8 +22,8 @@
  * FFI safe result type that can be converted to and from a rust result.
  */
 typedef enum EcallResult_sgx_dh_msg1_t__sgx_status_t_Tag {
-  Ok_sgx_dh_msg1_t__sgx_status_t,
-  Err_sgx_dh_msg1_t__sgx_status_t,
+  ECALL_RESULT_SGX_DH_MSG1_T_SGX_STATUS_T_OK_SGX_DH_MSG1_T_SGX_STATUS_T,
+  ECALL_RESULT_SGX_DH_MSG1_T_SGX_STATUS_T_ERR_SGX_DH_MSG1_T_SGX_STATUS_T,
 } EcallResult_sgx_dh_msg1_t__sgx_status_t_Tag;
 
 typedef struct EcallResult_sgx_dh_msg1_t__sgx_status_t {
@@ -44,8 +44,8 @@ typedef struct EcallResult_sgx_dh_msg1_t__sgx_status_t SessionRequestResult;
  * FFI safe result type that can be converted to and from a rust result.
  */
 typedef enum EcallResult_sgx_dh_msg3_t__sgx_status_t_Tag {
-  Ok_sgx_dh_msg3_t__sgx_status_t,
-  Err_sgx_dh_msg3_t__sgx_status_t,
+  ECALL_RESULT_SGX_DH_MSG3_T_SGX_STATUS_T_OK_SGX_DH_MSG3_T_SGX_STATUS_T,
+  ECALL_RESULT_SGX_DH_MSG3_T_SGX_STATUS_T_ERR_SGX_DH_MSG3_T_SGX_STATUS_T,
 } EcallResult_sgx_dh_msg3_t__sgx_status_t_Tag;
 
 typedef struct EcallResult_sgx_dh_msg3_t__sgx_status_t {
@@ -63,10 +63,10 @@ typedef struct EcallResult_sgx_dh_msg3_t__sgx_status_t {
 typedef struct EcallResult_sgx_dh_msg3_t__sgx_status_t ExchangeReportResult;
 
 typedef enum CreateReportResult_Tag {
-  Success,
-  Sgx,
-  FailedToGetPublicKey,
-  FailedEncodePublicKey,
+  CREATE_REPORT_RESULT_SUCCESS,
+  CREATE_REPORT_RESULT_SGX,
+  CREATE_REPORT_RESULT_FAILED_TO_GET_PUBLIC_KEY,
+  CREATE_REPORT_RESULT_FAILED_ENCODE_PUBLIC_KEY,
 } CreateReportResult_Tag;
 
 typedef struct CreateReportResult {

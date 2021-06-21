@@ -9,9 +9,11 @@
 //! (The Rust compiler should report an error if these don't line up:
 //! this can be used to update these if `set_access_key` changes.)
 
-use sgx_types::sgx_aes_gcm_128bit_tag_t;
+use sgx_types::{sgx_aes_gcm_128bit_tag_t, sgx_status_t};
 
 use super::{set_access_key, RecommendedAesGcmIv};
+use crate::enclave_messages::errors::SealingError;
+use crate::EcallResult;
 
 // See enclave_messages::ARCHIVED_ENCLAVE_ID_SIZE
 pub const ARCHIVED_ENCLAVE_ID_SIZE: usize = 8;
@@ -44,7 +46,16 @@ pub struct SetAccessKeyEncryptedResponse {
     pub nonce: RecommendedAesGcmIv,
 }
 
+// FFI type: SetAccessKeyResult
+pub type SetAccessKeyResult = EcallResult<SetAccessKeyEncryptedResponse, SealingError>;
+
 // End FFI types
+
+impl Default for SetAccessKeyResult {
+    fn default() -> Self {
+        EcallResult::Err(SealingError::Sgx(sgx_status_t::SGX_ERROR_UNEXPECTED))
+    }
+}
 
 // Boilerplate From implementations:
 
@@ -57,12 +68,12 @@ impl From<set_access_key::EncryptedRequest> for SetAccessKeyEncryptedRequest {
             nonce,
         }: set_access_key::EncryptedRequest,
     ) -> Self {
-        return SetAccessKeyEncryptedRequest {
+        SetAccessKeyEncryptedRequest {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -75,12 +86,12 @@ impl From<SetAccessKeyEncryptedRequest> for set_access_key::EncryptedRequest {
             nonce,
         }: SetAccessKeyEncryptedRequest,
     ) -> Self {
-        return set_access_key::EncryptedRequest {
+        set_access_key::EncryptedRequest {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -93,12 +104,12 @@ impl From<set_access_key::EncryptedResponse> for SetAccessKeyEncryptedResponse {
             nonce,
         }: set_access_key::EncryptedResponse,
     ) -> Self {
-        return SetAccessKeyEncryptedResponse {
+        SetAccessKeyEncryptedResponse {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
     }
 }
 
@@ -111,11 +122,23 @@ impl From<SetAccessKeyEncryptedResponse> for set_access_key::EncryptedResponse {
             nonce,
         }: SetAccessKeyEncryptedResponse,
     ) -> Self {
-        return set_access_key::EncryptedResponse {
+        set_access_key::EncryptedResponse {
             tag,
             ciphertext,
             aad,
             nonce,
-        };
+        }
+    }
+}
+
+impl From<set_access_key::SetAccessKeyResult> for SetAccessKeyResult {
+    fn from(result: set_access_key::SetAccessKeyResult) -> Self {
+        Self::from(result.map(SetAccessKeyEncryptedResponse::from))
+    }
+}
+
+impl From<SetAccessKeyResult> for set_access_key::SetAccessKeyResult {
+    fn from(result: SetAccessKeyResult) -> Self {
+        Self::from(result.map(set_access_key::EncryptedResponse::from))
     }
 }
