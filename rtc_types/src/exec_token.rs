@@ -9,14 +9,14 @@ use crate::{CryptoError, EcallResult, Nonce};
 #[derive(Debug)]
 pub struct ExecReqMetadata {
     pub uploader_pub_key: [u8; 32],
-    pub nonce: [u8; 24],
+    pub nonce: Nonce,
 }
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct ExecTokenResponse {
     pub execution_token: Vec<u8>,
-    pub nonce: [u8; 24],
+    pub nonce: Nonce,
 }
 
 pub type IssueTokenResult = EcallResult<Nonce, ExecTokenError>;

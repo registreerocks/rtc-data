@@ -30,8 +30,6 @@ pub struct ExecReqData {
     number_of_uses: u32,
 }
 
-pub type Nonce = [u8; 24];
-
 /// Issue an execution token using the parameters defined in the payload.
 ///
 /// # Safety

@@ -52,7 +52,7 @@ typedef struct EcallResult_Nonce__ExecTokenError IssueTokenResult;
 
 typedef struct ExecReqMetadata {
   uint8_t uploader_pub_key[32];
-  uint8_t nonce[24];
+  Nonce nonce;
 } ExecReqMetadata;
 
 /**
