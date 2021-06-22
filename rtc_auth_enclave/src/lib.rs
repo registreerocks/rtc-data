@@ -22,6 +22,15 @@ use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// Minimum size for the out_token parameter's buffer.
+///
+/// From my testing, the token size were never bigger than 400.
+/// So this value refers to: 400 (for the token) + 16 (Authentication bytes from NaCl)
+const MIN_OUT_TOKEN_LEN: usize = 416;
+
+/// Maximum size for the out_token parameter's buffer.
+const MAX_OUT_TOKEN_LEN: usize = 1000;
+
 #[derive(Serialize, Deserialize)]
 pub struct ExecReqData {
     dataset_uuid: [u8; 16],
@@ -67,7 +76,7 @@ fn issue_execution_token_impl(
     max_ciphertext_len: usize,
 ) -> Result<EncryptedMessage, ExecTokenError> {
     // Ensure that the out token len is reasonable before proceeding
-    if max_ciphertext_len < 416 && max_ciphertext_len > 1000 {
+    if max_ciphertext_len < MIN_OUT_TOKEN_LEN || max_ciphertext_len > MAX_OUT_TOKEN_LEN {
         return Err(ExecTokenError::OutputBufferSize);
     }
 
@@ -87,19 +96,19 @@ fn issue_execution_token_impl(
 
         let mut token_vec = token.into_bytes();
 
+        // TODO: Move this check before persistence
         if max_ciphertext_len < token_vec.len() - 16 {
             return Err(ExecTokenError::OutputBufferSize);
         }
 
-        // TODO: Comment on how message size will be upheld
+        // Grow the plaintext vector to the max ciphertext size - 16
+        // The 16 refers to the authentication bytes that gets added by NaCl
         token_vec.resize(max_ciphertext_len - 16, 0);
 
         Ok(crypto.encrypt_message(
             Secret::new(token_vec.into_boxed_slice()),
             &metadata.uploader_pub_key,
         )?)
-
-        // TODO: Move this check before persistence
     } else {
         Err(ExecTokenError::Validation)
     }
