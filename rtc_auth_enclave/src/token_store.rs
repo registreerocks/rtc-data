@@ -43,9 +43,10 @@ pub(crate) fn issue_token(
     dataset_uuid: Uuid,
     exec_module_hash: [u8; 32],
     number_of_allowed_uses: u32,
+    dataset_size: u64,
 ) -> Result<String, io::Error> {
     let EncodedExecutionToken { token, token_id } =
-        EncodedExecutionToken::new(exec_module_hash, dataset_uuid);
+        EncodedExecutionToken::new(exec_module_hash, dataset_uuid, dataset_size);
 
     save_token(
         dataset_uuid,

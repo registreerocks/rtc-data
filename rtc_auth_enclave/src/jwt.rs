@@ -32,10 +32,16 @@ struct Claims {
     // TODO: Better names. use `x-ntls-mod-hash` etc?
     exec_module_hash: String,
     dataset_uuid: String,
+    dataset_size: u64,
 }
 
 impl Claims {
-    fn new(exec_module_hash: String, dataset_uuid: String, token_id: String) -> Self {
+    fn new(
+        exec_module_hash: String,
+        dataset_uuid: String,
+        token_id: String,
+        dataset_size: u64,
+    ) -> Self {
         // TODO: Look at the attack vectors opened up by using untrusted system time
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -49,6 +55,7 @@ impl Claims {
             jti: token_id,
             exec_module_hash,
             dataset_uuid,
+            dataset_size,
         }
     }
 }
@@ -59,13 +66,14 @@ pub(crate) struct EncodedExecutionToken {
 }
 
 impl EncodedExecutionToken {
-    pub(crate) fn new(exec_module_hash: [u8; 32], dataset_uuid: Uuid) -> Self {
+    pub(crate) fn new(exec_module_hash: [u8; 32], dataset_uuid: Uuid, dataset_size: u64) -> Self {
         let token_id = Uuid::new_v4();
 
         let claims = Claims::new(
             base64::encode(exec_module_hash),
             uuid_to_string(dataset_uuid),
             uuid_to_string(token_id),
+            dataset_size,
         );
 
         // TODO: Use a signing key that corresponds to the public key

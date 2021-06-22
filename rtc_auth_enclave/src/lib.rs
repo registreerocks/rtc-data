@@ -87,11 +87,14 @@ fn issue_execution_token_impl(
     let message: ExecReqData = serde_json::from_slice(message_bytes.expose_secret())
         .map_err(|_| ExecTokenError::Validation)?;
 
-    if valid_dataset_access_key(message.dataset_uuid, message.dataset_access_key) {
+    if let Some(dataset_size) =
+        validate_dataset_access_key(message.dataset_uuid, message.dataset_access_key)
+    {
         let token = token_store::issue_token(
             Uuid::from_bytes(message.dataset_uuid),
             message.exec_module_hash,
             message.number_of_uses,
+            dataset_size,
         )?;
 
         let mut token_vec = token.into_bytes();
@@ -114,9 +117,15 @@ fn issue_execution_token_impl(
     }
 }
 
-fn valid_dataset_access_key(_dataset_uuid: [u8; 16], _access_key: [u8; 24]) -> bool {
-    // TODO: Check access key store to see if the request is valid
-    true
+/// The size of the dataset in bytes
+type DatasetSize = u64;
+
+// This is a placeholder and the signature might change when the dataset and access key store gets implemented.
+fn validate_dataset_access_key(
+    _dataset_uuid: [u8; 16],
+    _access_key: [u8; 24],
+) -> Option<DatasetSize> {
+    Some(20)
 }
 
 pub(crate) fn uuid_to_string(uuid: Uuid) -> String {
