@@ -69,6 +69,7 @@ pub mod ecalls {
         payload: &[u8],
         metadata: ExecReqMetadata,
     ) -> Result<EncryptedMessage, EcallError<ExecTokenError>> {
+        // See MAX / MIN_OUT_TOKEN_LEN in rtc_auth_enclave
         let mut out_token_buffer = vec![0u8; 416].into_boxed_slice();
         let mut retval = IssueTokenResult::Ok([0u8; 24]);
 
