@@ -72,11 +72,10 @@ fn save_token(
         current_uses: 0u32,
     };
 
-    store
-        .alter(&dataset_uuid_string, |records| {
-            let mut records = records.map_or(HashMap::new(), |r| r);
-            records.insert(token_uuid, new_record);
-            Some(records)
-        })
-        .and(Ok(()))
+    store.alter(&dataset_uuid_string, |records| {
+        let mut records = records.unwrap_or_else(HashMap::new);
+        records.insert(token_uuid, new_record);
+        Some(records)
+    })?;
+    Ok(())
 }
