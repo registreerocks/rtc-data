@@ -23,6 +23,7 @@ use crate::uuid_to_string;
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
+    // Registered Claim Names: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
     // TODO: serialize to hex string? This can be mrenclave or mrsigner
     iss: String,
     nbf: u64,
