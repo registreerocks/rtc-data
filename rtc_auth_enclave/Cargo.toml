@@ -26,7 +26,7 @@ base64 = { git = "https://github.com/mesalock-linux/rust-base64-sgx" }
 
 # See "Cargo patch limitation workaround" in HACKING.md:
 once_cell = { git = "https://github.com/mesalock-linux/once_cell-sgx.git" }
-serde = { git = "https://github.com/mesalock-linux/serde-sgx", feature = ["derive"] }
+serde = { git = "https://github.com/mesalock-linux/serde-sgx", features = ["derive"] }
 serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx" }
 
 secrecy = { version = "0.7.0", default-features = false }
