@@ -31,7 +31,6 @@ struct ExecutionTokenSet {
 }
 
 impl ExecutionTokenSet {
-    #[allow(unused)]
     fn new(dataset_uuid: Uuid, access_key: [u8; 24], dataset_size: u64) -> ExecutionTokenSet {
         ExecutionTokenSet {
             dataset_uuid,
@@ -63,6 +62,32 @@ fn kv_store<'a>() -> MutexGuard<'a, impl KvStore<ExecutionTokenSet, Error = io::
         Mutex::new(FsStore::new(path, SgxFiler))
     });
     store.lock().expect("FS store mutex poisoned")
+}
+
+/// Save a new dataset access key and associated metadata to the store.
+///
+/// This must be called before [`issue_token`] can be called.
+///
+/// # Panics
+///
+/// If `dataset_uuid` already exists in the store. (This should not happen.)
+#[allow(dead_code)] // TODO
+pub(crate) fn save_access_key(
+    dataset_uuid: Uuid,
+    access_key: [u8; 24],
+    dataset_size: u64,
+) -> Result<(), io::Error> {
+    let mut store = kv_store();
+    let dataset_uuid_string = uuid_to_string(dataset_uuid);
+    let empty_token_set = ExecutionTokenSet::new(dataset_uuid, access_key, dataset_size);
+
+    match store.try_insert(&dataset_uuid_string, &empty_token_set)? {
+        None => Ok(()),
+        Some(_existing) => panic!(
+            "token_store::save_access_key: access key for dateset_uuid={:?} already saved (this should not happen)",
+            dataset_uuid,
+        )
+    }
 }
 
 // Returns exec token hash
