@@ -9,8 +9,10 @@ use crate::enclave_messages::errors::SealingError;
 pub enum DataUploadError {
     #[error("Data validation failed")]
     Validation,
+
     #[error("Data sealing failed: {}", .0)]
     Sealing(sgx_status_t),
+
     #[error("Crypto failed: {}", .0)]
     Crypto(#[from] CryptoError),
 
