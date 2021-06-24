@@ -10,10 +10,10 @@ pub enum DataUploadError {
     #[error("Data validation failed")]
     Validation,
 
-    #[error("Data sealing failed: {}", .0)]
+    #[error("Data sealing failed: {0}")]
     Sealing(sgx_status_t),
 
-    #[error("Crypto failed: {}", .0)]
+    #[error("Crypto failed: {0}")]
     Crypto(#[from] CryptoError),
 
     #[error("save_access_key OCALL sealing error: {0}")]
