@@ -20,7 +20,13 @@ enclave {
                                               [out, isary]EnclaveHeldData enclave_data,
                                               [out]sgx_report_t* p_report);
 
-        public DataUploadResult validate_and_save([in, count=payload_len]const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+        public DataUploadResult validate_and_save(
+            sgx_enclave_id_t auth_enclave_id,
+            [in, count=payload_len]const uint8_t* payload_ptr,
+            size_t payload_len,
+            UploadMetadata metadata
+        );
+
         public sgx_status_t local_attestation(sgx_enclave_id_t rtc_local_attestation);
     };
 

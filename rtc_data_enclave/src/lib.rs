@@ -29,6 +29,7 @@ use sgx_types::*;
 /// length `payload_len`
 #[no_mangle]
 pub unsafe extern "C" fn validate_and_save(
+    #[allow(unused)] auth_enclave_id: sgx_enclave_id_t, // TODO: pass to validate_and_seal
     payload_ptr: *const u8,
     payload_len: usize,
     metadata: UploadMetadata,

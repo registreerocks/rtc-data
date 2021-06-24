@@ -36,6 +36,7 @@ typedef struct ms_enclave_create_report_t {
 
 typedef struct ms_validate_and_save_t {
 	DataUploadResult ms_retval;
+	sgx_enclave_id_t ms_auth_enclave_id;
 	const uint8_t* ms_payload_ptr;
 	size_t ms_payload_len;
 	UploadMetadata ms_metadata;
@@ -707,7 +708,7 @@ static sgx_status_t SGX_CDECL sgx_validate_and_save(void* pms)
 
 	}
 
-	ms->ms_retval = validate_and_save((const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
+	ms->ms_retval = validate_and_save(ms->ms_auth_enclave_id, (const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
 
 err:
 	if (_in_payload_ptr) free(_in_payload_ptr);
