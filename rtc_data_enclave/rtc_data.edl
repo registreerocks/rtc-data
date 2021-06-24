@@ -33,6 +33,11 @@ enclave {
     untrusted {
         /* define OCALLs here. */
 
+        SetAccessKeyResult rtc_save_access_key_u(
+            sgx_enclave_id_t auth_enclave_id,
+            SetAccessKeyEncryptedRequest encrypted_request
+        );
+
         sgx_status_t rtc_save_sealed_blob_u([in, count=blob_len]const uint8_t* blob_ptr, size_t blob_len,[in]uint8_t uuid[16]);
     };
 };

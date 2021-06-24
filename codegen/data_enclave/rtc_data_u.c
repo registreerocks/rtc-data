@@ -43,6 +43,12 @@ typedef struct ms_end_session_t {
 	sgx_enclave_id_t ms_src_enclave_id;
 } ms_end_session_t;
 
+typedef struct ms_rtc_save_access_key_u_t {
+	SetAccessKeyResult ms_retval;
+	sgx_enclave_id_t ms_auth_enclave_id;
+	SetAccessKeyEncryptedRequest ms_encrypted_request;
+} ms_rtc_save_access_key_u_t;
+
 typedef struct ms_rtc_save_sealed_blob_u_t {
 	sgx_status_t ms_retval;
 	const uint8_t* ms_blob_ptr;
@@ -557,6 +563,14 @@ typedef struct ms_rtc_end_session_u_t {
 	sgx_enclave_id_t ms_src_enclave_id;
 	sgx_enclave_id_t ms_dest_enclave_id;
 } ms_rtc_end_session_u_t;
+
+static sgx_status_t SGX_CDECL rtc_data_rtc_save_access_key_u(void* pms)
+{
+	ms_rtc_save_access_key_u_t* ms = SGX_CAST(ms_rtc_save_access_key_u_t*, pms);
+	ms->ms_retval = rtc_save_access_key_u(ms->ms_auth_enclave_id, ms->ms_encrypted_request);
+
+	return SGX_SUCCESS;
+}
 
 static sgx_status_t SGX_CDECL rtc_data_rtc_save_sealed_blob_u(void* pms)
 {
@@ -1152,10 +1166,11 @@ static sgx_status_t SGX_CDECL rtc_data_rtc_end_session_u(void* pms)
 
 static const struct {
 	size_t nr_ocall;
-	void * table[74];
+	void * table[75];
 } ocall_table_rtc_data = {
-	74,
+	75,
 	{
+		(void*)rtc_data_rtc_save_access_key_u,
 		(void*)rtc_data_rtc_save_sealed_blob_u,
 		(void*)rtc_data_u_thread_set_event_ocall,
 		(void*)rtc_data_u_thread_wait_event_ocall,

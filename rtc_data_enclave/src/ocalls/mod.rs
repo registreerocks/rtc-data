@@ -1,5 +1,6 @@
 //! OCALL definitions
 
+mod save_access_key_impl;
 mod save_sealed_blob_impl;
 
 // Re-export the OCALL entry points we're interested in:

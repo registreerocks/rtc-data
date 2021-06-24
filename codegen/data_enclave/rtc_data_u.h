@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+#ifndef RTC_SAVE_ACCESS_KEY_U_DEFINED__
+#define RTC_SAVE_ACCESS_KEY_U_DEFINED__
+SetAccessKeyResult SGX_UBRIDGE(SGX_NOCONVENTION, rtc_save_access_key_u, (sgx_enclave_id_t auth_enclave_id, SetAccessKeyEncryptedRequest encrypted_request));
+#endif
 #ifndef RTC_SAVE_SEALED_BLOB_U_DEFINED__
 #define RTC_SAVE_SEALED_BLOB_U_DEFINED__
 sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_save_sealed_blob_u, (const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16]));

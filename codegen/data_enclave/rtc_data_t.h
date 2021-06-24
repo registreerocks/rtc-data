@@ -35,6 +35,7 @@ SessionRequestResult session_request(sgx_enclave_id_t src_enclave_id);
 ExchangeReportResult exchange_report(sgx_enclave_id_t src_enclave_id, const sgx_dh_msg2_t* dh_msg2);
 sgx_status_t end_session(sgx_enclave_id_t src_enclave_id);
 
+sgx_status_t SGX_CDECL rtc_save_access_key_u(SetAccessKeyResult* retval, sgx_enclave_id_t auth_enclave_id, SetAccessKeyEncryptedRequest encrypted_request);
 sgx_status_t SGX_CDECL rtc_save_sealed_blob_u(sgx_status_t* retval, const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16]);
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);
 sgx_status_t SGX_CDECL u_thread_wait_event_ocall(int* retval, int* error, const void* tcs, const struct timespec* timeout);
