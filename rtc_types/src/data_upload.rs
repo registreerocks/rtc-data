@@ -2,6 +2,7 @@ use thiserror;
 use thiserror::Error;
 
 use super::*;
+use crate::enclave_messages::errors::SealingError;
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug, Error)]
@@ -12,6 +13,12 @@ pub enum DataUploadError {
     Sealing(sgx_status_t),
     #[error("Crypto failed: {}", .0)]
     Crypto(#[from] CryptoError),
+
+    #[error("save_access_key OCALL sealing error: {0}")]
+    SaveAccessKeySealingError(SealingError),
+
+    #[error("save_access_key OCALL failed")]
+    SaveAccessKeyFailed,
 }
 
 #[repr(C)]
