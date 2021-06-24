@@ -40,7 +40,8 @@ typedef struct ms_issue_execution_token_t {
 	size_t ms_payload_len;
 	const ExecReqMetadata* ms_metadata;
 	uint8_t* ms_out_token_ptr;
-	size_t ms_out_token_len;
+	size_t ms_out_token_capacity;
+	size_t* ms_out_token_used;
 } ms_issue_execution_token_t;
 
 typedef struct ms_t_global_init_ecall_t {
@@ -669,9 +670,12 @@ static sgx_status_t SGX_CDECL sgx_issue_execution_token(void* pms)
 	size_t _len_metadata = sizeof(ExecReqMetadata);
 	ExecReqMetadata* _in_metadata = NULL;
 	uint8_t* _tmp_out_token_ptr = ms->ms_out_token_ptr;
-	size_t _tmp_out_token_len = ms->ms_out_token_len;
-	size_t _len_out_token_ptr = _tmp_out_token_len * sizeof(uint8_t);
+	size_t _tmp_out_token_capacity = ms->ms_out_token_capacity;
+	size_t _len_out_token_ptr = _tmp_out_token_capacity * sizeof(uint8_t);
 	uint8_t* _in_out_token_ptr = NULL;
+	size_t* _tmp_out_token_used = ms->ms_out_token_used;
+	size_t _len_out_token_used = sizeof(size_t);
+	size_t* _in_out_token_used = NULL;
 
 	if (sizeof(*_tmp_payload_ptr) != 0 &&
 		(size_t)_tmp_payload_len > (SIZE_MAX / sizeof(*_tmp_payload_ptr))) {
@@ -679,13 +683,14 @@ static sgx_status_t SGX_CDECL sgx_issue_execution_token(void* pms)
 	}
 
 	if (sizeof(*_tmp_out_token_ptr) != 0 &&
-		(size_t)_tmp_out_token_len > (SIZE_MAX / sizeof(*_tmp_out_token_ptr))) {
+		(size_t)_tmp_out_token_capacity > (SIZE_MAX / sizeof(*_tmp_out_token_ptr))) {
 		return SGX_ERROR_INVALID_PARAMETER;
 	}
 
 	CHECK_UNIQUE_POINTER(_tmp_payload_ptr, _len_payload_ptr);
 	CHECK_UNIQUE_POINTER(_tmp_metadata, _len_metadata);
 	CHECK_UNIQUE_POINTER(_tmp_out_token_ptr, _len_out_token_ptr);
+	CHECK_UNIQUE_POINTER(_tmp_out_token_used, _len_out_token_used);
 
 	//
 	// fence after pointer checks
@@ -736,10 +741,29 @@ static sgx_status_t SGX_CDECL sgx_issue_execution_token(void* pms)
 
 		memset((void*)_in_out_token_ptr, 0, _len_out_token_ptr);
 	}
+	if (_tmp_out_token_used != NULL && _len_out_token_used != 0) {
+		if ( _len_out_token_used % sizeof(*_tmp_out_token_used) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		if ((_in_out_token_used = (size_t*)malloc(_len_out_token_used)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
 
-	ms->ms_retval = issue_execution_token((const uint8_t*)_in_payload_ptr, _tmp_payload_len, (const ExecReqMetadata*)_in_metadata, _in_out_token_ptr, _tmp_out_token_len);
+		memset((void*)_in_out_token_used, 0, _len_out_token_used);
+	}
+
+	ms->ms_retval = issue_execution_token((const uint8_t*)_in_payload_ptr, _tmp_payload_len, (const ExecReqMetadata*)_in_metadata, _in_out_token_ptr, _tmp_out_token_capacity, _in_out_token_used);
 	if (_in_out_token_ptr) {
 		if (memcpy_s(_tmp_out_token_ptr, _len_out_token_ptr, _in_out_token_ptr, _len_out_token_ptr)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+	}
+	if (_in_out_token_used) {
+		if (memcpy_s(_tmp_out_token_used, _len_out_token_used, _in_out_token_used, _len_out_token_used)) {
 			status = SGX_ERROR_UNEXPECTED;
 			goto err;
 		}
@@ -749,6 +773,7 @@ err:
 	if (_in_payload_ptr) free(_in_payload_ptr);
 	if (_in_metadata) free(_in_metadata);
 	if (_in_out_token_ptr) free(_in_out_token_ptr);
+	if (_in_out_token_used) free(_in_out_token_used);
 	return status;
 }
 

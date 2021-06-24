@@ -70,7 +70,8 @@ pub mod ecalls {
         metadata: ExecReqMetadata,
     ) -> Result<EncryptedMessage, EcallError<ExecTokenError>> {
         // See MAX / MIN_OUT_TOKEN_LEN in rtc_auth_enclave
-        let mut out_token_buffer = vec![0u8; 416].into_boxed_slice();
+        let mut out_token_buffer = vec![0u8; 500];
+        let mut out_token_used = 0;
         let mut retval = IssueTokenResult::Ok([0u8; 24]);
 
         // Safety: Since the payload, and out buffer is allocated and valid this will be
@@ -84,14 +85,16 @@ pub mod ecalls {
                 &metadata,
                 out_token_buffer.as_mut_ptr(),
                 out_token_buffer.len(),
+                &mut out_token_used,
             )
         };
 
         let x: Result<Nonce, EcallError<ExecTokenError>> = retval.to_ecall_err(res).into();
 
-        x.map(|r| EncryptedMessage {
-            ciphertext: out_token_buffer,
-            nonce: r,
+        x.map(|nonce| {
+            out_token_buffer.truncate(out_token_used);
+            let ciphertext = out_token_buffer.into_boxed_slice();
+            EncryptedMessage { ciphertext, nonce }
         })
     }
 }

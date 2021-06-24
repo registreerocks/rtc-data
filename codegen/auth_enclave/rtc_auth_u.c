@@ -14,7 +14,8 @@ typedef struct ms_issue_execution_token_t {
 	size_t ms_payload_len;
 	const ExecReqMetadata* ms_metadata;
 	uint8_t* ms_out_token_ptr;
-	size_t ms_out_token_len;
+	size_t ms_out_token_capacity;
+	size_t* ms_out_token_used;
 } ms_issue_execution_token_t;
 
 typedef struct ms_t_global_init_ecall_t {
@@ -1224,7 +1225,7 @@ sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportRe
 	return status;
 }
 
-sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_len)
+sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used)
 {
 	sgx_status_t status;
 	ms_issue_execution_token_t ms;
@@ -1232,7 +1233,8 @@ sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResu
 	ms.ms_payload_len = payload_len;
 	ms.ms_metadata = metadata;
 	ms.ms_out_token_ptr = out_token_ptr;
-	ms.ms_out_token_len = out_token_len;
+	ms.ms_out_token_capacity = out_token_capacity;
+	ms.ms_out_token_used = out_token_used;
 	status = sgx_ecall(eid, 1, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;

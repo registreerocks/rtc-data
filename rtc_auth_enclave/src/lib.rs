@@ -24,9 +24,8 @@ use uuid::Uuid;
 
 /// Minimum size for the out_token parameter's buffer.
 ///
-/// From my testing, the token size were never bigger than 400.
-/// So this value refers to: 400 (for the token) + 16 (Authentication bytes from NaCl)
-const MIN_OUT_TOKEN_LEN: usize = 416;
+/// From my testing, the total token size (including auth bytes) were never bigger than 500.
+const MIN_OUT_TOKEN_LEN: usize = 500;
 
 /// Maximum size for the out_token parameter's buffer.
 const MAX_OUT_TOKEN_LEN: usize = 1000;
@@ -53,19 +52,27 @@ pub unsafe extern "C" fn issue_execution_token(
     payload_len: usize,
     metadata_ptr: *const ExecReqMetadata,
     out_token_ptr: *mut u8,
-    out_token_len: usize,
+    out_token_capacity: usize,
+    out_token_used: *mut usize,
 ) -> IssueTokenResult {
+    // Ensure that the out token len is reasonable before proceeding
+    if out_token_capacity < MIN_OUT_TOKEN_LEN || out_token_capacity > MAX_OUT_TOKEN_LEN {
+        return EcallResult::Err(ExecTokenError::OutputBufferSize);
+    }
+
     let payload = unsafe { slice::from_raw_parts(payload_ptr, payload_len) };
     let metadata = unsafe { &*metadata_ptr };
 
-    match issue_execution_token_impl(payload, metadata, out_token_len) {
-        Ok(message) => {
-            assert_eq!(message.ciphertext.len(), out_token_len);
+    match issue_execution_token_impl(payload, metadata) {
+        Ok(message) if message.ciphertext.len() <= out_token_capacity => {
+            let out_token_len = message.ciphertext.len();
             unsafe {
+                *out_token_used = out_token_len;
                 ptr::copy_nonoverlapping(message.ciphertext.as_ptr(), out_token_ptr, out_token_len);
             }
             EcallResult::Ok(message.nonce)
         }
+        Ok(_) => EcallResult::Err(ExecTokenError::OutputBufferSize),
         Err(err) => EcallResult::Err(err),
     }
 }
@@ -73,13 +80,7 @@ pub unsafe extern "C" fn issue_execution_token(
 fn issue_execution_token_impl(
     payload: &[u8],
     metadata: &ExecReqMetadata,
-    max_ciphertext_len: usize,
 ) -> Result<EncryptedMessage, ExecTokenError> {
-    // Ensure that the out token len is reasonable before proceeding
-    if max_ciphertext_len < MIN_OUT_TOKEN_LEN || max_ciphertext_len > MAX_OUT_TOKEN_LEN {
-        return Err(ExecTokenError::OutputBufferSize);
-    }
-
     let mut crypto = Crypto::new();
     let message_bytes =
         crypto.decrypt_message(payload, &metadata.uploader_pub_key, &metadata.nonce)?;
@@ -97,16 +98,7 @@ fn issue_execution_token_impl(
             dataset_size,
         )?;
 
-        let mut token_vec = token.into_bytes();
-
-        // TODO: Move this check before persistence
-        if max_ciphertext_len < token_vec.len() - 16 {
-            return Err(ExecTokenError::OutputBufferSize);
-        }
-
-        // Grow the plaintext vector to the max ciphertext size - 16
-        // The 16 refers to the authentication bytes that gets added by NaCl
-        token_vec.resize(max_ciphertext_len - 16, 0);
+        let token_vec = token.into_bytes();
 
         Ok(crypto.encrypt_message(
             Secret::new(token_vec.into_boxed_slice()),
