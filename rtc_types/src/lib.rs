@@ -32,6 +32,8 @@ pub use ecall_result::*;
 pub mod byte_formats;
 pub mod enclave_messages;
 
+pub type Nonce = [u8; 24];
+
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct EncryptedMessage {

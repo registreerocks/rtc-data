@@ -34,6 +34,16 @@ typedef struct ms_enclave_create_report_t {
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
+typedef struct ms_issue_execution_token_t {
+	IssueTokenResult ms_retval;
+	const uint8_t* ms_payload_ptr;
+	size_t ms_payload_len;
+	const ExecReqMetadata* ms_metadata;
+	uint8_t* ms_out_token_ptr;
+	size_t ms_out_token_capacity;
+	size_t* ms_out_token_used;
+} ms_issue_execution_token_t;
+
 typedef struct ms_t_global_init_ecall_t {
 	uint64_t ms_id;
 	const uint8_t* ms_path;
@@ -501,6 +511,69 @@ typedef struct ms_sgx_thread_set_multiple_untrusted_events_ocall_t {
 	size_t ms_total;
 } ms_sgx_thread_set_multiple_untrusted_events_ocall_t;
 
+typedef struct ms_u_sgxprotectedfs_exclusive_file_open_t {
+	void* ms_retval;
+	const char* ms_filename;
+	uint8_t ms_read_only;
+	int64_t* ms_file_size;
+	int32_t* ms_error_code;
+} ms_u_sgxprotectedfs_exclusive_file_open_t;
+
+typedef struct ms_u_sgxprotectedfs_check_if_file_exists_t {
+	uint8_t ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_check_if_file_exists_t;
+
+typedef struct ms_u_sgxprotectedfs_fread_node_t {
+	int32_t ms_retval;
+	void* ms_f;
+	uint64_t ms_node_number;
+	uint8_t* ms_buffer;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_fread_node_t;
+
+typedef struct ms_u_sgxprotectedfs_fwrite_node_t {
+	int32_t ms_retval;
+	void* ms_f;
+	uint64_t ms_node_number;
+	uint8_t* ms_buffer;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_fwrite_node_t;
+
+typedef struct ms_u_sgxprotectedfs_fclose_t {
+	int32_t ms_retval;
+	void* ms_f;
+} ms_u_sgxprotectedfs_fclose_t;
+
+typedef struct ms_u_sgxprotectedfs_fflush_t {
+	uint8_t ms_retval;
+	void* ms_f;
+} ms_u_sgxprotectedfs_fflush_t;
+
+typedef struct ms_u_sgxprotectedfs_remove_t {
+	int32_t ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_remove_t;
+
+typedef struct ms_u_sgxprotectedfs_recovery_file_open_t {
+	void* ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_recovery_file_open_t;
+
+typedef struct ms_u_sgxprotectedfs_fwrite_recovery_node_t {
+	uint8_t ms_retval;
+	void* ms_f;
+	uint8_t* ms_data;
+	uint32_t ms_data_length;
+} ms_u_sgxprotectedfs_fwrite_recovery_node_t;
+
+typedef struct ms_u_sgxprotectedfs_do_file_recovery_t {
+	int32_t ms_retval;
+	const char* ms_filename;
+	const char* ms_recovery_filename;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_do_file_recovery_t;
+
 static sgx_status_t SGX_CDECL sgx_enclave_create_report(void* pms)
 {
 	CHECK_REF_POINTER(pms, sizeof(ms_enclave_create_report_t));
@@ -577,6 +650,130 @@ err:
 	if (_in_p_qe3_target) free(_in_p_qe3_target);
 	if (_in_enclave_data) free(_in_enclave_data);
 	if (_in_p_report) free(_in_p_report);
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_issue_execution_token(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_issue_execution_token_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_issue_execution_token_t* ms = SGX_CAST(ms_issue_execution_token_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+	const uint8_t* _tmp_payload_ptr = ms->ms_payload_ptr;
+	size_t _tmp_payload_len = ms->ms_payload_len;
+	size_t _len_payload_ptr = _tmp_payload_len * sizeof(uint8_t);
+	uint8_t* _in_payload_ptr = NULL;
+	const ExecReqMetadata* _tmp_metadata = ms->ms_metadata;
+	size_t _len_metadata = sizeof(ExecReqMetadata);
+	ExecReqMetadata* _in_metadata = NULL;
+	uint8_t* _tmp_out_token_ptr = ms->ms_out_token_ptr;
+	size_t _tmp_out_token_capacity = ms->ms_out_token_capacity;
+	size_t _len_out_token_ptr = _tmp_out_token_capacity * sizeof(uint8_t);
+	uint8_t* _in_out_token_ptr = NULL;
+	size_t* _tmp_out_token_used = ms->ms_out_token_used;
+	size_t _len_out_token_used = sizeof(size_t);
+	size_t* _in_out_token_used = NULL;
+
+	if (sizeof(*_tmp_payload_ptr) != 0 &&
+		(size_t)_tmp_payload_len > (SIZE_MAX / sizeof(*_tmp_payload_ptr))) {
+		return SGX_ERROR_INVALID_PARAMETER;
+	}
+
+	if (sizeof(*_tmp_out_token_ptr) != 0 &&
+		(size_t)_tmp_out_token_capacity > (SIZE_MAX / sizeof(*_tmp_out_token_ptr))) {
+		return SGX_ERROR_INVALID_PARAMETER;
+	}
+
+	CHECK_UNIQUE_POINTER(_tmp_payload_ptr, _len_payload_ptr);
+	CHECK_UNIQUE_POINTER(_tmp_metadata, _len_metadata);
+	CHECK_UNIQUE_POINTER(_tmp_out_token_ptr, _len_out_token_ptr);
+	CHECK_UNIQUE_POINTER(_tmp_out_token_used, _len_out_token_used);
+
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+
+	if (_tmp_payload_ptr != NULL && _len_payload_ptr != 0) {
+		if ( _len_payload_ptr % sizeof(*_tmp_payload_ptr) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		_in_payload_ptr = (uint8_t*)malloc(_len_payload_ptr);
+		if (_in_payload_ptr == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_payload_ptr, _len_payload_ptr, _tmp_payload_ptr, _len_payload_ptr)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+	if (_tmp_metadata != NULL && _len_metadata != 0) {
+		_in_metadata = (ExecReqMetadata*)malloc(_len_metadata);
+		if (_in_metadata == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_metadata, _len_metadata, _tmp_metadata, _len_metadata)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+	if (_tmp_out_token_ptr != NULL && _len_out_token_ptr != 0) {
+		if ( _len_out_token_ptr % sizeof(*_tmp_out_token_ptr) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		if ((_in_out_token_ptr = (uint8_t*)malloc(_len_out_token_ptr)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		memset((void*)_in_out_token_ptr, 0, _len_out_token_ptr);
+	}
+	if (_tmp_out_token_used != NULL && _len_out_token_used != 0) {
+		if ( _len_out_token_used % sizeof(*_tmp_out_token_used) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		if ((_in_out_token_used = (size_t*)malloc(_len_out_token_used)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		memset((void*)_in_out_token_used, 0, _len_out_token_used);
+	}
+
+	ms->ms_retval = issue_execution_token((const uint8_t*)_in_payload_ptr, _tmp_payload_len, (const ExecReqMetadata*)_in_metadata, _in_out_token_ptr, _tmp_out_token_capacity, _in_out_token_used);
+	if (_in_out_token_ptr) {
+		if (memcpy_s(_tmp_out_token_ptr, _len_out_token_ptr, _in_out_token_ptr, _len_out_token_ptr)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+	}
+	if (_in_out_token_used) {
+		if (memcpy_s(_tmp_out_token_used, _len_out_token_used, _in_out_token_used, _len_out_token_used)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+	}
+
+err:
+	if (_in_payload_ptr) free(_in_payload_ptr);
+	if (_in_metadata) free(_in_metadata);
+	if (_in_out_token_ptr) free(_in_out_token_ptr);
+	if (_in_out_token_used) free(_in_out_token_used);
 	return status;
 }
 
@@ -714,11 +911,12 @@ static sgx_status_t SGX_CDECL sgx_end_session(void* pms)
 
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[6];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
 } g_ecall_table = {
-	6,
+	7,
 	{
 		{(void*)(uintptr_t)sgx_enclave_create_report, 0, 0},
+		{(void*)(uintptr_t)sgx_issue_execution_token, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_init_ecall, 0, 0},
 		{(void*)(uintptr_t)sgx_t_global_exit_ecall, 0, 0},
 		{(void*)(uintptr_t)sgx_session_request, 0, 0},
@@ -729,73 +927,83 @@ SGX_EXTERNC const struct {
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[63][6];
+	uint8_t entry_table[73][7];
 } g_dyn_entry_table = {
-	63,
+	73,
 	{
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 
@@ -4915,6 +5123,539 @@ sgx_status_t SGX_CDECL sgx_thread_set_multiple_untrusted_events_ocall(int* retva
 	
 	ms->ms_total = total;
 	status = sgx_ocall(62, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_exclusive_file_open(void** retval, const char* filename, uint8_t read_only, int64_t* file_size, int32_t* error_code)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_filename = filename ? strlen(filename) + 1 : 0;
+	size_t _len_file_size = sizeof(int64_t);
+	size_t _len_error_code = sizeof(int32_t);
+
+	ms_u_sgxprotectedfs_exclusive_file_open_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_exclusive_file_open_t);
+	void *__tmp = NULL;
+
+	void *__tmp_file_size = NULL;
+	void *__tmp_error_code = NULL;
+
+	CHECK_ENCLAVE_POINTER(filename, _len_filename);
+	CHECK_ENCLAVE_POINTER(file_size, _len_file_size);
+	CHECK_ENCLAVE_POINTER(error_code, _len_error_code);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (filename != NULL) ? _len_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (file_size != NULL) ? _len_file_size : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (error_code != NULL) ? _len_error_code : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_exclusive_file_open_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_exclusive_file_open_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_exclusive_file_open_t);
+
+	if (filename != NULL) {
+		ms->ms_filename = (const char*)__tmp;
+		if (_len_filename % sizeof(*filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, filename, _len_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_filename);
+		ocalloc_size -= _len_filename;
+	} else {
+		ms->ms_filename = NULL;
+	}
+	
+	ms->ms_read_only = read_only;
+	if (file_size != NULL) {
+		ms->ms_file_size = (int64_t*)__tmp;
+		__tmp_file_size = __tmp;
+		if (_len_file_size % sizeof(*file_size) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		memset(__tmp_file_size, 0, _len_file_size);
+		__tmp = (void *)((size_t)__tmp + _len_file_size);
+		ocalloc_size -= _len_file_size;
+	} else {
+		ms->ms_file_size = NULL;
+	}
+	
+	if (error_code != NULL) {
+		ms->ms_error_code = (int32_t*)__tmp;
+		__tmp_error_code = __tmp;
+		if (_len_error_code % sizeof(*error_code) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		memset(__tmp_error_code, 0, _len_error_code);
+		__tmp = (void *)((size_t)__tmp + _len_error_code);
+		ocalloc_size -= _len_error_code;
+	} else {
+		ms->ms_error_code = NULL;
+	}
+	
+	status = sgx_ocall(63, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+		if (file_size) {
+			if (memcpy_s((void*)file_size, _len_file_size, __tmp_file_size, _len_file_size)) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
+		if (error_code) {
+			if (memcpy_s((void*)error_code, _len_error_code, __tmp_error_code, _len_error_code)) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_check_if_file_exists(uint8_t* retval, const char* filename)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_filename = filename ? strlen(filename) + 1 : 0;
+
+	ms_u_sgxprotectedfs_check_if_file_exists_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_check_if_file_exists_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(filename, _len_filename);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (filename != NULL) ? _len_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_check_if_file_exists_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_check_if_file_exists_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_check_if_file_exists_t);
+
+	if (filename != NULL) {
+		ms->ms_filename = (const char*)__tmp;
+		if (_len_filename % sizeof(*filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, filename, _len_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_filename);
+		ocalloc_size -= _len_filename;
+	} else {
+		ms->ms_filename = NULL;
+	}
+	
+	status = sgx_ocall(64, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_fread_node(int32_t* retval, void* f, uint64_t node_number, uint8_t* buffer, uint32_t node_size)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_buffer = node_size;
+
+	ms_u_sgxprotectedfs_fread_node_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_fread_node_t);
+	void *__tmp = NULL;
+
+	void *__tmp_buffer = NULL;
+
+	CHECK_ENCLAVE_POINTER(buffer, _len_buffer);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (buffer != NULL) ? _len_buffer : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_fread_node_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_fread_node_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fread_node_t);
+
+	ms->ms_f = f;
+	ms->ms_node_number = node_number;
+	if (buffer != NULL) {
+		ms->ms_buffer = (uint8_t*)__tmp;
+		__tmp_buffer = __tmp;
+		if (_len_buffer % sizeof(*buffer) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		memset(__tmp_buffer, 0, _len_buffer);
+		__tmp = (void *)((size_t)__tmp + _len_buffer);
+		ocalloc_size -= _len_buffer;
+	} else {
+		ms->ms_buffer = NULL;
+	}
+	
+	ms->ms_node_size = node_size;
+	status = sgx_ocall(65, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+		if (buffer) {
+			if (memcpy_s((void*)buffer, _len_buffer, __tmp_buffer, _len_buffer)) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_fwrite_node(int32_t* retval, void* f, uint64_t node_number, uint8_t* buffer, uint32_t node_size)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_buffer = node_size;
+
+	ms_u_sgxprotectedfs_fwrite_node_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_fwrite_node_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(buffer, _len_buffer);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (buffer != NULL) ? _len_buffer : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_fwrite_node_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_fwrite_node_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fwrite_node_t);
+
+	ms->ms_f = f;
+	ms->ms_node_number = node_number;
+	if (buffer != NULL) {
+		ms->ms_buffer = (uint8_t*)__tmp;
+		if (_len_buffer % sizeof(*buffer) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, buffer, _len_buffer)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_buffer);
+		ocalloc_size -= _len_buffer;
+	} else {
+		ms->ms_buffer = NULL;
+	}
+	
+	ms->ms_node_size = node_size;
+	status = sgx_ocall(66, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_fclose(int32_t* retval, void* f)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_u_sgxprotectedfs_fclose_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_fclose_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_fclose_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_fclose_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fclose_t);
+
+	ms->ms_f = f;
+	status = sgx_ocall(67, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_fflush(uint8_t* retval, void* f)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_u_sgxprotectedfs_fflush_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_fflush_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_fflush_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_fflush_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fflush_t);
+
+	ms->ms_f = f;
+	status = sgx_ocall(68, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_remove(int32_t* retval, const char* filename)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_filename = filename ? strlen(filename) + 1 : 0;
+
+	ms_u_sgxprotectedfs_remove_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_remove_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(filename, _len_filename);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (filename != NULL) ? _len_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_remove_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_remove_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_remove_t);
+
+	if (filename != NULL) {
+		ms->ms_filename = (const char*)__tmp;
+		if (_len_filename % sizeof(*filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, filename, _len_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_filename);
+		ocalloc_size -= _len_filename;
+	} else {
+		ms->ms_filename = NULL;
+	}
+	
+	status = sgx_ocall(69, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_recovery_file_open(void** retval, const char* filename)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_filename = filename ? strlen(filename) + 1 : 0;
+
+	ms_u_sgxprotectedfs_recovery_file_open_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_recovery_file_open_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(filename, _len_filename);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (filename != NULL) ? _len_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_recovery_file_open_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_recovery_file_open_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_recovery_file_open_t);
+
+	if (filename != NULL) {
+		ms->ms_filename = (const char*)__tmp;
+		if (_len_filename % sizeof(*filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, filename, _len_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_filename);
+		ocalloc_size -= _len_filename;
+	} else {
+		ms->ms_filename = NULL;
+	}
+	
+	status = sgx_ocall(70, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_fwrite_recovery_node(uint8_t* retval, void* f, uint8_t* data, uint32_t data_length)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_data = data_length * sizeof(uint8_t);
+
+	ms_u_sgxprotectedfs_fwrite_recovery_node_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_fwrite_recovery_node_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(data, _len_data);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (data != NULL) ? _len_data : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_fwrite_recovery_node_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_fwrite_recovery_node_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fwrite_recovery_node_t);
+
+	ms->ms_f = f;
+	if (data != NULL) {
+		ms->ms_data = (uint8_t*)__tmp;
+		if (_len_data % sizeof(*data) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, data, _len_data)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_data);
+		ocalloc_size -= _len_data;
+	} else {
+		ms->ms_data = NULL;
+	}
+	
+	ms->ms_data_length = data_length;
+	status = sgx_ocall(71, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL u_sgxprotectedfs_do_file_recovery(int32_t* retval, const char* filename, const char* recovery_filename, uint32_t node_size)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	size_t _len_filename = filename ? strlen(filename) + 1 : 0;
+	size_t _len_recovery_filename = recovery_filename ? strlen(recovery_filename) + 1 : 0;
+
+	ms_u_sgxprotectedfs_do_file_recovery_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_u_sgxprotectedfs_do_file_recovery_t);
+	void *__tmp = NULL;
+
+
+	CHECK_ENCLAVE_POINTER(filename, _len_filename);
+	CHECK_ENCLAVE_POINTER(recovery_filename, _len_recovery_filename);
+
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (filename != NULL) ? _len_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (recovery_filename != NULL) ? _len_recovery_filename : 0))
+		return SGX_ERROR_INVALID_PARAMETER;
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_u_sgxprotectedfs_do_file_recovery_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_u_sgxprotectedfs_do_file_recovery_t));
+	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_do_file_recovery_t);
+
+	if (filename != NULL) {
+		ms->ms_filename = (const char*)__tmp;
+		if (_len_filename % sizeof(*filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, filename, _len_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_filename);
+		ocalloc_size -= _len_filename;
+	} else {
+		ms->ms_filename = NULL;
+	}
+	
+	if (recovery_filename != NULL) {
+		ms->ms_recovery_filename = (const char*)__tmp;
+		if (_len_recovery_filename % sizeof(*recovery_filename) != 0) {
+			sgx_ocfree();
+			return SGX_ERROR_INVALID_PARAMETER;
+		}
+		if (memcpy_s(__tmp, ocalloc_size, recovery_filename, _len_recovery_filename)) {
+			sgx_ocfree();
+			return SGX_ERROR_UNEXPECTED;
+		}
+		__tmp = (void *)((size_t)__tmp + _len_recovery_filename);
+		ocalloc_size -= _len_recovery_filename;
+	} else {
+		ms->ms_recovery_filename = NULL;
+	}
+	
+	ms->ms_node_size = node_size;
+	status = sgx_ocall(72, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;

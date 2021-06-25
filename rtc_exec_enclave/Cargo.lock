@@ -221,7 +221,7 @@ dependencies = [
 [[package]]
 name = "once_cell"
 version = "1.4.0"
-source = "git+https://github.com/mesalock-linux/once_cell-sgx.git?tag=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx.git#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
 dependencies = [
  "sgx_tstd",
 ]
@@ -500,7 +500,7 @@ dependencies = [
 [[package]]
 name = "serde_json"
 version = "1.0.60"
-source = "git+https://github.com/mesalock-linux/serde-json-sgx?tag=sgx_1.1.3#380893814ad2a057758d825bab798aa117f7362a"
+source = "git+https://github.com/mesalock-linux/serde-json-sgx#380893814ad2a057758d825bab798aa117f7362a"
 dependencies = [
  "itoa 0.4.5",
  "ryu",

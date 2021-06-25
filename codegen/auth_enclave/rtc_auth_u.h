@@ -278,8 +278,49 @@ int SGX_UBRIDGE(SGX_CDECL, sgx_thread_setwait_untrusted_events_ocall, (const voi
 #define SGX_THREAD_SET_MULTIPLE_UNTRUSTED_EVENTS_OCALL_DEFINED__
 int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (const void** waiters, size_t total));
 #endif
+#ifndef U_SGXPROTECTEDFS_EXCLUSIVE_FILE_OPEN_DEFINED__
+#define U_SGXPROTECTEDFS_EXCLUSIVE_FILE_OPEN_DEFINED__
+void* SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_exclusive_file_open, (const char* filename, uint8_t read_only, int64_t* file_size, int32_t* error_code));
+#endif
+#ifndef U_SGXPROTECTEDFS_CHECK_IF_FILE_EXISTS_DEFINED__
+#define U_SGXPROTECTEDFS_CHECK_IF_FILE_EXISTS_DEFINED__
+uint8_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_check_if_file_exists, (const char* filename));
+#endif
+#ifndef U_SGXPROTECTEDFS_FREAD_NODE_DEFINED__
+#define U_SGXPROTECTEDFS_FREAD_NODE_DEFINED__
+int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fread_node, (void* f, uint64_t node_number, uint8_t* buffer, uint32_t node_size));
+#endif
+#ifndef U_SGXPROTECTEDFS_FWRITE_NODE_DEFINED__
+#define U_SGXPROTECTEDFS_FWRITE_NODE_DEFINED__
+int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fwrite_node, (void* f, uint64_t node_number, uint8_t* buffer, uint32_t node_size));
+#endif
+#ifndef U_SGXPROTECTEDFS_FCLOSE_DEFINED__
+#define U_SGXPROTECTEDFS_FCLOSE_DEFINED__
+int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fclose, (void* f));
+#endif
+#ifndef U_SGXPROTECTEDFS_FFLUSH_DEFINED__
+#define U_SGXPROTECTEDFS_FFLUSH_DEFINED__
+uint8_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fflush, (void* f));
+#endif
+#ifndef U_SGXPROTECTEDFS_REMOVE_DEFINED__
+#define U_SGXPROTECTEDFS_REMOVE_DEFINED__
+int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_remove, (const char* filename));
+#endif
+#ifndef U_SGXPROTECTEDFS_RECOVERY_FILE_OPEN_DEFINED__
+#define U_SGXPROTECTEDFS_RECOVERY_FILE_OPEN_DEFINED__
+void* SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_recovery_file_open, (const char* filename));
+#endif
+#ifndef U_SGXPROTECTEDFS_FWRITE_RECOVERY_NODE_DEFINED__
+#define U_SGXPROTECTEDFS_FWRITE_RECOVERY_NODE_DEFINED__
+uint8_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_fwrite_recovery_node, (void* f, uint8_t* data, uint32_t data_length));
+#endif
+#ifndef U_SGXPROTECTEDFS_DO_FILE_RECOVERY_DEFINED__
+#define U_SGXPROTECTEDFS_DO_FILE_RECOVERY_DEFINED__
+int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_do_file_recovery, (const char* filename, const char* recovery_filename, uint32_t node_size));
+#endif
 
 sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used);
 sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid);
 sgx_status_t rtc_auth_session_request(sgx_enclave_id_t eid, SessionRequestResult* retval, sgx_enclave_id_t src_enclave_id);

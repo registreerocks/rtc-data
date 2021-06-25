@@ -24,9 +24,23 @@ dependencies = [
 
 [[package]]
 name = "autocfg"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
+
+[[package]]
+name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
+
+[[package]]
+name = "base64"
+version = "0.13.0"
+source = "git+https://github.com/mesalock-linux/rust-base64-sgx#dc7389e10817b078f289386b3b6a852ab6c4c021"
+dependencies = [
+ "sgx_tstd",
+]
 
 [[package]]
 name = "bitflags"
@@ -76,6 +90,16 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "chrono"
+version = "0.4.11"
+source = "git+https://github.com/mesalock-linux/chrono-sgx#f964ae7f5f65bd2c9cd6f44a067e7980afc08ca0"
+dependencies = [
+ "num-integer",
+ "num-traits",
+ "sgx_tstd",
+]
 
 [[package]]
 name = "clap"
@@ -161,7 +185,7 @@ version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
 dependencies = [
- "autocfg",
+ "autocfg 1.0.1",
  "hashbrown",
 ]
 
@@ -186,6 +210,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83bdfbace3a0e81a4253f73b49e960b053e396a11012cbd49b9b74d6a2b67062"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "jsonwebtoken"
+version = "7.2.0"
+source = "git+https://github.com/mesalock-linux/jsonwebtoken-sgx#a110ccf3a7ee5c1e9ca8ba776c2f37fc960a4b5f"
+dependencies = [
+ "base64",
+ "pem",
+ "ring 0.16.19",
+ "serde 1.0.118",
+ "serde_json 1.0.60",
+ "sgx_tstd",
+ "simple_asn1",
 ]
 
 [[package]]
@@ -215,13 +253,43 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59accc507f1338036a0477ef61afdae33cde60840f4dfe481319ce3ad116ddf9"
 dependencies = [
- "autocfg",
+ "autocfg 1.0.1",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.2.5"
+source = "git+https://github.com/mesalock-linux/num-bigint-sgx#76a5bed94dc31c32bd1670dbf72877abcf9bbc09"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.41"
+source = "git+https://github.com/mesalock-linux/num-integer-sgx#404c50e5378ca635261688b080dee328ff42b6bd"
+dependencies = [
+ "autocfg 0.1.7",
+ "num-traits",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.10"
+source = "git+https://github.com/mesalock-linux/num-traits-sgx#af046e0b15c594c960007418097dd4ff37ec3f7a"
+dependencies = [
+ "autocfg 0.1.7",
+ "sgx_tstd",
 ]
 
 [[package]]
 name = "once_cell"
 version = "1.4.0"
-source = "git+https://github.com/mesalock-linux/once_cell-sgx.git?tag=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx.git#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
 dependencies = [
  "sgx_tstd",
 ]
@@ -231,6 +299,17 @@ name = "once_cell"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af8b08b04175473088b46763e51ee54da5f9a164bc162f615b91bc179dbf15a3"
+
+[[package]]
+name = "pem"
+version = "0.8.2"
+source = "git+https://github.com/mesalock-linux/pem-rs-sgx#fdfef4f24a9fb3fa72e8a71bb28bd8ff15feff2f"
+dependencies = [
+ "base64",
+ "once_cell 1.4.0",
+ "regex",
+ "sgx_tstd",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -361,12 +440,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex"
+version = "1.3.1"
+source = "git+https://github.com/mesalock-linux/regex-sgx#76aef86f9836532d17764523d0fa23bb7d2e31cf"
+dependencies = [
+ "regex-syntax",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.6.12"
+source = "git+https://github.com/mesalock-linux/regex-sgx#76aef86f9836532d17764523d0fa23bb7d2e31cf"
+dependencies = [
+ "sgx_tstd",
+]
+
+[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "ring"
+version = "0.16.19"
+source = "git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5#844efe271ed78a399d803b2579f5f2424d543c9f"
+dependencies = [
+ "cc",
+ "sgx_tstd",
+ "spin",
+ "untrusted",
 ]
 
 [[package]]
@@ -410,12 +517,21 @@ dependencies = [
 name = "rtc_auth_enclave"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "cbindgen",
  "cc",
+ "jsonwebtoken",
+ "once_cell 1.4.0",
+ "rand 0.7.3",
  "rtc_tenclave",
  "rtc_types",
+ "secrecy",
+ "serde 1.0.118",
+ "serde_json 1.0.60",
+ "sgx_tcrypto",
  "sgx_tstd",
  "sgx_types",
+ "uuid",
 ]
 
 [[package]]
@@ -426,7 +542,7 @@ dependencies = [
  "hex",
  "once_cell 1.4.0",
  "rand 0.7.3",
- "ring",
+ "ring 0.17.0-alpha.10",
  "rkyv",
  "rtc_types",
  "secrecy",
@@ -473,6 +589,7 @@ name = "serde"
 version = "1.0.118"
 source = "git+https://github.com/mesalock-linux/serde-sgx#db0226f1d5d70fca6b96af2c285851502204e21c"
 dependencies = [
+ "serde_derive 1.0.118",
  "sgx_tstd",
 ]
 
@@ -482,7 +599,17 @@ version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "558dc50e1a5a5fa7112ca2ce4effcb321b0300c0d4ccf0776a9f60cd89031171"
 dependencies = [
- "serde_derive",
+ "serde_derive 1.0.125",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.118"
+source = "git+https://github.com/mesalock-linux/serde-sgx#db0226f1d5d70fca6b96af2c285851502204e21c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -499,7 +626,7 @@ dependencies = [
 [[package]]
 name = "serde_json"
 version = "1.0.60"
-source = "git+https://github.com/mesalock-linux/serde-json-sgx?tag=sgx_1.1.3#380893814ad2a057758d825bab798aa117f7362a"
+source = "git+https://github.com/mesalock-linux/serde-json-sgx#380893814ad2a057758d825bab798aa117f7362a"
 dependencies = [
  "itoa 0.4.5",
  "ryu",
@@ -623,6 +750,17 @@ version = "0.1.1"
 source = "git+https://github.com/apache/incubator-teaclave-sgx-sdk.git?rev=b9d1bda#b9d1bda674564668f8cf2e1ee202d08533fde46f"
 dependencies = [
  "sgx_build_helper",
+]
+
+[[package]]
+name = "simple_asn1"
+version = "0.5.0"
+source = "git+https://github.com/mesalock-linux/simple_asn1-sgx#ba48e2390f14094e5a210ab7dc0421a9a86725d0"
+dependencies = [
+ "chrono",
+ "num-bigint",
+ "num-traits",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -751,6 +889,16 @@ name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
+
+[[package]]
+name = "uuid"
+version = "0.8.1"
+source = "git+https://github.com/mesalock-linux/uuid-sgx#9b425a8f07d5bb6e50b9a24414d11a59ec86617a"
+dependencies = [
+ "rand 0.7.3",
+ "serde 1.0.118",
+ "sgx_tstd",
+]
 
 [[package]]
 name = "vec_map"

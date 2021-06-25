@@ -23,12 +23,37 @@ so these references must be patched like this:
 sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", rev = "b9d1bda" }
 ```
 
-However, also note that Cargo currently has this limitation:
+### Cargo patch limitation workaround
+
+Ideally, we want to explicitly specify the tag or revision of the SGX-forked packages we use,
+like this:
+
+```toml
+serde = { git = "https://github.com/mesalock-linux/serde-sgx", tag = "sgx_1.1.3" }
+```
+
+However, this fails for packages that are also listed as dependencies of other SGX-forked packages
+_without_ the explicit tag: Cargo will resolve these as different crates, which causes problems
+(such as different crates referring to different versions of `serde`'s traits).
+
+We cannot use `[patch]` to override these dependencies to use the same specifiers,
+because of this Cargo limitation:
 
 * [Cannot patch underspecified git dependency #7670](https://github.com/rust-lang/cargo/issues/7670)
+  * Comment: <https://github.com/rust-lang/cargo/issues/7670#issuecomment-841722488>
 
-This prevents patching a repository reference to a different revision in the same repository,
-which makes some SGX-patched packages (such as `serde-sgx` and `serde-json-sgx`) tricky to deal with.
+To work around this problem, our specifiers must exactly match the specifiers used by our dependencies'
+dependency declarations. (That is, the `rev` / `tag` / `branch` values (or lack of them) must match.)
+
+Currently, at least these transitively-used dependencies must be specified exactly:
+
+```toml
+once_cell = { git = "https://github.com/mesalock-linux/once_cell-sgx" }
+serde = { git = "https://github.com/mesalock-linux/serde-sgx" }
+serde-big-array = { git = "https://github.com/mesalock-linux/serde-big-array-sgx" }
+serde_derive = { git = "https://github.com/mesalock-linux/serde-sgx" }
+serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx" }
+```
 
 
 ## Aligned memory allocation for secret values

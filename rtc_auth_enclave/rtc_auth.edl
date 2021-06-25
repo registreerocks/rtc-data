@@ -2,6 +2,7 @@ enclave {
     from "sgx_tstd.edl" import *;
     from "sgx_backtrace.edl" import *;
     from "rtc_tenclave.edl" import *;
+    from "sgx_tprotected_fs.edl" import *;
 
     include "sgx_report.h"
     include "sgx_dh.h"
@@ -12,5 +13,11 @@ enclave {
         public CreateReportResult enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
                                               [out, isary]EnclaveHeldData enclave_data,
                                               [out]sgx_report_t* p_report);
+        public IssueTokenResult issue_execution_token([in, count=payload_len]const uint8_t* payload_ptr,
+                                          size_t payload_len,
+                                          [in]const ExecReqMetadata* metadata,
+                                          [out, count=out_token_capacity]uint8_t* out_token_ptr,
+                                          size_t out_token_capacity,
+                                          [out] size_t* out_token_used);
     };
 };

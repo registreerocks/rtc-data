@@ -13,8 +13,8 @@ use rtc_data_service::data_upload::models;
 use crate::helpers;
 
 // See rtc_tenclave/src/crypto.rs
-const CRYPTO_BOX_ZEROBYTES: usize = 32;
-const CRYPTO_BOX_BOXZEROBYTES: usize = 16;
+use crate::CRYPTO_BOX_BOXZEROBYTES;
+use crate::CRYPTO_BOX_ZEROBYTES;
 
 /// Upload some data, decrypt and check the result.
 #[actix_rt::test]

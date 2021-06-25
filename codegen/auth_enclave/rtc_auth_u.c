@@ -8,6 +8,16 @@ typedef struct ms_enclave_create_report_t {
 	sgx_report_t* ms_p_report;
 } ms_enclave_create_report_t;
 
+typedef struct ms_issue_execution_token_t {
+	IssueTokenResult ms_retval;
+	const uint8_t* ms_payload_ptr;
+	size_t ms_payload_len;
+	const ExecReqMetadata* ms_metadata;
+	uint8_t* ms_out_token_ptr;
+	size_t ms_out_token_capacity;
+	size_t* ms_out_token_used;
+} ms_issue_execution_token_t;
+
 typedef struct ms_t_global_init_ecall_t {
 	uint64_t ms_id;
 	const uint8_t* ms_path;
@@ -474,6 +484,69 @@ typedef struct ms_sgx_thread_set_multiple_untrusted_events_ocall_t {
 	const void** ms_waiters;
 	size_t ms_total;
 } ms_sgx_thread_set_multiple_untrusted_events_ocall_t;
+
+typedef struct ms_u_sgxprotectedfs_exclusive_file_open_t {
+	void* ms_retval;
+	const char* ms_filename;
+	uint8_t ms_read_only;
+	int64_t* ms_file_size;
+	int32_t* ms_error_code;
+} ms_u_sgxprotectedfs_exclusive_file_open_t;
+
+typedef struct ms_u_sgxprotectedfs_check_if_file_exists_t {
+	uint8_t ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_check_if_file_exists_t;
+
+typedef struct ms_u_sgxprotectedfs_fread_node_t {
+	int32_t ms_retval;
+	void* ms_f;
+	uint64_t ms_node_number;
+	uint8_t* ms_buffer;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_fread_node_t;
+
+typedef struct ms_u_sgxprotectedfs_fwrite_node_t {
+	int32_t ms_retval;
+	void* ms_f;
+	uint64_t ms_node_number;
+	uint8_t* ms_buffer;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_fwrite_node_t;
+
+typedef struct ms_u_sgxprotectedfs_fclose_t {
+	int32_t ms_retval;
+	void* ms_f;
+} ms_u_sgxprotectedfs_fclose_t;
+
+typedef struct ms_u_sgxprotectedfs_fflush_t {
+	uint8_t ms_retval;
+	void* ms_f;
+} ms_u_sgxprotectedfs_fflush_t;
+
+typedef struct ms_u_sgxprotectedfs_remove_t {
+	int32_t ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_remove_t;
+
+typedef struct ms_u_sgxprotectedfs_recovery_file_open_t {
+	void* ms_retval;
+	const char* ms_filename;
+} ms_u_sgxprotectedfs_recovery_file_open_t;
+
+typedef struct ms_u_sgxprotectedfs_fwrite_recovery_node_t {
+	uint8_t ms_retval;
+	void* ms_f;
+	uint8_t* ms_data;
+	uint32_t ms_data_length;
+} ms_u_sgxprotectedfs_fwrite_recovery_node_t;
+
+typedef struct ms_u_sgxprotectedfs_do_file_recovery_t {
+	int32_t ms_retval;
+	const char* ms_filename;
+	const char* ms_recovery_filename;
+	uint32_t ms_node_size;
+} ms_u_sgxprotectedfs_do_file_recovery_t;
 
 static sgx_status_t SGX_CDECL rtc_auth_u_thread_set_event_ocall(void* pms)
 {
@@ -979,11 +1052,91 @@ static sgx_status_t SGX_CDECL rtc_auth_sgx_thread_set_multiple_untrusted_events_
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_exclusive_file_open(void* pms)
+{
+	ms_u_sgxprotectedfs_exclusive_file_open_t* ms = SGX_CAST(ms_u_sgxprotectedfs_exclusive_file_open_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_exclusive_file_open(ms->ms_filename, ms->ms_read_only, ms->ms_file_size, ms->ms_error_code);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_check_if_file_exists(void* pms)
+{
+	ms_u_sgxprotectedfs_check_if_file_exists_t* ms = SGX_CAST(ms_u_sgxprotectedfs_check_if_file_exists_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_check_if_file_exists(ms->ms_filename);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_fread_node(void* pms)
+{
+	ms_u_sgxprotectedfs_fread_node_t* ms = SGX_CAST(ms_u_sgxprotectedfs_fread_node_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_fread_node(ms->ms_f, ms->ms_node_number, ms->ms_buffer, ms->ms_node_size);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_fwrite_node(void* pms)
+{
+	ms_u_sgxprotectedfs_fwrite_node_t* ms = SGX_CAST(ms_u_sgxprotectedfs_fwrite_node_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_fwrite_node(ms->ms_f, ms->ms_node_number, ms->ms_buffer, ms->ms_node_size);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_fclose(void* pms)
+{
+	ms_u_sgxprotectedfs_fclose_t* ms = SGX_CAST(ms_u_sgxprotectedfs_fclose_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_fclose(ms->ms_f);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_fflush(void* pms)
+{
+	ms_u_sgxprotectedfs_fflush_t* ms = SGX_CAST(ms_u_sgxprotectedfs_fflush_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_fflush(ms->ms_f);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_remove(void* pms)
+{
+	ms_u_sgxprotectedfs_remove_t* ms = SGX_CAST(ms_u_sgxprotectedfs_remove_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_remove(ms->ms_filename);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_recovery_file_open(void* pms)
+{
+	ms_u_sgxprotectedfs_recovery_file_open_t* ms = SGX_CAST(ms_u_sgxprotectedfs_recovery_file_open_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_recovery_file_open(ms->ms_filename);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_fwrite_recovery_node(void* pms)
+{
+	ms_u_sgxprotectedfs_fwrite_recovery_node_t* ms = SGX_CAST(ms_u_sgxprotectedfs_fwrite_recovery_node_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_fwrite_recovery_node(ms->ms_f, ms->ms_data, ms->ms_data_length);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL rtc_auth_u_sgxprotectedfs_do_file_recovery(void* pms)
+{
+	ms_u_sgxprotectedfs_do_file_recovery_t* ms = SGX_CAST(ms_u_sgxprotectedfs_do_file_recovery_t*, pms);
+	ms->ms_retval = u_sgxprotectedfs_do_file_recovery(ms->ms_filename, ms->ms_recovery_filename, ms->ms_node_size);
+
+	return SGX_SUCCESS;
+}
+
 static const struct {
 	size_t nr_ocall;
-	void * table[63];
+	void * table[73];
 } ocall_table_rtc_auth = {
-	63,
+	73,
 	{
 		(void*)rtc_auth_u_thread_set_event_ocall,
 		(void*)rtc_auth_u_thread_wait_event_ocall,
@@ -1048,6 +1201,16 @@ static const struct {
 		(void*)rtc_auth_sgx_thread_set_untrusted_event_ocall,
 		(void*)rtc_auth_sgx_thread_setwait_untrusted_events_ocall,
 		(void*)rtc_auth_sgx_thread_set_multiple_untrusted_events_ocall,
+		(void*)rtc_auth_u_sgxprotectedfs_exclusive_file_open,
+		(void*)rtc_auth_u_sgxprotectedfs_check_if_file_exists,
+		(void*)rtc_auth_u_sgxprotectedfs_fread_node,
+		(void*)rtc_auth_u_sgxprotectedfs_fwrite_node,
+		(void*)rtc_auth_u_sgxprotectedfs_fclose,
+		(void*)rtc_auth_u_sgxprotectedfs_fflush,
+		(void*)rtc_auth_u_sgxprotectedfs_remove,
+		(void*)rtc_auth_u_sgxprotectedfs_recovery_file_open,
+		(void*)rtc_auth_u_sgxprotectedfs_fwrite_recovery_node,
+		(void*)rtc_auth_u_sgxprotectedfs_do_file_recovery,
 	}
 };
 sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report)
@@ -1062,6 +1225,21 @@ sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportRe
 	return status;
 }
 
+sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used)
+{
+	sgx_status_t status;
+	ms_issue_execution_token_t ms;
+	ms.ms_payload_ptr = payload_ptr;
+	ms.ms_payload_len = payload_len;
+	ms.ms_metadata = metadata;
+	ms.ms_out_token_ptr = out_token_ptr;
+	ms.ms_out_token_capacity = out_token_capacity;
+	ms.ms_out_token_used = out_token_used;
+	status = sgx_ecall(eid, 1, &ocall_table_rtc_auth, &ms);
+	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
+	return status;
+}
+
 sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len)
 {
 	sgx_status_t status;
@@ -1069,14 +1247,14 @@ sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, con
 	ms.ms_id = id;
 	ms.ms_path = path;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 1, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 2, &ocall_table_rtc_auth, &ms);
 	return status;
 }
 
 sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
-	status = sgx_ecall(eid, 2, &ocall_table_rtc_auth, NULL);
+	status = sgx_ecall(eid, 3, &ocall_table_rtc_auth, NULL);
 	return status;
 }
 
@@ -1085,7 +1263,7 @@ sgx_status_t rtc_auth_session_request(sgx_enclave_id_t eid, SessionRequestResult
 	sgx_status_t status;
 	ms_session_request_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
-	status = sgx_ecall(eid, 3, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 4, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1096,7 +1274,7 @@ sgx_status_t rtc_auth_exchange_report(sgx_enclave_id_t eid, ExchangeReportResult
 	ms_exchange_report_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
 	ms.ms_dh_msg2 = dh_msg2;
-	status = sgx_ecall(eid, 4, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 5, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1106,7 +1284,7 @@ sgx_status_t rtc_auth_end_session(sgx_enclave_id_t eid, sgx_status_t* retval, sg
 	sgx_status_t status;
 	ms_end_session_t ms;
 	ms.ms_src_enclave_id = src_enclave_id;
-	status = sgx_ecall(eid, 5, &ocall_table_rtc_auth, &ms);
+	status = sgx_ecall(eid, 6, &ocall_table_rtc_auth, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
