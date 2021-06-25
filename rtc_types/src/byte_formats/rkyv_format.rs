@@ -2,14 +2,9 @@
 
 use core::mem::size_of;
 
-use rkyv::{
-    archived_root,
-    ser::{
-        serializers::{BufferSerializer, BufferSerializerError},
-        Serializer,
-    },
-    Aligned, Archive, Deserialize, Infallible, Serialize, Unreachable,
-};
+use rkyv::ser::serializers::{BufferSerializer, BufferSerializerError};
+use rkyv::ser::Serializer;
+use rkyv::{archived_root, Aligned, Archive, Deserialize, Infallible, Serialize, Unreachable};
 
 pub fn write_array<T>(value: &T) -> Result<[u8; size_of::<T::Archived>()], BufferSerializerError>
 where
@@ -57,12 +52,11 @@ where
 mod tests {
     use core::mem::{size_of, size_of_val};
 
+    use proptest::prelude::*;
+    use proptest_derive::Arbitrary;
     use rkyv::{Archive, Deserialize, Serialize};
 
     use super::*;
-
-    use proptest::prelude::*;
-    use proptest_derive::Arbitrary;
 
     /// Arbitrary structure to test with.
     #[derive(

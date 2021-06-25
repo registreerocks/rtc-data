@@ -15,12 +15,12 @@ mod data_upload;
 mod ocalls;
 
 use core::slice;
-use rtc_types::*;
-use sgx_types::*;
 use std::prelude::v1::*;
 
 #[allow(unused_imports)] // for ECALL linking
 use rtc_tenclave::enclave::enclave_create_report;
+use rtc_types::*;
+use sgx_types::*;
 
 /// Validates and save a payload encrypted for the enclave
 ///

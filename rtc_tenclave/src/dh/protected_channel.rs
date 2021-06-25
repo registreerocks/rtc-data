@@ -1,18 +1,16 @@
 //! Secure symmetric communication channels based on [`sgx_tcrypto`]'s AES-GCM.
 
+use rtc_types::enclave_messages::{EncryptedEnclaveMessage, RecommendedAesGcmIv};
 use secrecy::{ExposeSecret, Secret};
 use sgx_tcrypto::{rsgx_rijndael128GCM_decrypt, rsgx_rijndael128GCM_encrypt};
+#[cfg(not(test))]
+use sgx_tstd::enclave;
 use sgx_types::*;
-
-use rtc_types::enclave_messages::{EncryptedEnclaveMessage, RecommendedAesGcmIv};
-
-use super::types::AlignedKey;
-use crate::util::concat_u8;
 
 #[cfg(test)]
 use super::enclave;
-#[cfg(not(test))]
-use sgx_tstd::enclave;
+use super::types::AlignedKey;
+use crate::util::concat_u8;
 
 pub struct ProtectedChannel {
     iv_constructor: DeterministicAesGcmIvConstructor,

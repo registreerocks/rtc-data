@@ -1,6 +1,7 @@
-use crate::data_enclave_actor::DataEnclaveActor;
 use actix::{Handler, Message};
 use rtc_types::{ExecReqMetadata, ExecTokenError, ExecTokenResponse};
+
+use crate::data_enclave_actor::DataEnclaveActor;
 
 // TODO : Change struct values to resemble request Body (add data access key, uuid, hash, keypair, nonce..)
 pub struct ExecTokenMessage {

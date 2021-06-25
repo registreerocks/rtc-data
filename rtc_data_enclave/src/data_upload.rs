@@ -1,14 +1,17 @@
+use std::prelude::v1::*;
+
 use rand::prelude::*;
-use rtc_tenclave::crypto::RtcCrypto;
-use rtc_tenclave::crypto::SodaBoxCrypto as Crypto;
+use rtc_tenclave::crypto::{RtcCrypto, SodaBoxCrypto as Crypto};
 use rtc_tenclave::util;
-use rtc_types::DataUploadError as DataError;
-use rtc_types::UploadMetadata as Metadata;
-use rtc_types::{CryptoError, DataUploadResponse};
+use rtc_types::{
+    CryptoError,
+    DataUploadError as DataError,
+    DataUploadResponse,
+    UploadMetadata as Metadata,
+};
 use secrecy::{ExposeSecret, Zeroize};
 use sgx_tseal::SgxSealedData;
 use sgx_types::*;
-use std::prelude::v1::*;
 use uuid::Uuid;
 
 pub struct SealedResult {

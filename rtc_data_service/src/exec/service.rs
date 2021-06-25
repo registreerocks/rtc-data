@@ -1,14 +1,13 @@
 use std::convert::TryInto;
 
 use actix::{Addr, MailboxError};
-use actix_web::{error::ErrorInternalServerError, post, web};
+use actix_web::error::ErrorInternalServerError;
+use actix_web::{post, web};
 use models::*;
 
-use crate::{
-    exec::{RequestExecutionError, RequestExecutionMessage, RequestExecutionResponse},
-    exec_enclave_actor::ExecEnclaveActor,
-    merge_error::*,
-};
+use crate::exec::{RequestExecutionError, RequestExecutionMessage, RequestExecutionResponse};
+use crate::exec_enclave_actor::ExecEnclaveActor;
+use crate::merge_error::*;
 
 /// Request execution using an execution token
 #[post("/exec/request")]
@@ -27,11 +26,13 @@ pub async fn request_execution(
 }
 
 pub mod models {
+    use std::convert::TryFrom;
+
+    use serde::{Deserialize, Serialize};
+
     use crate::exec::{RequestExecutionMessage, RequestExecutionResponse};
     use crate::validation::ValidationError;
     use crate::Base64Standard;
-    use serde::{Deserialize, Serialize};
-    use std::convert::TryFrom;
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct Metadata {

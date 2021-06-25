@@ -1,11 +1,9 @@
 //! [`SgxFile`] support
 
-use std::prelude::v1::Vec;
-
 use std::io::ErrorKind::NotFound;
-use std::io::Result;
-use std::io::Write;
+use std::io::{Result, Write};
 use std::path::Path;
+use std::prelude::v1::Vec;
 
 use sgx_tstd::sgxfs;
 use sgx_tstd::sgxfs::SgxFile;

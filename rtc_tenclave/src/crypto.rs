@@ -1,13 +1,13 @@
-use rand::prelude::*;
-use rtc_types::EncryptedMessage;
-use rtc_types::{CryptoError as Error, SizedEncryptedMessage};
-use secrecy::{ExposeSecret, Secret};
-use sgx_types::*;
-use std::{convert::TryInto, prelude::v1::*};
-use zeroize::Zeroize;
+use std::convert::TryInto;
+use std::prelude::v1::*;
 
+use rand::prelude::*;
+use rtc_types::{CryptoError as Error, EncryptedMessage, SizedEncryptedMessage};
+use secrecy::{ExposeSecret, Secret};
 #[cfg(not(test))]
 use sgx_tse::{rsgx_get_key, rsgx_self_report};
+use sgx_types::*;
+use zeroize::Zeroize;
 
 // FIXME: sodalite should expose these padding constants.
 // Values referenced from https://tweetnacl.cr.yp.to/20140427/tweetnacl.h

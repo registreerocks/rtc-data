@@ -1,19 +1,15 @@
 mod responder;
 
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex, RwLock},
-};
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, RwLock};
 
 use once_cell::sync::OnceCell;
 use responder::Responder;
 pub use responder::ResponderSys;
-use rtc_types::{
-    dh::{ExchangeReportResult, SessionRequestResult},
-    EcallResult,
-};
+use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
+use rtc_types::EcallResult;
 use sgx_types::*;
-use std::collections::hash_map::Entry;
 
 type SyncSendResponder = Arc<Mutex<Responder>>;
 

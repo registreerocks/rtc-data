@@ -1,9 +1,10 @@
 //! In-memory implementations of [`KvStore`] (for testing)
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::prelude::v1::*;
+
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 use super::KvStore;
 

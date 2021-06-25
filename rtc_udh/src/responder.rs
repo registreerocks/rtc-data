@@ -1,7 +1,5 @@
-use rtc_types::{
-    dh::{ExchangeReportResult, SessionRequestResult},
-    EcallResult,
-};
+use rtc_types::dh::{ExchangeReportResult, SessionRequestResult};
+use rtc_types::EcallResult;
 use sgx_types::*;
 
 pub trait ResponderSys: Send {

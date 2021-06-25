@@ -1,7 +1,8 @@
+use std::env;
+use std::path::{Path, PathBuf};
+
 use bindgen::{self, CodegenConfig};
 use cc;
-use std::path::PathBuf;
-use std::{env, path::Path};
 
 fn main() {
     let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/sgxsdk".to_string());

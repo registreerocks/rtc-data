@@ -1,8 +1,9 @@
 use std::borrow::Borrow;
 
-use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 use exec_sys::ExecSys;
 use sgx_types::*;
+
+use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 
 /// Wraps all the functionality for interacting with the exec enclave
 pub struct RtcExecEnclave<TCfg>(RtcEnclave<TCfg, ExecSys>)

@@ -1,6 +1,7 @@
-use super::*;
 use thiserror;
 use thiserror::Error;
+
+use super::*;
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug, Error)]

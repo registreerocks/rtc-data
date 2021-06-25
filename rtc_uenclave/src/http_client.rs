@@ -1,11 +1,10 @@
+#[cfg(test)]
+use mockall::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use thiserror::Error;
 use ureq;
 use ureq::Agent;
-
-#[cfg(test)]
-use mockall::*;
 
 // 200 KB
 const ERR_RESPONSE_READ_LIMIT: usize = 200 * 1_024;

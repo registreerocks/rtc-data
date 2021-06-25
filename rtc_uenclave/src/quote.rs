@@ -26,7 +26,6 @@ mod qe_functions {
 
 #[cfg(test)]
 use self::mock_qe_functions::*;
-
 #[cfg(not(test))]
 use self::qe_functions::*;
 

@@ -1,14 +1,13 @@
-use crate::crypto::{RtcCrypto, SodaBoxCrypto};
+#[cfg(test)]
+use mock::mock_rsgx_create_report as rsgx_create_report;
 use rtc_types::{CreateReportResult, EnclaveHeldData, ENCLAVE_HELD_PUB_KEY_SIZE};
 use secrecy::Zeroize;
 use sgx_tcrypto::rsgx_sha256_slice;
-use sgx_types::*;
-
 #[cfg(not(test))]
 use sgx_tse::rsgx_create_report;
+use sgx_types::*;
 
-#[cfg(test)]
-use mock::mock_rsgx_create_report as rsgx_create_report;
+use crate::crypto::{RtcCrypto, SodaBoxCrypto};
 
 fn create_report_impl(
     qe_target_info: &sgx_target_info_t,

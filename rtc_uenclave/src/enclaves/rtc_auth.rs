@@ -1,9 +1,10 @@
 use std::borrow::Borrow;
 
-use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 use auth_sys::AuthSys;
 use rtc_types::{EcallError, EncryptedMessage, ExecReqMetadata, ExecTokenError};
 use sgx_types::*;
+
+use crate::{AttestationError, EnclaveConfig, EnclaveReportResult, RtcEnclave};
 
 /// Wraps all the functionality for interacting with the auth enclave
 pub struct RtcAuthEnclave<TCfg>(RtcEnclave<TCfg, AuthSys>)
