@@ -1,3 +1,4 @@
+use core::str::FromStr;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::io;
@@ -13,6 +14,7 @@ use sgx_tstd::sync::{SgxMutex as Mutex, SgxMutexGuard as MutexGuard};
 use sgx_tstd::untrusted::{fs as untrusted_fs, path as untrusted_path};
 use uuid::Uuid;
 
+use crate::jwt::{Claims, DecodedExecutionToken};
 use crate::{jwt, uuid_to_string};
 
 /// The set of execution tokens issued for a dataset.
@@ -110,6 +112,46 @@ pub(crate) fn issue_token(
     save_token(dataset_uuid, access_key, token_id, token_state)?;
 
     Ok(token)
+}
+
+pub(crate) fn validate_and_use(token: &str) -> Result<bool, io::Error> {
+    let mut store = kv_store();
+    // TODO: Error handling
+    let decoded_token = DecodedExecutionToken::decode(token).unwrap();
+    let claims = decoded_token.claims();
+
+    match store.load(&claims.dataset_uuid)? {
+        // TODO: error handling
+        Some(mut token_set) => {
+            // Consistency check:
+            assert_eq!(
+                Uuid::from_str(&claims.dataset_uuid).unwrap(),
+                token_set.dataset_uuid
+            );
+
+            let token_id = Uuid::from_str(&claims.jti).unwrap();
+            match token_set.issued_tokens.get_mut(&token_id) {
+                Some(mut token_state) if token_claim_is_valid(claims, token_state).unwrap() => {
+                    token_state.current_uses += 1;
+                    store.save(&claims.dataset_uuid, &token_set)?;
+                    Ok(true)
+                }
+                Some(_) | None => Ok(false),
+            }
+        }
+        None => Ok(false),
+    }
+}
+
+fn token_claim_is_valid(
+    claims: &Claims,
+    token_state: &ExecutionTokenState,
+) -> Result<bool, uuid::Error> {
+    let has_uses = token_state.allowed_uses > token_state.current_uses;
+    let for_correct_exec_module =
+        base64::encode(token_state.exec_module_hash) == claims.exec_module_hash;
+
+    Ok(has_uses && for_correct_exec_module)
 }
 
 /// Save a newly-issued execution token's state to the store.
