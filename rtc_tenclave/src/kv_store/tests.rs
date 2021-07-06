@@ -10,9 +10,22 @@ use tempfile::TempDir;
 
 use super::fs::std_filer::StdFiler;
 use super::fs::FsStore;
-use super::in_memory::{InMemoryJsonStore, InMemoryStore};
+use super::in_memory::{InMemoryJsonStore, InMemoryStore, Never};
 use super::inspect::InspectStore;
 use super::KvStore;
+
+#[test]
+fn test_mutate() -> Result<(), Never> {
+    let mut store = InMemoryStore::default();
+
+    assert_eq!(store.mutate("missing", |n| n + 1)?, None);
+
+    store.save("existing", &2)?;
+    assert_eq!(store.mutate("existing", |n| n + 1)?, Some(3));
+    assert_eq!(store.load("existing")?, Some(3));
+
+    Ok(())
+}
 
 /// Verify that executing a sequence of store operations matches a simple model.
 #[test]
