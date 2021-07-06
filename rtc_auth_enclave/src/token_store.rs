@@ -71,7 +71,6 @@ fn kv_store<'a>() -> MutexGuard<'a, impl KvStore<ExecutionTokenSet, Error = io::
 /// # Panics
 ///
 /// If `dataset_uuid` already exists in the store. (This should not happen.)
-#[allow(dead_code)] // TODO
 pub(crate) fn save_access_key(
     dataset_uuid: Uuid,
     access_key: [u8; 24],
