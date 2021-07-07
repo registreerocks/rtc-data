@@ -7,8 +7,9 @@ use std::sync::Arc;
 
 use actix::prelude::*;
 use rtc_uenclave::{EnclaveConfig, RtcDataEnclave};
+use sgx_types::sgx_enclave_id_t;
 
-use crate::enclave_messages::{RequestAttestation, RequestAttestationResult};
+use crate::enclave_messages::{GetEnclaveId, RequestAttestation, RequestAttestationResult};
 
 pub struct DataEnclaveActor {
     enclave: Option<RtcDataEnclave<Arc<EnclaveConfig>>>,
@@ -45,6 +46,14 @@ impl Actor for DataEnclaveActor {
     fn started(&mut self, _ctx: &mut Self::Context) {
         self.enclave
             .replace(RtcDataEnclave::init(self.config.clone()).expect("enclave to initialize"));
+    }
+}
+
+impl Handler<GetEnclaveId> for DataEnclaveActor {
+    type Result = sgx_enclave_id_t;
+
+    fn handle(&mut self, _msg: GetEnclaveId, _ctx: &mut Self::Context) -> Self::Result {
+        self.get_enclave().geteid()
     }
 }
 
