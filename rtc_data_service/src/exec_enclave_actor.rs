@@ -6,16 +6,9 @@
 use std::sync::Arc;
 
 use actix::prelude::*;
-use rtc_uenclave::{AttestationError, EnclaveConfig, RtcExecEnclave};
+use rtc_uenclave::{EnclaveConfig, RtcExecEnclave};
 
-#[derive(Default)]
-pub(crate) struct RequestAttestation;
-
-type RequestAttestationResult = Result<String, AttestationError>;
-
-impl Message for RequestAttestation {
-    type Result = RequestAttestationResult;
-}
+use crate::enclave_messages::{RequestAttestation, RequestAttestationResult};
 
 pub struct ExecEnclaveActor {
     enclave: Option<RtcExecEnclave<Arc<EnclaveConfig>>>,
