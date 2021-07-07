@@ -28,7 +28,9 @@ FROM registree/teaclave-build:latest AS runsw
 WORKDIR /root/rtc-data
 COPY --from=builder /root/rtc-data/rtc_data_service/http_server/config ./config
 COPY --from=builder /root/out/http_server ./http_server
-COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./data_enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so ./auth_enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_exec_enclave/build/bin/enclave.signed.so ./exec_enclave.signed.so
 
 EXPOSE 8080
 
@@ -37,9 +39,12 @@ CMD ["./http_server"]
 FROM registree/sgx-run:latest AS runhw
 
 WORKDIR /root/rtc-data
+
 COPY --from=builder /root/rtc-data/rtc_data_service/http_server/config ./config
 COPY --from=builder /root/out/http_server ./http_server
-COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_data_enclave/build/bin/enclave.signed.so ./data_enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so ./auth_enclave.signed.so
+COPY --from=builder /root/rtc-data/rtc_exec_enclave/build/bin/enclave.signed.so ./exec_enclave.signed.so
 
 EXPOSE 8080
 
