@@ -2,6 +2,7 @@ use std::convert::TryInto;
 use std::str::FromStr;
 
 use rtc_types::ExecReqMetadata;
+use rtc_uenclave::{EnclaveConfig, RtcAuthEnclave};
 use serde::{Deserialize, Serialize};
 use sgx_types::sgx_target_info_t;
 
@@ -15,10 +16,9 @@ pub struct ExecReqData {
     number_of_uses: u32,
 }
 
-#[test]
-fn test_issue_execution_token_success() {
-    let enclave = helpers::init_auth_enclave();
-
+fn make_request(
+    enclave: &RtcAuthEnclave<EnclaveConfig>,
+) -> ([u8; 32], [u8; 32], Vec<u8>, ExecReqMetadata) {
     let enclave_pubkey = enclave
         .create_report(&sgx_target_info_t::default())
         .unwrap()
@@ -53,15 +53,23 @@ fn test_issue_execution_token_success() {
     )
     .unwrap();
 
-    let result = enclave
-        .issue_execution_token(
-            &ciphertext[CRYPTO_BOX_BOXZEROBYTES..],
-            ExecReqMetadata {
-                uploader_pub_key: pubkey,
-                nonce,
-            },
-        )
-        .unwrap();
+    let payload = ciphertext[CRYPTO_BOX_BOXZEROBYTES..].to_vec();
+
+    let metadata = ExecReqMetadata {
+        uploader_pub_key: pubkey,
+        nonce,
+    };
+
+    (enclave_pubkey, privkey, payload, metadata)
+}
+
+#[test]
+fn test_issue_execution_token_success() {
+    let enclave = helpers::init_auth_enclave();
+
+    let (enclave_pubkey, privkey, payload, metadata) = make_request(&enclave);
+
+    let result = enclave.issue_execution_token(&payload, metadata).unwrap();
 
     let mut m = vec![0_u8; result.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
 
