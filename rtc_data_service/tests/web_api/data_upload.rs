@@ -3,7 +3,8 @@
 use std::convert::TryInto;
 use std::path::Path;
 
-use actix_web::test;
+use actix_web::web::Bytes;
+use actix_web::{http, test};
 use rtc_data_service::data_upload::models;
 use sgx_types::sgx_target_info_t;
 use uuid::Uuid;
@@ -57,10 +58,17 @@ async fn data_service_data_upload_ok() {
         .to_request();
 
     let resp = test::call_service(&app, req).await;
+    let status: http::StatusCode = resp.status();
+    let body: Bytes = test::read_body(resp).await;
 
-    assert!(resp.status().is_success());
+    assert!(
+        status.is_success(),
+        "status = {}, body = {:?}",
+        status,
+        body
+    );
 
-    let body: models::ResponseBody = serde_json::from_slice(&test::read_body(resp).await).unwrap();
+    let body: models::ResponseBody = serde_json::from_slice(&body).unwrap();
 
     // NOTE: re-add padding since sodalite supports the C-style nacl api
     let mut m = vec![0_u8; body.ciphertext.len() + CRYPTO_BOX_BOXZEROBYTES];
