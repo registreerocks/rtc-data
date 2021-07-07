@@ -12,7 +12,6 @@ use sgx_tstd::enclave::get_enclave_id;
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
 // Handle protected channel establishment
-#[allow(dead_code)] // TODO
 pub(crate) fn save_access_key(
     auth_enclave_id: sgx_enclave_id_t,
     request: set_access_key::Request,
