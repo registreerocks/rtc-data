@@ -26,6 +26,19 @@ fn test_mutate() -> Result<(), Never> {
 
     Ok(())
 }
+#[test]
+fn test_try_insert() -> Result<(), Never> {
+    let mut store = InMemoryStore::default();
+
+    assert_eq!(store.try_insert("missing", &42)?, None);
+    assert_eq!(store.load("missing")?, Some(42));
+
+    store.save("existing", &5)?;
+    assert_eq!(store.try_insert("existing", &42)?, Some(5));
+    assert_eq!(store.load("existing")?, Some(5));
+
+    Ok(())
+}
 
 /// Verify that executing a sequence of store operations matches a simple model.
 #[test]

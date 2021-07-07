@@ -52,6 +52,17 @@ pub trait KvStore<V> {
     {
         self.alter(key, |opt_v| opt_v.map(mutate_fn))
     }
+
+    /// Insert a value for `key`, if absent. If `key` already has a value, do nothing.
+    ///
+    /// Return the key's prior value (`None` if `value` was inserted)
+    fn try_insert(&mut self, key: &str, value: &V) -> Result<Option<V>, Self::Error> {
+        let loaded = self.load(key)?;
+        if loaded.is_none() {
+            self.save(key, value)?;
+        }
+        Ok(loaded)
+    }
 }
 
 #[cfg(test)]
