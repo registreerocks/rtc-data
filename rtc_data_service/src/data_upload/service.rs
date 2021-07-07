@@ -6,8 +6,10 @@ use actix_web::{post, web};
 use models::*;
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError};
 
+use crate::auth_enclave_actor::AuthEnclaveActor;
 use crate::data_enclave_actor::DataEnclaveActor;
 use crate::data_upload::{DataUploadMessage, DataUploadRequest};
+use crate::enclave_messages::GetEnclaveId;
 use crate::merge_error::*;
 
 /// Save uploaded data file using a [`DataUploadMessage`] for [`DataEnclaveActor`].
@@ -20,10 +22,19 @@ use crate::merge_error::*;
 #[post("/data/uploads")]
 pub async fn upload_file(
     req_body: web::Json<RequestBody>,
+    auth_enclave: web::Data<Addr<AuthEnclaveActor>>,
     data_enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<web::Json<ResponseBody>> {
+    let auth_enclave_id = auth_enclave
+        .send(GetEnclaveId)
+        .await
+        .map_err(ErrorInternalServerError)?;
+
     let request: DataUploadRequest = req_body.0.try_into()?;
-    let message = DataUploadMessage { request };
+    let message = DataUploadMessage {
+        auth_enclave_id,
+        request,
+    };
 
     let result: Result<DataUploadResponse, MergedError<EcallError<DataUploadError>, MailboxError>> =
         data_enclave.send(message).await.merge_err();

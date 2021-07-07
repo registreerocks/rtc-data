@@ -1,5 +1,6 @@
 use actix::{Handler, Message};
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata};
+use sgx_types::sgx_enclave_id_t;
 
 use crate::data_enclave_actor::DataEnclaveActor;
 
@@ -11,11 +12,12 @@ pub struct DataUploadRequest {
     pub payload: Box<[u8]>,
 }
 
-/// [`Message`]: Process a sealed [`DataUploadRequest`].
+/// [`Message`]: Process a [`DataUploadRequest`] sealed for [`auth_enclave_id`].
 /// Return a sealed [`DataUploadResponse`].
 ///
 /// See: [`rtc_uenclave::enclaves::rtc_data::upload_data`]
 pub struct DataUploadMessage {
+    pub auth_enclave_id: sgx_enclave_id_t,
     pub request: DataUploadRequest,
 }
 
