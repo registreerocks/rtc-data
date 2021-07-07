@@ -63,7 +63,10 @@ fn make_request(
     (enclave_pubkey, privkey, payload, metadata)
 }
 
-#[test]
+// FIXME: The success case currently fails because there's no actual data / access key.
+//        Complete the test once that's available.
+#[allow(dead_code)]
+// #[test]
 fn test_issue_execution_token_success() {
     let enclave = helpers::init_auth_enclave();
 
@@ -96,4 +99,18 @@ fn test_issue_execution_token_success() {
     );
 
     // TODO: Assert that decrypted value is a valid JWT
+}
+
+// Lookup failure: Invalid dataset UUID and access key.
+#[test]
+fn test_lookup_failure() {
+    let enclave = helpers::init_auth_enclave();
+
+    let (_enclave_pubkey, _privkey, payload, metadata) = make_request(&enclave);
+
+    let err = enclave
+        .issue_execution_token(&payload, metadata)
+        .unwrap_err();
+
+    assert_eq!(format!("{:?}", err), "RtcEnclave(IO)")
 }
