@@ -3,11 +3,18 @@ use rtc_types::{DataUploadError, DataUploadResponse, EcallError, UploadMetadata}
 
 use crate::data_enclave_actor::DataEnclaveActor;
 
+/// Sealed request from a client to upload a new dataset.
+///
+/// See: [`crate::data_upload::service::models::RequestBody`]
 pub struct DataUploadRequest {
     pub metadata: UploadMetadata,
     pub payload: Box<[u8]>,
 }
 
+/// [`Message`]: Process a sealed [`DataUploadRequest`].
+/// Return a sealed [`DataUploadResponse`].
+///
+/// See: [`rtc_uenclave::enclaves::rtc_data::upload_data`]
 pub struct DataUploadMessage {
     pub request: DataUploadRequest,
 }
