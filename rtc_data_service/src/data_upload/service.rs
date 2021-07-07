@@ -20,13 +20,13 @@ use crate::merge_error::*;
 #[post("/data/uploads")]
 pub async fn upload_file(
     req_body: web::Json<RequestBody>,
-    enclave: web::Data<Addr<DataEnclaveActor>>,
+    data_enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<web::Json<ResponseBody>> {
     let request: DataUploadRequest = req_body.0.try_into()?;
     let message = DataUploadMessage { request };
 
     let result: Result<DataUploadResponse, MergedError<EcallError<DataUploadError>, MailboxError>> =
-        enclave.send(message).await.merge_err();
+        data_enclave.send(message).await.merge_err();
 
     match result {
         Ok(resp) => Ok(web::Json(resp.into())),
