@@ -2,6 +2,18 @@
 
 use actix::Message;
 use rtc_uenclave::AttestationError;
+use sgx_types::sgx_enclave_id_t;
+
+/// [`Message`]: Get the enclave's ID.
+/// Return [`sgx_enclave_id_t`].
+///
+/// See: [`rtc_uenclave::rtc_enclave::geteid`]
+#[derive(Default)]
+pub(crate) struct GetEnclaveId;
+
+impl Message for GetEnclaveId {
+    type Result = sgx_enclave_id_t;
+}
 
 /// [`Message`]: Request enclave attestation.
 /// Return JWT with quote and enclave data.
