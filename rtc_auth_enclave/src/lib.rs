@@ -10,14 +10,21 @@ mod token_store;
 extern crate sgx_tstd as std;
 
 use core::slice;
-use std::ptr;
 use std::string::{String, ToString};
+use std::{ptr, str};
 
 use rtc_tenclave::crypto::{RtcCrypto, SodaBoxCrypto as Crypto};
 pub use rtc_tenclave::dh::*;
 #[allow(unused_imports)] // for ECALL linking
 use rtc_tenclave::enclave::enclave_create_report;
-use rtc_types::{EcallResult, EncryptedMessage, ExecReqMetadata, ExecTokenError, IssueTokenResult};
+use rtc_types::{
+    CryptoError,
+    EcallResult,
+    EncryptedMessage,
+    ExecReqMetadata,
+    ExecTokenError,
+    IssueTokenResult,
+};
 use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -119,6 +126,32 @@ fn validate_dataset_access_key(
     _access_key: [u8; 24],
 ) -> Option<DatasetSize> {
     Some(20)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn validate_and_use_token(
+    payload_ptr: *const u8,
+    payload_len: usize,
+    metadata_ptr: *const ExecReqMetadata,
+) {
+    let payload = unsafe { slice::from_raw_parts(payload_ptr, payload_len) };
+    let metadata = unsafe { &*metadata_ptr };
+    validate_and_use_token_impl(payload, metadata).unwrap();
+}
+
+fn validate_and_use_token_impl(
+    payload: &[u8],
+    metadata: &ExecReqMetadata,
+) -> Result<(), CryptoError> {
+    let crypto = Crypto::new();
+    let message = crypto.decrypt_message(payload, &metadata.uploader_pub_key, &metadata.nonce)?;
+    // TODO: Error handling
+    let token_str = str::from_utf8(message.expose_secret()).unwrap();
+
+    match token_store::validate_and_use(token_str) {
+        Ok(true) => Ok(()),
+        Ok(_) | Err(_) => todo!(),
+    }
 }
 
 pub(crate) fn uuid_to_string(uuid: Uuid) -> String {

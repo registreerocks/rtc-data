@@ -531,6 +531,7 @@ dependencies = [
  "sgx_tcrypto",
  "sgx_tstd",
  "sgx_types",
+ "thiserror 1.0.9",
  "uuid",
 ]
 

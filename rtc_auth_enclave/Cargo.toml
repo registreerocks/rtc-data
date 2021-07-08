@@ -23,6 +23,7 @@ jsonwebtoken = { git = "https://github.com/mesalock-linux/jsonwebtoken-sgx" }
 # TODO: confirm that we have to use a forked crate here
 uuid = { git = "https://github.com/mesalock-linux/uuid-sgx", features = ["v4", "serde"] }
 base64 = { git = "https://github.com/mesalock-linux/rust-base64-sgx" }
+thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git", tag = "sgx_1.1.3" }
 
 # See "Cargo patch limitation workaround" in HACKING.md:
 once_cell = { git = "https://github.com/mesalock-linux/once_cell-sgx.git" }
