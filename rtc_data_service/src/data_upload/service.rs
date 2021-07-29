@@ -6,8 +6,10 @@ use actix_web::{post, web};
 use models::*;
 use rtc_types::{DataUploadError, DataUploadResponse, EcallError};
 
-use super::DataUploadMessage;
+use crate::auth_enclave_actor::AuthEnclaveActor;
 use crate::data_enclave_actor::DataEnclaveActor;
+use crate::data_upload::{DataUploadMessage, DataUploadRequest};
+use crate::enclave_messages::GetEnclaveId;
 use crate::merge_error::*;
 
 /// Save uploaded data file using a [`DataUploadMessage`] for [`DataEnclaveActor`].
@@ -20,12 +22,22 @@ use crate::merge_error::*;
 #[post("/data/uploads")]
 pub async fn upload_file(
     req_body: web::Json<RequestBody>,
-    enclave: web::Data<Addr<DataEnclaveActor>>,
+    auth_enclave: web::Data<Addr<AuthEnclaveActor>>,
+    data_enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<web::Json<ResponseBody>> {
-    let message: DataUploadMessage = req_body.0.try_into()?;
+    let auth_enclave_id = auth_enclave
+        .send(GetEnclaveId)
+        .await
+        .map_err(ErrorInternalServerError)?;
+
+    let request: DataUploadRequest = req_body.0.try_into()?;
+    let message = DataUploadMessage {
+        auth_enclave_id,
+        request,
+    };
 
     let result: Result<DataUploadResponse, MergedError<EcallError<DataUploadError>, MailboxError>> =
-        enclave.send(message).await.merge_err();
+        data_enclave.send(message).await.merge_err();
 
     match result {
         Ok(resp) => Ok(web::Json(resp.into())),
@@ -40,7 +52,7 @@ pub mod models {
     use rtc_types::{DataUploadResponse, UploadMetadata};
     use serde::{Deserialize, Serialize};
 
-    use crate::data_upload::DataUploadMessage;
+    use crate::data_upload::DataUploadRequest;
     use crate::validation::ValidationError;
     use crate::Base64Standard;
 
@@ -76,7 +88,7 @@ pub mod models {
         }
     }
 
-    impl TryFrom<RequestBody> for DataUploadMessage {
+    impl TryFrom<RequestBody> for DataUploadRequest {
         type Error = ValidationError;
 
         fn try_from(request_body: RequestBody) -> Result<Self, Self::Error> {
@@ -85,7 +97,7 @@ pub mod models {
             let nonce = TryFrom::try_from(request_body.metadata.nonce)
                 .or(Err(ValidationError::new("Invalid nonce")))?;
 
-            Ok(DataUploadMessage {
+            Ok(DataUploadRequest {
                 metadata: UploadMetadata {
                     uploader_pub_key,
                     nonce,

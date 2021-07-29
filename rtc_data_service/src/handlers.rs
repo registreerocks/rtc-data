@@ -5,9 +5,9 @@ use models::Status;
 
 use crate::auth_enclave_actor::AuthEnclaveActor;
 use crate::data_enclave_actor::DataEnclaveActor;
+use crate::enclave_messages::RequestAttestation;
 use crate::exec_enclave_actor::ExecEnclaveActor;
 use crate::merge_error::*;
-use crate::{auth_enclave_actor, data_enclave_actor, exec_enclave_actor};
 
 pub async fn server_status(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Ok().json(Status {
@@ -21,7 +21,7 @@ pub async fn auth_enclave_attestation(
     enclave: web::Data<Addr<AuthEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let jwt = enclave
-        .send(auth_enclave_actor::RequestAttestation::default())
+        .send(RequestAttestation::default())
         .await
         .merge_err();
     dbg!(&jwt);
@@ -39,7 +39,7 @@ pub async fn data_enclave_attestation(
     enclave: web::Data<Addr<DataEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let jwt = enclave
-        .send(data_enclave_actor::RequestAttestation::default())
+        .send(RequestAttestation::default())
         .await
         .merge_err();
     dbg!(&jwt);
@@ -57,7 +57,7 @@ pub async fn exec_enclave_attestation(
     enclave: web::Data<Addr<ExecEnclaveActor>>,
 ) -> actix_web::Result<String> {
     let jwt = enclave
-        .send(exec_enclave_actor::RequestAttestation::default())
+        .send(RequestAttestation::default())
         .await
         .merge_err();
     dbg!(&jwt);

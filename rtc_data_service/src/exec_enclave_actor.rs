@@ -6,16 +6,10 @@
 use std::sync::Arc;
 
 use actix::prelude::*;
-use rtc_uenclave::{AttestationError, EnclaveConfig, RtcExecEnclave};
+use rtc_uenclave::{EnclaveConfig, RtcExecEnclave};
+use sgx_types::sgx_enclave_id_t;
 
-#[derive(Default)]
-pub(crate) struct RequestAttestation;
-
-type RequestAttestationResult = Result<String, AttestationError>;
-
-impl Message for RequestAttestation {
-    type Result = RequestAttestationResult;
-}
+use crate::enclave_messages::{GetEnclaveId, RequestAttestation, RequestAttestationResult};
 
 pub struct ExecEnclaveActor {
     enclave: Option<RtcExecEnclave<Arc<EnclaveConfig>>>,
@@ -52,6 +46,14 @@ impl Actor for ExecEnclaveActor {
     fn started(&mut self, _ctx: &mut Self::Context) {
         self.enclave
             .replace(RtcExecEnclave::init(self.config.clone()).expect("enclave to initialize"));
+    }
+}
+
+impl Handler<GetEnclaveId> for ExecEnclaveActor {
+    type Result = sgx_enclave_id_t;
+
+    fn handle(&mut self, _msg: GetEnclaveId, _ctx: &mut Self::Context) -> Self::Result {
+        self.get_enclave().geteid()
     }
 }
 
