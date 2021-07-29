@@ -9,7 +9,7 @@ use thiserror::Error;
 /// Failed to acquire session / protected channel.
 ///
 /// See: `rtc_tenclave::dh::sessions::DhSessions`
-#[derive(Debug, PartialEq)] // core
+#[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug)] // core
 #[derive(Error)] // thiserror
 #[repr(C)]
 pub enum AcquireSessionError {
@@ -39,7 +39,7 @@ impl From<sgx_status_t> for AcquireSessionError {
     }
 }
 
-#[derive(Debug)] // core
+#[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Debug)] // core
 #[derive(Error)] // thiserror
 #[repr(C)]
 pub enum SealingError {

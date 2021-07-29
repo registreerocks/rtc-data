@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+#ifndef RTC_SAVE_ACCESS_KEY_U_DEFINED__
+#define RTC_SAVE_ACCESS_KEY_U_DEFINED__
+SetAccessKeyResult SGX_UBRIDGE(SGX_NOCONVENTION, rtc_save_access_key_u, (sgx_enclave_id_t auth_enclave_id, SetAccessKeyEncryptedRequest encrypted_request));
+#endif
 #ifndef RTC_SAVE_SEALED_BLOB_U_DEFINED__
 #define RTC_SAVE_SEALED_BLOB_U_DEFINED__
 sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_save_sealed_blob_u, (const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16]));
@@ -325,7 +329,7 @@ sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, rtc_end_session_u, (sgx_enclave_id_t 
 #endif
 
 sgx_status_t rtc_data_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
-sgx_status_t rtc_data_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
+sgx_status_t rtc_data_validate_and_save(sgx_enclave_id_t eid, DataUploadResult* retval, sgx_enclave_id_t auth_enclave_id, const uint8_t* payload_ptr, size_t payload_len, UploadMetadata metadata);
 sgx_status_t rtc_data_local_attestation(sgx_enclave_id_t eid, sgx_status_t* retval, sgx_enclave_id_t rtc_local_attestation);
 sgx_status_t rtc_data_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t rtc_data_t_global_exit_ecall(sgx_enclave_id_t eid);

@@ -41,10 +41,11 @@ where
     /// uploaded data
     pub fn upload_data(
         &self,
+        auth_enclave_id: sgx_enclave_id_t,
         payload: &[u8],
         metadata: UploadMetadata,
     ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
-        ecalls::validate_and_save(self.0.geteid(), payload, metadata)
+        ecalls::validate_and_save(self.0.geteid(), auth_enclave_id, payload, metadata)
     }
 
     /// Issue a new execution token.
@@ -84,6 +85,7 @@ pub mod ecalls {
 
     pub fn validate_and_save(
         eid: sgx_enclave_id_t,
+        auth_enclave_id: sgx_enclave_id_t,
         payload: &[u8],
         metadata: UploadMetadata,
     ) -> Result<DataUploadResponse, EcallError<DataUploadError>> {
@@ -93,6 +95,7 @@ pub mod ecalls {
             ffi::rtc_data_validate_and_save(
                 eid,
                 &mut retval,
+                auth_enclave_id,
                 payload.as_ptr(),
                 payload.len(),
                 metadata,

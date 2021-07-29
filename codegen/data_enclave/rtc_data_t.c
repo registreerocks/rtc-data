@@ -36,6 +36,7 @@ typedef struct ms_enclave_create_report_t {
 
 typedef struct ms_validate_and_save_t {
 	DataUploadResult ms_retval;
+	sgx_enclave_id_t ms_auth_enclave_id;
 	const uint8_t* ms_payload_ptr;
 	size_t ms_payload_len;
 	UploadMetadata ms_metadata;
@@ -67,6 +68,12 @@ typedef struct ms_end_session_t {
 	sgx_status_t ms_retval;
 	sgx_enclave_id_t ms_src_enclave_id;
 } ms_end_session_t;
+
+typedef struct ms_rtc_save_access_key_u_t {
+	SetAccessKeyResult ms_retval;
+	sgx_enclave_id_t ms_auth_enclave_id;
+	SetAccessKeyEncryptedRequest ms_encrypted_request;
+} ms_rtc_save_access_key_u_t;
 
 typedef struct ms_rtc_save_sealed_blob_u_t {
 	sgx_status_t ms_retval;
@@ -707,7 +714,7 @@ static sgx_status_t SGX_CDECL sgx_validate_and_save(void* pms)
 
 	}
 
-	ms->ms_retval = validate_and_save((const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
+	ms->ms_retval = validate_and_save(ms->ms_auth_enclave_id, (const uint8_t*)_in_payload_ptr, _tmp_payload_len, ms->ms_metadata);
 
 err:
 	if (_in_payload_ptr) free(_in_payload_ptr);
@@ -883,10 +890,11 @@ SGX_EXTERNC const struct {
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[74][8];
+	uint8_t entry_table[75][8];
 } g_dyn_entry_table = {
-	74,
+	75,
 	{
+		{0, 0, 0, 0, 0, 0, 0, 0, },
 		{0, 0, 0, 0, 0, 0, 0, 0, },
 		{0, 0, 0, 0, 0, 0, 0, 0, },
 		{0, 0, 0, 0, 0, 0, 0, 0, },
@@ -965,6 +973,35 @@ SGX_EXTERNC const struct {
 };
 
 
+sgx_status_t SGX_CDECL rtc_save_access_key_u(SetAccessKeyResult* retval, sgx_enclave_id_t auth_enclave_id, SetAccessKeyEncryptedRequest encrypted_request)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_rtc_save_access_key_u_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_rtc_save_access_key_u_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_rtc_save_access_key_u_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_rtc_save_access_key_u_t));
+	ocalloc_size -= sizeof(ms_rtc_save_access_key_u_t);
+
+	ms->ms_auth_enclave_id = auth_enclave_id;
+	ms->ms_encrypted_request = encrypted_request;
+	status = sgx_ocall(0, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) *retval = ms->ms_retval;
+	}
+	sgx_ocfree();
+	return status;
+}
+
 sgx_status_t SGX_CDECL rtc_save_sealed_blob_u(sgx_status_t* retval, const uint8_t* blob_ptr, size_t blob_len, uint8_t uuid[16])
 {
 	sgx_status_t status = SGX_SUCCESS;
@@ -1026,7 +1063,7 @@ sgx_status_t SGX_CDECL rtc_save_sealed_blob_u(sgx_status_t* retval, const uint8_
 		ms->ms_uuid = NULL;
 	}
 	
-	status = sgx_ocall(0, ms);
+	status = sgx_ocall(1, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1075,7 +1112,7 @@ sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const v
 	}
 	
 	ms->ms_tcs = tcs;
-	status = sgx_ocall(1, ms);
+	status = sgx_ocall(2, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1146,7 +1183,7 @@ sgx_status_t SGX_CDECL u_thread_wait_event_ocall(int* retval, int* error, const 
 		ms->ms_timeout = NULL;
 	}
 	
-	status = sgx_ocall(2, ms);
+	status = sgx_ocall(3, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1221,7 +1258,7 @@ sgx_status_t SGX_CDECL u_thread_set_multiple_events_ocall(int* retval, int* erro
 	}
 	
 	ms->ms_total = total;
-	status = sgx_ocall(3, ms);
+	status = sgx_ocall(4, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1293,7 +1330,7 @@ sgx_status_t SGX_CDECL u_thread_setwait_events_ocall(int* retval, int* error, co
 		ms->ms_timeout = NULL;
 	}
 	
-	status = sgx_ocall(4, ms);
+	status = sgx_ocall(5, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1363,7 +1400,7 @@ sgx_status_t SGX_CDECL u_clock_gettime_ocall(int* retval, int* error, int clk_id
 		ms->ms_tp = NULL;
 	}
 	
-	status = sgx_ocall(5, ms);
+	status = sgx_ocall(6, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1426,7 +1463,7 @@ sgx_status_t SGX_CDECL u_read_ocall(size_t* retval, int* error, int fd, void* bu
 	ms->ms_fd = fd;
 	ms->ms_buf = buf;
 	ms->ms_count = count;
-	status = sgx_ocall(6, ms);
+	status = sgx_ocall(7, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1484,7 +1521,7 @@ sgx_status_t SGX_CDECL u_pread64_ocall(size_t* retval, int* error, int fd, void*
 	ms->ms_buf = buf;
 	ms->ms_count = count;
 	ms->ms_offset = offset;
-	status = sgx_ocall(7, ms);
+	status = sgx_ocall(8, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1556,7 +1593,7 @@ sgx_status_t SGX_CDECL u_readv_ocall(size_t* retval, int* error, int fd, const s
 	}
 	
 	ms->ms_iovcnt = iovcnt;
-	status = sgx_ocall(8, ms);
+	status = sgx_ocall(9, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1629,7 +1666,7 @@ sgx_status_t SGX_CDECL u_preadv64_ocall(size_t* retval, int* error, int fd, cons
 	
 	ms->ms_iovcnt = iovcnt;
 	ms->ms_offset = offset;
-	status = sgx_ocall(9, ms);
+	status = sgx_ocall(10, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1686,7 +1723,7 @@ sgx_status_t SGX_CDECL u_write_ocall(size_t* retval, int* error, int fd, const v
 	ms->ms_fd = fd;
 	ms->ms_buf = buf;
 	ms->ms_count = count;
-	status = sgx_ocall(10, ms);
+	status = sgx_ocall(11, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1744,7 +1781,7 @@ sgx_status_t SGX_CDECL u_pwrite64_ocall(size_t* retval, int* error, int fd, cons
 	ms->ms_buf = buf;
 	ms->ms_count = count;
 	ms->ms_offset = offset;
-	status = sgx_ocall(11, ms);
+	status = sgx_ocall(12, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1816,7 +1853,7 @@ sgx_status_t SGX_CDECL u_writev_ocall(size_t* retval, int* error, int fd, const 
 	}
 	
 	ms->ms_iovcnt = iovcnt;
-	status = sgx_ocall(12, ms);
+	status = sgx_ocall(13, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1889,7 +1926,7 @@ sgx_status_t SGX_CDECL u_pwritev64_ocall(size_t* retval, int* error, int fd, con
 	
 	ms->ms_iovcnt = iovcnt;
 	ms->ms_offset = offset;
-	status = sgx_ocall(13, ms);
+	status = sgx_ocall(14, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -1945,7 +1982,7 @@ sgx_status_t SGX_CDECL u_fcntl_arg0_ocall(int* retval, int* error, int fd, int c
 	
 	ms->ms_fd = fd;
 	ms->ms_cmd = cmd;
-	status = sgx_ocall(14, ms);
+	status = sgx_ocall(15, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2002,7 +2039,7 @@ sgx_status_t SGX_CDECL u_fcntl_arg1_ocall(int* retval, int* error, int fd, int c
 	ms->ms_fd = fd;
 	ms->ms_cmd = cmd;
 	ms->ms_arg = arg;
-	status = sgx_ocall(15, ms);
+	status = sgx_ocall(16, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2058,7 +2095,7 @@ sgx_status_t SGX_CDECL u_ioctl_arg0_ocall(int* retval, int* error, int fd, int r
 	
 	ms->ms_fd = fd;
 	ms->ms_request = request;
-	status = sgx_ocall(16, ms);
+	status = sgx_ocall(17, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2136,7 +2173,7 @@ sgx_status_t SGX_CDECL u_ioctl_arg1_ocall(int* retval, int* error, int fd, int r
 		ms->ms_arg = NULL;
 	}
 	
-	status = sgx_ocall(17, ms);
+	status = sgx_ocall(18, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2197,7 +2234,7 @@ sgx_status_t SGX_CDECL u_close_ocall(int* retval, int* error, int fd)
 	}
 	
 	ms->ms_fd = fd;
-	status = sgx_ocall(18, ms);
+	status = sgx_ocall(19, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2252,7 +2289,7 @@ sgx_status_t SGX_CDECL u_malloc_ocall(void** retval, int* error, size_t size)
 	}
 	
 	ms->ms_size = size;
-	status = sgx_ocall(19, ms);
+	status = sgx_ocall(20, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2286,7 +2323,7 @@ sgx_status_t SGX_CDECL u_free_ocall(void* p)
 	ocalloc_size -= sizeof(ms_u_free_ocall_t);
 
 	ms->ms_p = p;
-	status = sgx_ocall(20, ms);
+	status = sgx_ocall(21, ms);
 
 	if (status == SGX_SUCCESS) {
 	}
@@ -2339,7 +2376,7 @@ sgx_status_t SGX_CDECL u_mmap_ocall(void** retval, int* error, void* start, size
 	ms->ms_flags = flags;
 	ms->ms_fd = fd;
 	ms->ms_offset = offset;
-	status = sgx_ocall(21, ms);
+	status = sgx_ocall(22, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2395,7 +2432,7 @@ sgx_status_t SGX_CDECL u_munmap_ocall(int* retval, int* error, void* start, size
 	
 	ms->ms_start = start;
 	ms->ms_length = length;
-	status = sgx_ocall(22, ms);
+	status = sgx_ocall(23, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2452,7 +2489,7 @@ sgx_status_t SGX_CDECL u_msync_ocall(int* retval, int* error, void* addr, size_t
 	ms->ms_addr = addr;
 	ms->ms_length = length;
 	ms->ms_flags = flags;
-	status = sgx_ocall(23, ms);
+	status = sgx_ocall(24, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2509,7 +2546,7 @@ sgx_status_t SGX_CDECL u_mprotect_ocall(int* retval, int* error, void* addr, siz
 	ms->ms_addr = addr;
 	ms->ms_length = length;
 	ms->ms_prot = prot;
-	status = sgx_ocall(24, ms);
+	status = sgx_ocall(25, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2584,7 +2621,7 @@ sgx_status_t SGX_CDECL u_open_ocall(int* retval, int* error, const char* pathnam
 	}
 	
 	ms->ms_flags = flags;
-	status = sgx_ocall(25, ms);
+	status = sgx_ocall(26, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2660,7 +2697,7 @@ sgx_status_t SGX_CDECL u_open64_ocall(int* retval, int* error, const char* path,
 	
 	ms->ms_oflag = oflag;
 	ms->ms_mode = mode;
-	status = sgx_ocall(26, ms);
+	status = sgx_ocall(27, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2730,7 +2767,7 @@ sgx_status_t SGX_CDECL u_fstat_ocall(int* retval, int* error, int fd, struct sta
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(27, ms);
+	status = sgx_ocall(28, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2806,7 +2843,7 @@ sgx_status_t SGX_CDECL u_fstat64_ocall(int* retval, int* error, int fd, struct s
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(28, ms);
+	status = sgx_ocall(29, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2901,7 +2938,7 @@ sgx_status_t SGX_CDECL u_stat_ocall(int* retval, int* error, const char* path, s
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(29, ms);
+	status = sgx_ocall(30, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -2996,7 +3033,7 @@ sgx_status_t SGX_CDECL u_stat64_ocall(int* retval, int* error, const char* path,
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(30, ms);
+	status = sgx_ocall(31, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3091,7 +3128,7 @@ sgx_status_t SGX_CDECL u_lstat_ocall(int* retval, int* error, const char* path, 
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(31, ms);
+	status = sgx_ocall(32, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3186,7 +3223,7 @@ sgx_status_t SGX_CDECL u_lstat64_ocall(int* retval, int* error, const char* path
 		ms->ms_buf = NULL;
 	}
 	
-	status = sgx_ocall(32, ms);
+	status = sgx_ocall(33, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3249,7 +3286,7 @@ sgx_status_t SGX_CDECL u_lseek_ocall(uint64_t* retval, int* error, int fd, int64
 	ms->ms_fd = fd;
 	ms->ms_offset = offset;
 	ms->ms_whence = whence;
-	status = sgx_ocall(33, ms);
+	status = sgx_ocall(34, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3306,7 +3343,7 @@ sgx_status_t SGX_CDECL u_lseek64_ocall(int64_t* retval, int* error, int fd, int6
 	ms->ms_fd = fd;
 	ms->ms_offset = offset;
 	ms->ms_whence = whence;
-	status = sgx_ocall(34, ms);
+	status = sgx_ocall(35, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3362,7 +3399,7 @@ sgx_status_t SGX_CDECL u_ftruncate_ocall(int* retval, int* error, int fd, int64_
 	
 	ms->ms_fd = fd;
 	ms->ms_length = length;
-	status = sgx_ocall(35, ms);
+	status = sgx_ocall(36, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3418,7 +3455,7 @@ sgx_status_t SGX_CDECL u_ftruncate64_ocall(int* retval, int* error, int fd, int6
 	
 	ms->ms_fd = fd;
 	ms->ms_length = length;
-	status = sgx_ocall(36, ms);
+	status = sgx_ocall(37, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3493,7 +3530,7 @@ sgx_status_t SGX_CDECL u_truncate_ocall(int* retval, int* error, const char* pat
 	}
 	
 	ms->ms_length = length;
-	status = sgx_ocall(37, ms);
+	status = sgx_ocall(38, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3568,7 +3605,7 @@ sgx_status_t SGX_CDECL u_truncate64_ocall(int* retval, int* error, const char* p
 	}
 	
 	ms->ms_length = length;
-	status = sgx_ocall(38, ms);
+	status = sgx_ocall(39, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3623,7 +3660,7 @@ sgx_status_t SGX_CDECL u_fsync_ocall(int* retval, int* error, int fd)
 	}
 	
 	ms->ms_fd = fd;
-	status = sgx_ocall(39, ms);
+	status = sgx_ocall(40, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3678,7 +3715,7 @@ sgx_status_t SGX_CDECL u_fdatasync_ocall(int* retval, int* error, int fd)
 	}
 	
 	ms->ms_fd = fd;
-	status = sgx_ocall(40, ms);
+	status = sgx_ocall(41, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3734,7 +3771,7 @@ sgx_status_t SGX_CDECL u_fchmod_ocall(int* retval, int* error, int fd, uint32_t 
 	
 	ms->ms_fd = fd;
 	ms->ms_mode = mode;
-	status = sgx_ocall(41, ms);
+	status = sgx_ocall(42, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3808,7 +3845,7 @@ sgx_status_t SGX_CDECL u_unlink_ocall(int* retval, int* error, const char* pathn
 		ms->ms_pathname = NULL;
 	}
 	
-	status = sgx_ocall(42, ms);
+	status = sgx_ocall(43, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3902,7 +3939,7 @@ sgx_status_t SGX_CDECL u_link_ocall(int* retval, int* error, const char* oldpath
 		ms->ms_newpath = NULL;
 	}
 	
-	status = sgx_ocall(43, ms);
+	status = sgx_ocall(44, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -3996,7 +4033,7 @@ sgx_status_t SGX_CDECL u_rename_ocall(int* retval, int* error, const char* oldpa
 		ms->ms_newpath = NULL;
 	}
 	
-	status = sgx_ocall(44, ms);
+	status = sgx_ocall(45, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4071,7 +4108,7 @@ sgx_status_t SGX_CDECL u_chmod_ocall(int* retval, int* error, const char* path, 
 	}
 	
 	ms->ms_mode = mode;
-	status = sgx_ocall(45, ms);
+	status = sgx_ocall(46, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4165,7 +4202,7 @@ sgx_status_t SGX_CDECL u_readlink_ocall(size_t* retval, int* error, const char* 
 	}
 	
 	ms->ms_bufsz = bufsz;
-	status = sgx_ocall(46, ms);
+	status = sgx_ocall(47, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4265,7 +4302,7 @@ sgx_status_t SGX_CDECL u_symlink_ocall(int* retval, int* error, const char* path
 		ms->ms_path2 = NULL;
 	}
 	
-	status = sgx_ocall(47, ms);
+	status = sgx_ocall(48, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4339,7 +4376,7 @@ sgx_status_t SGX_CDECL u_realpath_ocall(char** retval, int* error, const char* p
 		ms->ms_pathname = NULL;
 	}
 	
-	status = sgx_ocall(48, ms);
+	status = sgx_ocall(49, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4414,7 +4451,7 @@ sgx_status_t SGX_CDECL u_mkdir_ocall(int* retval, int* error, const char* pathna
 	}
 	
 	ms->ms_mode = mode;
-	status = sgx_ocall(49, ms);
+	status = sgx_ocall(50, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4488,7 +4525,7 @@ sgx_status_t SGX_CDECL u_rmdir_ocall(int* retval, int* error, const char* pathna
 		ms->ms_pathname = NULL;
 	}
 	
-	status = sgx_ocall(50, ms);
+	status = sgx_ocall(51, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4562,7 +4599,7 @@ sgx_status_t SGX_CDECL u_opendir_ocall(void** retval, int* error, const char* pa
 		ms->ms_pathname = NULL;
 	}
 	
-	status = sgx_ocall(51, ms);
+	status = sgx_ocall(52, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4635,7 +4672,7 @@ sgx_status_t SGX_CDECL u_readdir64_r_ocall(int* retval, void* dirp, struct diren
 		ms->ms_result = NULL;
 	}
 	
-	status = sgx_ocall(52, ms);
+	status = sgx_ocall(53, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4696,7 +4733,7 @@ sgx_status_t SGX_CDECL u_closedir_ocall(int* retval, int* error, void* dirp)
 	}
 	
 	ms->ms_dirp = dirp;
-	status = sgx_ocall(53, ms);
+	status = sgx_ocall(54, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4751,7 +4788,7 @@ sgx_status_t SGX_CDECL u_dirfd_ocall(int* retval, int* error, void* dirp)
 	}
 	
 	ms->ms_dirp = dirp;
-	status = sgx_ocall(54, ms);
+	status = sgx_ocall(55, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4842,7 +4879,7 @@ sgx_status_t SGX_CDECL u_fstatat64_ocall(int* retval, int* error, int dirfd, con
 	}
 	
 	ms->ms_flags = flags;
-	status = sgx_ocall(55, ms);
+	status = sgx_ocall(56, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4904,7 +4941,7 @@ sgx_status_t SGX_CDECL sgx_oc_cpuidex(int cpuinfo[4], int leaf, int subleaf)
 	
 	ms->ms_leaf = leaf;
 	ms->ms_subleaf = subleaf;
-	status = sgx_ocall(56, ms);
+	status = sgx_ocall(57, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (cpuinfo) {
@@ -4937,7 +4974,7 @@ sgx_status_t SGX_CDECL sgx_thread_wait_untrusted_event_ocall(int* retval, const 
 	ocalloc_size -= sizeof(ms_sgx_thread_wait_untrusted_event_ocall_t);
 
 	ms->ms_self = self;
-	status = sgx_ocall(57, ms);
+	status = sgx_ocall(58, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4965,7 +5002,7 @@ sgx_status_t SGX_CDECL sgx_thread_set_untrusted_event_ocall(int* retval, const v
 	ocalloc_size -= sizeof(ms_sgx_thread_set_untrusted_event_ocall_t);
 
 	ms->ms_waiter = waiter;
-	status = sgx_ocall(58, ms);
+	status = sgx_ocall(59, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -4994,7 +5031,7 @@ sgx_status_t SGX_CDECL sgx_thread_setwait_untrusted_events_ocall(int* retval, co
 
 	ms->ms_waiter = waiter;
 	ms->ms_self = self;
-	status = sgx_ocall(59, ms);
+	status = sgx_ocall(60, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5044,7 +5081,7 @@ sgx_status_t SGX_CDECL sgx_thread_set_multiple_untrusted_events_ocall(int* retva
 	}
 	
 	ms->ms_total = total;
-	status = sgx_ocall(60, ms);
+	status = sgx_ocall(61, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5132,7 +5169,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_exclusive_file_open(void** retval, const
 		ms->ms_error_code = NULL;
 	}
 	
-	status = sgx_ocall(61, ms);
+	status = sgx_ocall(62, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5193,7 +5230,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_check_if_file_exists(uint8_t* retval, co
 		ms->ms_filename = NULL;
 	}
 	
-	status = sgx_ocall(62, ms);
+	status = sgx_ocall(63, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5244,7 +5281,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_fread_node(int32_t* retval, void* f, uin
 	}
 	
 	ms->ms_node_size = node_size;
-	status = sgx_ocall(63, ms);
+	status = sgx_ocall(64, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5302,7 +5339,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_fwrite_node(int32_t* retval, void* f, ui
 	}
 	
 	ms->ms_node_size = node_size;
-	status = sgx_ocall(64, ms);
+	status = sgx_ocall(65, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5330,7 +5367,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_fclose(int32_t* retval, void* f)
 	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fclose_t);
 
 	ms->ms_f = f;
-	status = sgx_ocall(65, ms);
+	status = sgx_ocall(66, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5358,7 +5395,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_fflush(uint8_t* retval, void* f)
 	ocalloc_size -= sizeof(ms_u_sgxprotectedfs_fflush_t);
 
 	ms->ms_f = f;
-	status = sgx_ocall(66, ms);
+	status = sgx_ocall(67, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5407,7 +5444,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_remove(int32_t* retval, const char* file
 		ms->ms_filename = NULL;
 	}
 	
-	status = sgx_ocall(67, ms);
+	status = sgx_ocall(68, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5456,7 +5493,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_recovery_file_open(void** retval, const 
 		ms->ms_filename = NULL;
 	}
 	
-	status = sgx_ocall(68, ms);
+	status = sgx_ocall(69, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5507,7 +5544,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_fwrite_recovery_node(uint8_t* retval, vo
 	}
 	
 	ms->ms_data_length = data_length;
-	status = sgx_ocall(69, ms);
+	status = sgx_ocall(70, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5577,7 +5614,7 @@ sgx_status_t SGX_CDECL u_sgxprotectedfs_do_file_recovery(int32_t* retval, const 
 	}
 	
 	ms->ms_node_size = node_size;
-	status = sgx_ocall(70, ms);
+	status = sgx_ocall(71, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5606,7 +5643,7 @@ sgx_status_t SGX_CDECL rtc_session_request_u(SessionRequestResult* retval, sgx_e
 
 	ms->ms_src_enclave_id = src_enclave_id;
 	ms->ms_dest_enclave_id = dest_enclave_id;
-	status = sgx_ocall(71, ms);
+	status = sgx_ocall(72, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5653,7 +5690,7 @@ sgx_status_t SGX_CDECL rtc_exchange_report_u(ExchangeReportResult* retval, sgx_e
 		ms->ms_dh_msg2 = NULL;
 	}
 	
-	status = sgx_ocall(72, ms);
+	status = sgx_ocall(73, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
@@ -5682,7 +5719,7 @@ sgx_status_t SGX_CDECL rtc_end_session_u(sgx_status_t* retval, sgx_enclave_id_t 
 
 	ms->ms_src_enclave_id = src_enclave_id;
 	ms->ms_dest_enclave_id = dest_enclave_id;
-	status = sgx_ocall(73, ms);
+	status = sgx_ocall(74, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;

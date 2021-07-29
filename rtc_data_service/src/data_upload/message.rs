@@ -30,7 +30,10 @@ impl Handler<DataUploadMessage> for DataEnclaveActor {
     type Result = <DataUploadMessage as Message>::Result;
 
     fn handle(&mut self, msg: DataUploadMessage, _ctx: &mut Self::Context) -> Self::Result {
-        self.get_enclave()
-            .upload_data(&msg.request.payload, msg.request.metadata)
+        self.get_enclave().upload_data(
+            msg.auth_enclave_id,
+            &msg.request.payload,
+            msg.request.metadata,
+        )
     }
 }

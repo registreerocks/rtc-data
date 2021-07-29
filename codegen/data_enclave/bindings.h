@@ -37,10 +37,56 @@ typedef struct CryptoError {
   };
 } CryptoError;
 
+/**
+ * Failed to acquire session / protected channel.
+ *
+ * See: `rtc_tenclave::dh::sessions::DhSessions`
+ */
+typedef enum AcquireSessionError_Tag {
+  /**
+   * This should generally be treated as an unrecoverable error.
+   */
+  ACQUIRE_SESSION_ERROR_CHANNEL_MUTEX_POISONED,
+  ACQUIRE_SESSION_ERROR_NO_ACTIVE_SESSION,
+  ACQUIRE_SESSION_ERROR_SGX,
+} AcquireSessionError_Tag;
+
+typedef struct AcquireSessionError {
+  AcquireSessionError_Tag tag;
+  union {
+    struct {
+      sgx_enclave_id_t no_active_session;
+    };
+    struct {
+      sgx_status_t sgx;
+    };
+  };
+} AcquireSessionError;
+
+typedef enum SealingError_Tag {
+  SEALING_ERROR_CHANNEL_NOT_FOUND,
+  SEALING_ERROR_RKYV_BUFFER_SERIALIZER_ERROR,
+  SEALING_ERROR_SGX,
+} SealingError_Tag;
+
+typedef struct SealingError {
+  SealingError_Tag tag;
+  union {
+    struct {
+      struct AcquireSessionError channel_not_found;
+    };
+    struct {
+      sgx_status_t sgx;
+    };
+  };
+} SealingError;
+
 typedef enum DataUploadError_Tag {
   DATA_UPLOAD_ERROR_VALIDATION,
   DATA_UPLOAD_ERROR_SEALING,
   DATA_UPLOAD_ERROR_CRYPTO,
+  DATA_UPLOAD_ERROR_SAVE_ACCESS_KEY_SEALING_ERROR,
+  DATA_UPLOAD_ERROR_SAVE_ACCESS_KEY_FAILED,
 } DataUploadError_Tag;
 
 typedef struct DataUploadError {
@@ -51,6 +97,9 @@ typedef struct DataUploadError {
     };
     struct {
       struct CryptoError crypto;
+    };
+    struct {
+      struct SealingError save_access_key_sealing_error;
     };
   };
 } DataUploadError;
@@ -81,6 +130,44 @@ typedef struct UploadMetadata {
   uint8_t uploader_pub_key[32];
   uint8_t nonce[24];
 } UploadMetadata;
+
+typedef uint8_t RecommendedAesGcmIv[12];
+
+typedef struct SetAccessKeyEncryptedResponse {
+  sgx_aes_gcm_128bit_tag_t tag;
+  uint8_t ciphertext[SET_ACCESS_KEY_RESPONSE_SIZE];
+  uint8_t aad[0];
+  RecommendedAesGcmIv nonce;
+} SetAccessKeyEncryptedResponse;
+
+/**
+ * FFI safe result type that can be converted to and from a rust result.
+ */
+typedef enum EcallResult_SetAccessKeyEncryptedResponse__SealingError_Tag {
+  ECALL_RESULT_SET_ACCESS_KEY_ENCRYPTED_RESPONSE_SEALING_ERROR_OK_SET_ACCESS_KEY_ENCRYPTED_RESPONSE_SEALING_ERROR,
+  ECALL_RESULT_SET_ACCESS_KEY_ENCRYPTED_RESPONSE_SEALING_ERROR_ERR_SET_ACCESS_KEY_ENCRYPTED_RESPONSE_SEALING_ERROR,
+} EcallResult_SetAccessKeyEncryptedResponse__SealingError_Tag;
+
+typedef struct EcallResult_SetAccessKeyEncryptedResponse__SealingError {
+  EcallResult_SetAccessKeyEncryptedResponse__SealingError_Tag tag;
+  union {
+    struct {
+      struct SetAccessKeyEncryptedResponse ok;
+    };
+    struct {
+      struct SealingError err;
+    };
+  };
+} EcallResult_SetAccessKeyEncryptedResponse__SealingError;
+
+typedef struct EcallResult_SetAccessKeyEncryptedResponse__SealingError SetAccessKeyResult;
+
+typedef struct SetAccessKeyEncryptedRequest {
+  sgx_aes_gcm_128bit_tag_t tag;
+  uint8_t ciphertext[SET_ACCESS_KEY_REQUEST_SIZE];
+  uint8_t aad[ARCHIVED_ENCLAVE_ID_SIZE];
+  RecommendedAesGcmIv nonce;
+} SetAccessKeyEncryptedRequest;
 
 /**
  * FFI safe result type that can be converted to and from a rust result.

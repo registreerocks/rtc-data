@@ -1,6 +1,8 @@
+//! OCALL definition: `save_sealed_blob_u` (`rtc_save_sealed_blob_u`)
+
 use std::boxed::Box;
 
-use sgx_types::*;
+use sgx_types::sgx_status_t;
 use uuid::Uuid;
 
 extern "C" {
