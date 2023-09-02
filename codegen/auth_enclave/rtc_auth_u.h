@@ -320,6 +320,7 @@ int32_t SGX_UBRIDGE(SGX_NOCONVENTION, u_sgxprotectedfs_do_file_recovery, (const 
 #endif
 
 sgx_status_t rtc_auth_enclave_create_report(sgx_enclave_id_t eid, CreateReportResult* retval, const sgx_target_info_t* p_qe3_target, EnclaveHeldData enclave_data, sgx_report_t* p_report);
+sgx_status_t rtc_auth_save_access_key(sgx_enclave_id_t eid, SetAccessKeyResult* retval, SetAccessKeyEncryptedRequest encrypted_request);
 sgx_status_t rtc_auth_issue_execution_token(sgx_enclave_id_t eid, IssueTokenResult* retval, const uint8_t* payload_ptr, size_t payload_len, const ExecReqMetadata* metadata, uint8_t* out_token_ptr, size_t out_token_capacity, size_t* out_token_used);
 sgx_status_t rtc_auth_t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t rtc_auth_t_global_exit_ecall(sgx_enclave_id_t eid);

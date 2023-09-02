@@ -22,7 +22,7 @@ pub const ARCHIVED_ENCLAVE_ID_SIZE: usize = 8;
 // (Keep these FFI type comments in sync between set_access_key and ffi_set_access_key, for diffing!)
 
 // FFI type: REQUEST_SIZE
-pub const SET_ACCESS_KEY_REQUEST_SIZE: usize = 40;
+pub const SET_ACCESS_KEY_REQUEST_SIZE: usize = 48;
 
 // FFI type: EncryptedRequest
 #[repr(C)]

@@ -3,6 +3,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(clippy::mem_forget)]
 
+mod ecalls;
 mod jwt;
 mod token_store;
 

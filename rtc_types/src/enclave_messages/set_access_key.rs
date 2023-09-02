@@ -11,6 +11,9 @@ pub struct Request {
     //      It might make sense to conditionally export this as public.
     pub uuid: [u8; 16],       // TODO: Use UUID crate?
     pub access_key: [u8; 24], // [u8; ACCESS_KEY_BYTES]
+
+    /// Size of the dataset in bytes, to be cached alongside the UUID.
+    pub unsealed_size: u64,
 }
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
@@ -48,6 +51,7 @@ mod test {
         let request = set_access_key::Request {
             uuid: [5u8; 16],
             access_key: [2u8; 24],
+            unsealed_size: 42,
         };
 
         let buf = rkyv_format::write_array(&request).unwrap();
