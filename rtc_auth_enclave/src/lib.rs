@@ -93,6 +93,7 @@ fn issue_execution_token_impl(
     {
         let token = token_store::issue_token(
             Uuid::from_bytes(message.dataset_uuid),
+            message.dataset_access_key,
             message.exec_module_hash,
             message.number_of_uses,
             dataset_size,

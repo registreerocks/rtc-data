@@ -42,6 +42,27 @@ pub trait KvStore<V> {
         };
         Ok(altered)
     }
+
+    /// Mutate the value of `key`.
+    ///
+    /// This is like [`Self::mutate`], but only operates on existing values.
+    fn mutate<F>(&mut self, key: &str, mutate_fn: F) -> Result<Option<V>, Self::Error>
+    where
+        F: FnOnce(V) -> V,
+    {
+        self.alter(key, |opt_v| opt_v.map(mutate_fn))
+    }
+
+    /// Insert a value for `key`, if absent. If `key` already has a value, do nothing.
+    ///
+    /// Return the key's prior value (`None` if `value` was inserted)
+    fn try_insert(&mut self, key: &str, value: &V) -> Result<Option<V>, Self::Error> {
+        let loaded = self.load(key)?;
+        if loaded.is_none() {
+            self.save(key, value)?;
+        }
+        Ok(loaded)
+    }
 }
 
 #[cfg(test)]
