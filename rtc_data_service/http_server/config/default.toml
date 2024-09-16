@@ -10,6 +10,12 @@ debug = false
 lib_path = "/root/rtc-data/rtc_auth_enclave/build/bin/enclave.signed.so"
 attestation_provider_url = "https://sharedeus.eus.attest.azure.net"
 
+[exec_enclave]
+debug = false
+# Relative to the binary
+lib_path = "/root/rtc-data/rtc_exec_enclave/build/bin/enclave.signed.so"
+attestation_provider_url = "https://sharedeus.eus.attest.azure.net"
+
 [http_server]
 host = "127.0.0.1"
 port = "8080"
